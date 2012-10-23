@@ -32,7 +32,7 @@ CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} -std=gnu++0x # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
 #${MAIN}: CXXFLAGS += -DNDEBUG
-${MAIN}: gitstatus.o cmdline.o ${MAIN}.o
+${MAIN}: gitstatus.o cmdline.o ${MAIN}.o network.o
 	${CXX} ${CXXFLAGS} $^ ${LDFLAGS} -o $@
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o

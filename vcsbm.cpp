@@ -6,6 +6,8 @@ const char gitstatus[] =
 gengetopt_args_info args_info; // a global variable! Sorry.
 #include "macros.hpp"
 
+#include "network.hpp"
+
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -24,5 +26,7 @@ int main(int argc, char **argv) {
 	}
 
 	const char * edgeListFileName   = args_info.inputs[0];
-	PP(edgeListFileName);
+
+	network :: NodeSet_I * node_set = build_node_set_from_edge_list(edgeListFileName, network :: NodeSet_I :: NODE_NAME_INT64 );
+	PP(node_set -> N());
 }
