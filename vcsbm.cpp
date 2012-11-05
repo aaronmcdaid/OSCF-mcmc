@@ -32,16 +32,20 @@ int main(int argc, char **argv) {
 			?  network :: NodeSet_I :: NODE_NAME_STRING
 			:  network :: NodeSet_I :: NODE_NAME_INT64
 			);
-	PP(node_set -> N());
-	for(int i = 0; i<node_set ->N(); ++i) {
-		PP(node_set -> as_string(i));
-	}
 	network :: EdgeSet * edge_set = build_edge_set_from_edge_list(edgeListFileName,
 			args_info.weighted_flag
 			? network :: EdgeSet :: WEIGHT_INT
 			: network :: EdgeSet :: WEIGHT_NONE
 			, node_set
 			);
-	PP(edge_set->edges.size());
-
+	const int N = node_set -> N();
+	const int E = edge_set->edges.size();
+	PP2(N,E);
+#if 0 // This was the validation code, print the network out again to check it
+	for(size_t e = 0; e < edge_set->edges.size(); ++e) {
+		string left_str = node_set->as_string(edge_set->edges.at(e).left);
+		string right_str = node_set->as_string(edge_set->edges.at(e).right);
+		cout << left_str << ' ' << right_str << endl;
+	}
+#endif
 }
