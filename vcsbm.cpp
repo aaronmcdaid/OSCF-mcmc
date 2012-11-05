@@ -27,6 +27,10 @@ int main(int argc, char **argv) {
 
 	const char * edgeListFileName   = args_info.inputs[0];
 
-	network :: NodeSet_I * node_set = build_node_set_from_edge_list(edgeListFileName, network :: NodeSet_I :: NODE_NAME_INT64 );
+	network :: NodeSet_I * node_set = build_node_set_from_edge_list(edgeListFileName,
+			args_info.stringIDs_flag
+			?  network :: NodeSet_I :: NODE_NAME_STRING
+			:  network :: NodeSet_I :: NODE_NAME_INT64
+			);
 	PP(node_set -> N());
 }
