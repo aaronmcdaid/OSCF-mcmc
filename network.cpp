@@ -5,6 +5,7 @@
 #include <cassert>
 #include <set>
 #include <vector>
+#include <unordered_map>
 #include "network.hpp"
 #include "macros.hpp"
 
@@ -51,6 +52,8 @@ struct NodeSet_Impl : public NodeSet_I {
 	int N_;
 	vector<int64_t> node_names_int64_sorted;
 	vector<string> node_names_string_sorted;
+	unordered_map<int64_t, int> map_int64_to_id;
+	unordered_map<string, int> map_string_to_id;
 	bool locked() const {
 		return !(node_names_int64_sorted.empty() && node_names_string_sorted.empty());
 	}
@@ -59,11 +62,19 @@ struct NodeSet_Impl : public NodeSet_I {
 		if(this->node_name_type == NODE_NAME_INT64) {
 			copy(node_names_int64.begin(), node_names_int64.end(), back_inserter(node_names_int64_sorted));
 			this -> N_ = node_names_int64_sorted.size();
+			for(int i=0; i<this->N(); ++i) {
+				map_int64_to_id[ node_names_int64_sorted.at(i) ] = i;
+			}
 		} else {
 			copy(node_names_string.begin(), node_names_string.end(), back_inserter(node_names_string_sorted));
 			this -> N_ = node_names_string_sorted.size();
+			for(int i=0; i<this->N(); ++i) {
+				map_string_to_id[ node_names_string_sorted.at(i) ] = i;
+			}
 		}
 		assert(locked());
+		assert(node_names_int64_sorted.size() == map_int64_to_id.size());
+		assert(node_names_string_sorted.size() == map_string_to_id.size());
 	}
 };
 
