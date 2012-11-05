@@ -13,7 +13,7 @@ using namespace network;
 using namespace std;
 
 struct NodeSet_Impl : public NodeSet_I {
-	virtual int get_NodeNameType() const {
+	virtual NodeNameType get_NodeNameType() const {
 		return this->node_name_type;
 	}
 	virtual int N() const {
@@ -28,6 +28,10 @@ struct NodeSet_Impl : public NodeSet_I {
 			return oss.str();
 		} else
 			return this->node_names_string_sorted.at(node_id);
+	}
+	int64_t as_int64(int node_id) const {
+		assert (this->node_name_type == NODE_NAME_INT64);
+		return this->node_names_int64_sorted.at(node_id);
 	}
 
 	enum NodeNameType node_name_type;
@@ -52,8 +56,6 @@ struct NodeSet_Impl : public NodeSet_I {
 	int N_;
 	vector<int64_t> node_names_int64_sorted;
 	vector<string> node_names_string_sorted;
-	unordered_map<int64_t, int> map_int64_to_id;
-	unordered_map<string, int> map_string_to_id;
 	bool locked() const {
 		return !(node_names_int64_sorted.empty() && node_names_string_sorted.empty());
 	}
@@ -62,19 +64,11 @@ struct NodeSet_Impl : public NodeSet_I {
 		if(this->node_name_type == NODE_NAME_INT64) {
 			copy(node_names_int64.begin(), node_names_int64.end(), back_inserter(node_names_int64_sorted));
 			this -> N_ = node_names_int64_sorted.size();
-			for(int i=0; i<this->N(); ++i) {
-				map_int64_to_id[ node_names_int64_sorted.at(i) ] = i;
-			}
 		} else {
 			copy(node_names_string.begin(), node_names_string.end(), back_inserter(node_names_string_sorted));
 			this -> N_ = node_names_string_sorted.size();
-			for(int i=0; i<this->N(); ++i) {
-				map_string_to_id[ node_names_string_sorted.at(i) ] = i;
-			}
 		}
 		assert(locked());
-		assert(node_names_int64_sorted.size() == map_int64_to_id.size());
-		assert(node_names_string_sorted.size() == map_string_to_id.size());
 	}
 };
 
@@ -122,4 +116,68 @@ NodeSet_I * network :: build_node_set_from_edge_list(std :: string edgeListFileN
 	}
 	nodes->lock();
 	return nodes;
+}
+EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet_I * node_set) {
+	ifstream edgelist(edgeListFileName);
+	if(!edgelist) {
+		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
+		exit(1);
+	}
+	EdgeSet * edges = new EdgeSet(weight_type);
+
+	const network :: NodeSet_I :: NodeNameType node_name_type = node_set -> get_NodeNameType();
+	string line;
+	int64_t line_num = 0;
+
+	unordered_map<int64_t, int> map_int64_to_id;
+	unordered_map<string, int> map_string_to_id;
+	if(node_name_type == network :: NodeSet_I :: NODE_NAME_INT64) {
+		for(int i=0; i<node_set->N(); ++i) { map_int64_to_id[ node_set->as_int64(i) ] = i; }
+		assert(node_set->N() == (int)map_int64_to_id.size());
+	}else {
+		for(int i=0; i<node_set->N(); ++i) { map_string_to_id[ node_set->as_string(i) ] = i; }
+		assert(node_set->N() == (int)map_string_to_id.size());
+	}
+
+	while (getline(edgelist, line)) {
+		++ line_num;
+		// PP(line);
+		int64_t left_node_int64, right_node_int64;
+		string left_node_string, right_node_string;
+		istringstream fields(line);
+		if(node_name_type == network :: NodeSet_I :: NODE_NAME_INT64)
+			fields >> left_node_int64;
+		else
+			fields >> left_node_string;
+		if(!fields) {
+			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
+			exit(1);
+		}
+		if(node_name_type == network :: NodeSet_I :: NODE_NAME_INT64)
+			fields >> right_node_int64;
+		else
+			fields >> right_node_string;
+		if(!fields) {
+			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
+			exit(1);
+		}
+		int left_node_id, right_node_id;
+		if(node_name_type == network :: NodeSet_I :: NODE_NAME_INT64) {
+			left_node_id = map_int64_to_id[left_node_int64];
+			right_node_id = map_int64_to_id[right_node_int64];
+			assert(left_node_int64 == node_set->as_int64(left_node_id));
+			assert(right_node_int64 == node_set->as_int64(right_node_id));
+		} else {
+			left_node_id = map_string_to_id[left_node_string];
+			right_node_id = map_string_to_id[right_node_string];
+			assert(left_node_string == node_set->as_string(left_node_id));
+			assert(right_node_string == node_set->as_string(right_node_id));
+		}
+		EdgeSet :: Edge e;
+		e.left = left_node_id;
+		e.right = right_node_id;
+		edges->edges.push_back(e);
+	}
+	assert(edges->edges.size() == line_num);
+	return edges;
 }

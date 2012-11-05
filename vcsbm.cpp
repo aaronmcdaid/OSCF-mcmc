@@ -36,4 +36,12 @@ int main(int argc, char **argv) {
 	for(int i = 0; i<node_set ->N(); ++i) {
 		PP(node_set -> as_string(i));
 	}
+	network :: EdgeSet * edge_set = build_edge_set_from_edge_list(edgeListFileName,
+			args_info.weighted_flag
+			? network :: EdgeSet :: WEIGHT_INT
+			: network :: EdgeSet :: WEIGHT_NONE
+			, node_set
+			);
+	PP(edge_set->edges.size());
+
 }
