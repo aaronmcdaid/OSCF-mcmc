@@ -23,7 +23,10 @@ struct EdgeSet {
 	struct Edge {
 		int left;
 		int right;
-		int w_int;
+		WeightType w_type;
+		union {
+			int w_int;
+		} w_union;
 	};
 	std :: vector< Edge > edges;
 };
