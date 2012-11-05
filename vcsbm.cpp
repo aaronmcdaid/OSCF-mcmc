@@ -33,4 +33,7 @@ int main(int argc, char **argv) {
 			:  network :: NodeSet_I :: NODE_NAME_INT64
 			);
 	PP(node_set -> N());
+	for(int i = 0; i<node_set ->N(); ++i) {
+		PP(node_set -> as_string(i));
+	}
 }

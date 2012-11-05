@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cassert>
 #include <set>
+#include <vector>
 #include "network.hpp"
 #include "macros.hpp"
 
@@ -15,14 +16,17 @@ struct NodeSet_Impl : public NodeSet_I {
 		return this->node_name_type;
 	}
 	virtual int N() const {
-		if (this->node_name_type == NODE_NAME_INT64)
-			return this->node_names_int64.size();
-		else
-			return this->node_names_string.size();
-		return -1; // shouldn't get here
+		assert(locked());
+		return this -> N_;
 	}
-	std :: string as_string(int) const {
-		return "";
+	std :: string as_string(int node_id) const {
+		assert(node_id >= 0 && node_id < this->N());
+		if (this->node_name_type == NODE_NAME_INT64) {
+			ostringstream oss;
+			oss << this->node_names_int64_sorted.at(node_id);
+			return oss.str();
+		} else
+			return this->node_names_string_sorted.at(node_id);
 	}
 
 	enum NodeNameType node_name_type;
@@ -34,12 +38,32 @@ struct NodeSet_Impl : public NodeSet_I {
 	set<string> node_names_string;
 
 	void notify_of_node(int64_t node_name) {
+		assert(!locked());
 		assert(this-> node_name_type == NODE_NAME_INT64);
 		this->node_names_int64 . insert(node_name);
 	}
 	void notify_of_node(string node_name) {
+		assert(!locked());
 		assert(this-> node_name_type == NODE_NAME_STRING);
 		this->node_names_string . insert(node_name);
+	}
+
+	int N_;
+	vector<int64_t> node_names_int64_sorted;
+	vector<string> node_names_string_sorted;
+	bool locked() const {
+		return !(node_names_int64_sorted.empty() && node_names_string_sorted.empty());
+	}
+	void lock() {
+		assert(!locked());
+		if(this->node_name_type == NODE_NAME_INT64) {
+			copy(node_names_int64.begin(), node_names_int64.end(), back_inserter(node_names_int64_sorted));
+			this -> N_ = node_names_int64_sorted.size();
+		} else {
+			copy(node_names_string.begin(), node_names_string.end(), back_inserter(node_names_string_sorted));
+			this -> N_ = node_names_string_sorted.size();
+		}
+		assert(locked());
 	}
 };
 
@@ -85,5 +109,6 @@ NodeSet_I * network :: build_node_set_from_edge_list(std :: string edgeListFileN
 			nodes -> notify_of_node(right_node_string);
 		}
 	}
+	nodes->lock();
 	return nodes;
 }
