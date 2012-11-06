@@ -32,4 +32,19 @@ struct EdgeSet {
 };
 EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet_I * node_set);
 
+struct EndPoint {
+	int edge_id; // edge_id: a number between 0 and E
+	int endpoint_type; // 1: I'm the source, and the other end of the sink
+	                   // -1: Other way around
+			   // 0: Undirected, so it doesn't matter.
+	int this_node_id; // id of this node at this end of the edge.
+	int far_node_id; // id of the node at the other end of this  edge.
+	EndPoint(int edge_id_, int endpoint_type_, int this_node_id_, int far_node_id_);
+	bool operator <(const EndPoint &other) const;
+};
+struct EndPoints {
+	std :: vector<EndPoint> all_endpoints_sorted; // we'll sort this later
+	void finish();
+};
+
 } // namespace network
