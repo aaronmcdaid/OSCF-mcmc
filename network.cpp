@@ -13,18 +13,6 @@
 using namespace network;
 using namespace std;
 
-struct NodeSet {
-	// A Nodeset will take a load of strings and store them (or their int equivalent)
-	// Then, it will sort them (either lexicographically or numerically) and allow
-	// you random access to the sorted vector
-	//
-	// So yes, the interface is entirely string-based, as this is all that you will need
-	// most of the time.  But under the hood they may be stored, and sorted, as strings.
-	virtual void insert_string_version_of_name(string) = 0;
-	virtual string as_string(int) = 0;
-	virtual void finish_me() = 0;
-	virtual ~NodeSet() {}
-};
 template<typename T>
 struct NodeSet_ : public NodeSet {
 	set<T> set_of_names;
