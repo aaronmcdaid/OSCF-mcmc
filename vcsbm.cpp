@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
 		cout << left_str << ' ' << right_str << endl;
 	}
 #endif
+
 	// Finally, we create the list of Endpoints - by doubling the list of Edges
 	network :: EndPoints endpoints;
 	for(int e=0; e<E; ++e) {

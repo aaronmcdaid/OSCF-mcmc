@@ -13,6 +13,9 @@
 using namespace network;
 using namespace std;
 
+struct EdgeListFileFormatException : public std :: exception {
+};
+
 template<typename T>
 struct NodeSet_ : public NodeSet {
 	set<T> set_of_names;
@@ -30,6 +33,9 @@ struct NodeSet_ : public NodeSet {
 		int64_t name_as_int;
 		istringstream iss(s);
 		iss >> name_as_int;
+		if(! ( iss && iss.eof() ) ) {
+			throw EdgeListFileFormatException();
+		}
 		set_of_names.insert(name_as_int);
 	}
 	template<typename T>
@@ -147,12 +153,15 @@ NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileNam
 		istringstream fields(line);
 		fields >> left_node_string;
 		fields >> right_node_string;
-		if(!fields) {
+		try {
+			if(!fields)
+				throw EdgeListFileFormatException();
+			nodes->insert_string_version_of_name(left_node_string);
+			nodes->insert_string_version_of_name(right_node_string);
+		} catch (const EdgeListFileFormatException &) {
 			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
 			exit(1);
 		}
-		nodes->insert_string_version_of_name(left_node_string);
-		nodes->insert_string_version_of_name(right_node_string);
 	}
 	nodes->finish_me();
 	return nodes;
@@ -194,6 +203,9 @@ EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileNam
 		int left_node_id, right_node_id;
 		left_node_id = map_string_to_id[left_node_string];
 		right_node_id = map_string_to_id[right_node_string];
+		// If either of these two assertions fail, there is something weird going on.
+		// I assumed the file was fine, due to the fact that build_node_set_from_edge_list
+		// has already succeeded if we get in here
 		assert(left_node_string == node_set->as_string(left_node_id));
 		assert(right_node_string == node_set->as_string(right_node_id));
 		EdgeSet :: Edge e;
