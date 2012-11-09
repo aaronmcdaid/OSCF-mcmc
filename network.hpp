@@ -1,8 +1,9 @@
 #include<vector>
 namespace network {
 
+enum NodeNameType { NODE_NAME_INT64, NODE_NAME_STRING };
+
 struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
-	enum NodeNameType { NODE_NAME_INT64, NODE_NAME_STRING };
 	virtual NodeNameType get_NodeNameType() const = 0;
 	virtual int N() const = 0;
 	virtual std :: string as_string(int node_id) const = 0;
@@ -11,7 +12,7 @@ struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
 	}
 };
 
-NodeSet_I * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeSet_I :: NodeNameType node_name_type);
+NodeSet_I * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
 
 struct EdgeSet {
 	// This is a pretty dumb object, it just knows the edges in the order in which they appeared in the text file.

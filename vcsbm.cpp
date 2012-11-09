@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
 
 	network :: NodeSet_I * node_set = build_node_set_from_edge_list(edgeListFileName,
 			args_info.stringIDs_flag
-			?  network :: NodeSet_I :: NODE_NAME_STRING
-			:  network :: NodeSet_I :: NODE_NAME_INT64
+			?  network :: NODE_NAME_STRING
+			:  network :: NODE_NAME_INT64
 			);
 	network :: EdgeSet * edge_set = build_edge_set_from_edge_list(edgeListFileName,
 			args_info.weighted_flag
