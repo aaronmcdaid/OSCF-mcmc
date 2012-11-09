@@ -14,6 +14,12 @@ using namespace network;
 using namespace std;
 
 struct NodeSet {
+	// A Nodeset will take a load of strings and store them (or their int equivalent)
+	// Then, it will sort them (either lexicographically or numerically) and allow
+	// you random access to the sorted vector
+	//
+	// So yes, the interface is entirely string-based, as this is all that you will need
+	// most of the time.  But under the hood they may be stored, and sorted, as strings.
 	virtual void insert_string_version_of_name(string) = 0;
 	virtual string as_string(int) = 0;
 	virtual void finish_me() = 0;
@@ -23,13 +29,12 @@ template<typename T>
 struct NodeSet_ : public NodeSet {
 	set<T> set_of_names;
 	vector<T> vector_of_names;
+	virtual void insert_string_version_of_name(string);
+	virtual string as_string(int);
+	virtual void finish_me();
 };
-template struct NodeSet_<string>;
-template struct NodeSet_<int64_t>;
-NodeSet_<int64_t> ni;
-NodeSet_<string> ns;
 	template<>
-	void NodeSet_<string> :: nsert_string_version_of_name(string s) { set_of_names.insert(s); }
+	void NodeSet_<string> :: insert_string_version_of_name(string s) { set_of_names.insert(s); }
 	template<>
 	void NodeSet_<int64_t> :: insert_string_version_of_name(string s) {
 		int64_t name_as_int;
@@ -37,34 +42,35 @@ NodeSet_<string> ns;
 		iss >> name_as_int;
 		set_of_names.insert(name_as_int);
 	}
-
-
-struct NodeSet_String : public NodeSet {
-	set<string> set_of_names;
-	vector<string> vector_of_names;
-	void insert_string_version_of_name(string s) { set_of_names.insert(s); }
-	string as_string(int node_id) {
-		assert(node_id >= 0 && node_id < (int)vector_of_names.size());
+	template<typename T>
+	void NodeSet_<T> :: finish_me() {
+		assert(!this->set_of_names.empty());
+		copy(this->set_of_names.begin(), this->set_of_names.end(), back_inserter(vector_of_names));
+		this->set_of_names.clear();
+		assert(this->set_of_names.empty());
+	}
+	template<>
+	string NodeSet_<string> :: as_string(int node_id) {
+		assert(node_id >= 0);
+		assert(node_id < (int)this->vector_of_names.size());
 		return this->vector_of_names.at(node_id);
 	}
-	// void finish_me() { assert(!set_of_names.empty()); copy(set_of_names.begin(), set_of_names.end(), back_inserter(vector_of_names)); set_of_names.clear(); }
-};
-struct NodeSet_Int64 : public NodeSet {
-	set<int64_t> set_of_names;
-	vector<int64_t> vector_of_names;
-	void insert_string_version_of_name(string s) {
-		int64_t name_as_int;
-		istringstream iss(s);
-		iss >> name_as_int;
-		set_of_names.insert(name_as_int);
-	}
-	string as_string(int node_id) {
-		assert(node_id >= 0 && node_id < (int)vector_of_names.size());
+	template<>
+	string NodeSet_<int64_t> :: as_string(int node_id) {
+		assert(node_id >= 0);
+		assert(node_id < (int)this->vector_of_names.size());
+		const int64_t node_name = this->vector_of_names.at(node_id);
 		ostringstream oss;
-		oss << this->vector_of_names.at(node_id);
+		oss << node_name;
 		return oss.str();
 	}
-};
+template struct NodeSet_<string>;
+template struct NodeSet_<int64_t>;
+
+
+
+
+
 
 struct NodeSet_Impl : public NodeSet_I {
 	virtual NodeNameType get_NodeNameType() const {
