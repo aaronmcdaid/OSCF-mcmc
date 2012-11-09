@@ -15,6 +15,7 @@ using namespace std;
 
 struct EdgeListFileFormatException : public std :: exception {
 };
+struct EdgeListFileFormatException_ExpectedAnInt : public EdgeListFileFormatException {};
 
 template<typename T>
 struct NodeSet_ : public NodeSet {
@@ -34,7 +35,7 @@ struct NodeSet_ : public NodeSet {
 		istringstream iss(s);
 		iss >> name_as_int;
 		if(! ( iss && iss.eof() ) ) {
-			throw EdgeListFileFormatException();
+			throw EdgeListFileFormatException_ExpectedAnInt();
 		}
 		set_of_names.insert(name_as_int);
 	}
@@ -158,6 +159,9 @@ NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileNam
 				throw EdgeListFileFormatException();
 			nodes->insert_string_version_of_name(left_node_string);
 			nodes->insert_string_version_of_name(right_node_string);
+		} catch (const EdgeListFileFormatException_ExpectedAnInt &) {
+			cerr << "Error in edge list file on line " << line_num << ". Use the --str option if you wish to use non-integer node names. Exiting. : <" << line << ">" << endl;
+			exit(1);
 		} catch (const EdgeListFileFormatException &) {
 			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
 			exit(1);
