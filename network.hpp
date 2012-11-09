@@ -12,7 +12,9 @@ struct NodeSet {
 	virtual void insert_string_version_of_name(std :: string) = 0;
 	virtual std :: string as_string(int) = 0;
 	virtual void finish_me() = 0;
+	virtual int N() const = 0;
 	virtual ~NodeSet() {}
+	virtual NodeNameType get_NodeNameType() const = 0;
 };
 
 struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
@@ -24,7 +26,7 @@ struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
 	}
 };
 
-NodeSet_I * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
+NodeSet * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
 
 struct EdgeSet {
 	// This is a pretty dumb object, it just knows the edges in the order in which they appeared in the text file.
@@ -43,7 +45,7 @@ struct EdgeSet {
 	};
 	std :: vector< Edge > edges;
 };
-EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet_I * node_set);
+EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet * node_set);
 
 struct EndPoint {
 	int edge_id; // edge_id: a number between 0 and E

@@ -20,6 +20,8 @@ struct NodeSet_ : public NodeSet {
 	virtual void insert_string_version_of_name(string);
 	virtual string as_string(int);
 	virtual void finish_me();
+	virtual int N() const;
+	virtual NodeNameType get_NodeNameType() const;
 };
 	template<>
 	void NodeSet_<string> :: insert_string_version_of_name(string s) { set_of_names.insert(s); }
@@ -52,6 +54,14 @@ struct NodeSet_ : public NodeSet {
 		oss << node_name;
 		return oss.str();
 	}
+	template<typename T>
+	int NodeSet_<T> :: N() const {
+		assert(this->set_of_names.empty());
+		assert(!this->vector_of_names.empty());
+		return this->vector_of_names.size();
+	}
+	template<> NodeNameType NodeSet_<int64_t> :: get_NodeNameType() const { return NODE_NAME_INT64; }
+	template<> NodeNameType NodeSet_<string>  :: get_NodeNameType() const { return NODE_NAME_STRING; }
 template struct NodeSet_<string>;
 template struct NodeSet_<int64_t>;
 
@@ -120,107 +130,72 @@ struct NodeSet_Impl : public NodeSet_I {
 	}
 };
 
-NodeSet_I * network :: build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type) {
+NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type) {
 	ifstream edgelist(edgeListFileName);
 	if(!edgelist) {
 		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
 		exit(1);
 	}
-	NodeSet_Impl * nodes = new NodeSet_Impl(node_name_type);
+	NodeSet * nodes = (node_name_type == NODE_NAME_INT64) ? static_cast<NodeSet*>(new NodeSet_<int64_t>) : new NodeSet_<string>;
 
 	string line;
 	int64_t line_num = 0;
 	while (getline(edgelist, line)) {
 		++ line_num;
 		// PP(line);
-		int64_t left_node_int64, right_node_int64;
 		string left_node_string, right_node_string;
 		istringstream fields(line);
-		if(node_name_type == network :: NODE_NAME_INT64)
-			fields >> left_node_int64;
-		else
-			fields >> left_node_string;
+		fields >> left_node_string;
+		fields >> right_node_string;
 		if(!fields) {
 			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
 			exit(1);
 		}
-		if(node_name_type == network :: NODE_NAME_INT64)
-			fields >> right_node_int64;
-		else
-			fields >> right_node_string;
-		if(!fields) {
-			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
-			exit(1);
-		}
-		if(node_name_type == network :: NODE_NAME_INT64) {
-			// PP2(left_node_int64, right_node_int64);
-			nodes -> notify_of_node(left_node_int64);
-			nodes -> notify_of_node(right_node_int64);
-		} else {
-			// PP2(left_node_string, right_node_string);
-			nodes -> notify_of_node(left_node_string);
-			nodes -> notify_of_node(right_node_string);
-		}
+		nodes->insert_string_version_of_name(left_node_string);
+		nodes->insert_string_version_of_name(right_node_string);
 	}
-	nodes->lock();
+	nodes->finish_me();
 	return nodes;
 }
-EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet_I * node_set) {
+EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet * node_set) {
 	ifstream edgelist(edgeListFileName);
 	if(!edgelist) {
 		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
 		exit(1);
 	}
+
+	// We don't need to think explicitly about int64_t here,
+	// The file will give us strings, and we just need to map
+	// those strings to a number between 0 and N.
+	// In other words, the distinction between int64_t and string is
+	// no longer really relevant.
+	unordered_map<string, int> map_string_to_id;
+	for(int i=0; i<node_set->N(); ++i) {
+		map_string_to_id[ node_set->as_string(i) ] = i;
+	}
+	assert(node_set->N() == (int)map_string_to_id.size());
+
 	EdgeSet * edges = new EdgeSet(weight_type);
 
-	const network :: NodeNameType node_name_type = node_set -> get_NodeNameType();
 	string line;
 	int64_t line_num = 0;
-
-	unordered_map<int64_t, int> map_int64_to_id;
-	unordered_map<string, int> map_string_to_id;
-	if(node_name_type == network :: NODE_NAME_INT64) {
-		for(int i=0; i<node_set->N(); ++i) { map_int64_to_id[ node_set->as_int64(i) ] = i; }
-		assert(node_set->N() == (int)map_int64_to_id.size());
-	}else {
-		for(int i=0; i<node_set->N(); ++i) { map_string_to_id[ node_set->as_string(i) ] = i; }
-		assert(node_set->N() == (int)map_string_to_id.size());
-	}
 
 	while (getline(edgelist, line)) {
 		++ line_num;
 		// PP(line);
-		int64_t left_node_int64, right_node_int64;
 		string left_node_string, right_node_string;
 		istringstream fields(line);
-		if(node_name_type == network :: NODE_NAME_INT64)
-			fields >> left_node_int64;
-		else
-			fields >> left_node_string;
-		if(!fields) {
-			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
-			exit(1);
-		}
-		if(node_name_type == network :: NODE_NAME_INT64)
-			fields >> right_node_int64;
-		else
-			fields >> right_node_string;
+		fields >> left_node_string;
+		fields >> right_node_string;
 		if(!fields) {
 			cerr << "Error in edge list file on line " << line_num << ". Exiting. : <" << line << ">" << endl;
 			exit(1);
 		}
 		int left_node_id, right_node_id;
-		if(node_name_type == network :: NODE_NAME_INT64) {
-			left_node_id = map_int64_to_id[left_node_int64];
-			right_node_id = map_int64_to_id[right_node_int64];
-			assert(left_node_int64 == node_set->as_int64(left_node_id));
-			assert(right_node_int64 == node_set->as_int64(right_node_id));
-		} else {
-			left_node_id = map_string_to_id[left_node_string];
-			right_node_id = map_string_to_id[right_node_string];
-			assert(left_node_string == node_set->as_string(left_node_id));
-			assert(right_node_string == node_set->as_string(right_node_id));
-		}
+		left_node_id = map_string_to_id[left_node_string];
+		right_node_id = map_string_to_id[right_node_string];
+		assert(left_node_string == node_set->as_string(left_node_id));
+		assert(right_node_string == node_set->as_string(right_node_id));
 		EdgeSet :: Edge e;
 		e.left = left_node_id;
 		e.right = right_node_id;
