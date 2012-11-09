@@ -13,6 +13,59 @@
 using namespace network;
 using namespace std;
 
+struct NodeSet {
+	virtual void insert_string_version_of_name(string) = 0;
+	virtual string as_string(int) = 0;
+	virtual void finish_me() = 0;
+	virtual ~NodeSet() {}
+};
+template<typename T>
+struct NodeSet_ : public NodeSet {
+	set<T> set_of_names;
+	vector<T> vector_of_names;
+};
+template struct NodeSet_<string>;
+template struct NodeSet_<int64_t>;
+NodeSet_<int64_t> ni;
+NodeSet_<string> ns;
+	template<>
+	void NodeSet_<string> :: nsert_string_version_of_name(string s) { set_of_names.insert(s); }
+	template<>
+	void NodeSet_<int64_t> :: insert_string_version_of_name(string s) {
+		int64_t name_as_int;
+		istringstream iss(s);
+		iss >> name_as_int;
+		set_of_names.insert(name_as_int);
+	}
+
+
+struct NodeSet_String : public NodeSet {
+	set<string> set_of_names;
+	vector<string> vector_of_names;
+	void insert_string_version_of_name(string s) { set_of_names.insert(s); }
+	string as_string(int node_id) {
+		assert(node_id >= 0 && node_id < (int)vector_of_names.size());
+		return this->vector_of_names.at(node_id);
+	}
+	// void finish_me() { assert(!set_of_names.empty()); copy(set_of_names.begin(), set_of_names.end(), back_inserter(vector_of_names)); set_of_names.clear(); }
+};
+struct NodeSet_Int64 : public NodeSet {
+	set<int64_t> set_of_names;
+	vector<int64_t> vector_of_names;
+	void insert_string_version_of_name(string s) {
+		int64_t name_as_int;
+		istringstream iss(s);
+		iss >> name_as_int;
+		set_of_names.insert(name_as_int);
+	}
+	string as_string(int node_id) {
+		assert(node_id >= 0 && node_id < (int)vector_of_names.size());
+		ostringstream oss;
+		oss << this->vector_of_names.at(node_id);
+		return oss.str();
+	}
+};
+
 struct NodeSet_Impl : public NodeSet_I {
 	virtual NodeNameType get_NodeNameType() const {
 		return this->node_name_type;
