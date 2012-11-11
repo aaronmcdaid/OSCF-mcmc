@@ -65,7 +65,9 @@ struct Q {
 	void set_one_cell(int i, int k, long double val) {
 		assert(val >= 0.0L && val <= 1.0L);
 		try {
+			const long double old_val = this->Q_.at(i).at(k);
 			this->Q_.at(i).at(k) = val;
+			this->notify_listeners(i,k,old_val, val);
 		} catch (std :: out_of_range &e) {
 			PP(this->Q_.size());
 			PP(this->Q_.at(0).size());
@@ -73,11 +75,44 @@ struct Q {
 			throw;
 		}
 	}
+
+	// While the Q class itself is pretty simple,
+	// there are other classes that will want to be notified
+	// of any change to Q.  This is done via the Q_listener interface
+	struct Q_listener {
+		// any struct that wants to be notified of any changes to Q must
+		// implement this interface.
+		virtual void notify(int i, int k, long double old_val, long double new_val) = 0;
+		virtual ~Q_listener() {}
+	};
+	vector<Q_listener *> listeners;
+	void add_listener(Q_listener *l) {
+		this->listeners.push_back(l);
+	}
+	void notify_listeners(int i,int k,long double old_val, long double new_val) {
+		For(l, this->listeners) {
+			(*l)->notify(i, k, old_val, new_val);
+		}
+	}
 };
+
+// Here are a few classes that will 'listen' to changes to Q
+// and record various convenient summaries of Q, such as n_k
+struct Q_n_k : public Q :: Q_listener {
+	virtual void notify(int i, int k, long double old_val, long double new_val) {
+		PP4(i,k,old_val, new_val);
+	}
+	virtual ~Q_n_k() {}
+};
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
 	Q q(N,J);
+	Q_n_k n_k;
+	q.add_listener(&n_k);
 	q.set(0,0) = 0.3;
+	PP(q.get(0,0));
+	q.set(0,0) = 0.6;
 	PP(q.get(0,0));
 }
