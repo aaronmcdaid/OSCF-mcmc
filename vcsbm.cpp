@@ -55,14 +55,15 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	// Finally, we create the list of Endpoints - by doubling the list of Edges
-	network :: EndPoints endpoints;
+	// Finally, we create the list of Junctions - by doubling the list of Edges
+	network :: Junctions junctions;
 	for(int e=0; e<E; ++e) {
 		const network :: EdgeSet :: Edge & edge = edge_set->edges.at(e);
-		network :: EndPoint l(e, args_info.directed_flag ? 1 : 0, edge.left, edge.right);
-		network :: EndPoint r(e, args_info.directed_flag ?-1 : 0, edge.right, edge.left);
-		endpoints.all_endpoints_sorted.push_back(l);
-		endpoints.all_endpoints_sorted.push_back(r);
+		network :: Junction l(e, args_info.directed_flag ? 1 : 0, edge.left, edge.right);
+		network :: Junction r(e, args_info.directed_flag ?-1 : 0, edge.right, edge.left);
+		junctions.all_junctions_sorted.push_back(l);
+		junctions.all_junctions_sorted.push_back(r);
 	}
-	endpoints.finish(); // tell endpoints that we've finished telling it about the edges, it's ready to sort itself.
+	junctions.finish(); // tell junctions that we've finished telling it about the edges, it's ready to sort itself.
+	assert(junctions.all_junctions_sorted.size() == (size_t)2*E);
 }

@@ -220,10 +220,10 @@ EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileNam
 	assert(edges->edges.size() == line_num);
 	return edges;
 }
-network :: EndPoint :: EndPoint(int edge_id_, int endpoint_type_, int this_node_id_, int far_node_id_)
-			: edge_id(edge_id_), endpoint_type(endpoint_type_), this_node_id(this_node_id_), far_node_id(far_node_id_) {
+network :: Junction :: Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_)
+			: edge_id(edge_id_), junction_type(junction_type_), this_node_id(this_node_id_), far_node_id(far_node_id_) {
 }
-bool network :: EndPoint :: operator <(const EndPoint &other) const {
+bool network :: Junction :: operator <(const Junction &other) const {
 	if(this->this_node_id < other.this_node_id) return true;
 	if(this->this_node_id > other.this_node_id) return false;
 	assert(this->this_node_id == other.this_node_id);
@@ -232,6 +232,6 @@ bool network :: EndPoint :: operator <(const EndPoint &other) const {
 	assert(this->far_node_id == other.far_node_id);
 	return false;
 }
-void network :: EndPoints :: finish() {
-	std :: sort(this->all_endpoints_sorted.begin(), this->all_endpoints_sorted.end());
+void network :: Junctions :: finish() {
+	std :: sort(this->all_junctions_sorted.begin(), this->all_junctions_sorted.end());
 }
