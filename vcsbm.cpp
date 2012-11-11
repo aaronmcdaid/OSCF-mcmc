@@ -43,7 +43,11 @@ int main(int argc, char **argv) {
 	const int N = node_set -> N();
 	const int E = edge_set->edges.size();
 	PP2(N,E);
+
 #if 0 // This was the validation code, print the network out again to check it
+	for(int i=0; i<10 && i<N; ++i) { // print the first ten nodes, to make sure the order is as expected.
+		PP(node_set -> as_string(i));
+	}
 	for(size_t e = 0; e < edge_set->edges.size(); ++e) {
 		string left_str = node_set->as_string(edge_set->edges.at(e).left);
 		string right_str = node_set->as_string(edge_set->edges.at(e).right);
