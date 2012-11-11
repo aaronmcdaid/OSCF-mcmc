@@ -98,9 +98,24 @@ struct Q {
 
 // Here are a few classes that will 'listen' to changes to Q
 // and record various convenient summaries of Q, such as n_k
+#define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 struct Q_n_k : public Q :: Q_listener {
-	virtual void notify(int i, int k, long double old_val, long double new_val) {
-		PP4(i,k,old_val, new_val);
+	vector<long double> n_k;
+	Q_n_k() : n_k(10000) {}
+	virtual void notify(int, int k, long double old_val, long double new_val) {
+		assert_0_to_1(old_val);
+		assert_0_to_1(new_val);
+		this->n_k.at(k) -= old_val;
+		assert_0_to_1(this->n_k.at(k));
+		this->n_k.at(k) += new_val;
+		assert_0_to_1(this->n_k.at(k));
+	}
+	void dump_me() const {
+		cout << " n_k[0:20] : ";
+		for(int k=0; k<20; ++k) {
+			cout << ' ' << this->n_k.at(k);
+		}
+		cout << " ..." << endl;
 	}
 	virtual ~Q_n_k() {}
 };
@@ -111,8 +126,9 @@ void vcsbm(const Network * net) {
 	Q q(N,J);
 	Q_n_k n_k;
 	q.add_listener(&n_k);
-	q.set(0,0) = 0.3;
-	PP(q.get(0,0));
-	q.set(0,0) = 0.6;
-	PP(q.get(0,0));
+	q.set(0,3) = 0.3;
+	PP(q.get(0,3));
+	q.set(0,3) = 0.6;
+	PP(q.get(0,3));
+	n_k.dump_me();
 }
