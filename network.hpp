@@ -65,10 +65,15 @@ struct Junctions {
 };
 const Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool directed);
 
+struct OneNode {
+	std :: vector<int> my_junctions; // all of the junction ids associated with this node
+};
+
 struct Network { // bring all the above together
 	const network :: NodeSet * node_set;
 	const network :: EdgeSet * edge_set;
 	const network :: Junctions * junctions;
+	std :: vector<OneNode> i;
 	inline int N() const { return this->node_set->N(); }
 };
 const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
