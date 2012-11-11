@@ -105,10 +105,18 @@ struct Q {
 // mu_n_k = \sum_{i=1}^N Q_{ik}
 // \sum_{i=1}^N Q_{ik}^2
 
-struct Q_mu_n_k : public Q :: Q_listener {
+template<int power>
+struct Q_template_n_k : public Q :: Q_listener {
 	vector<long double> n_k;
-	Q_mu_n_k() : n_k(10000) {}
+	Q_template_n_k() : n_k(10000) {
+		assert(power == 1 || power == 2);
+	}
 	virtual void notify(int, int k, long double old_val, long double new_val) {
+		if(power!=1) {
+			assert(power==2);
+			old_val = old_val * old_val;
+			new_val = new_val * new_val;
+		}
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
 		this->n_k.at(k) -= old_val;
@@ -123,19 +131,24 @@ struct Q_mu_n_k : public Q :: Q_listener {
 		}
 		cout << " ..." << endl;
 	}
-	virtual ~Q_mu_n_k() {}
+	virtual ~Q_template_n_k() {}
 	void verify(const Q &q) const {
 		vector<long double> verify_n_k(this->n_k.size());
 		assert(!verify_n_k.empty());
 		For(node, q.Q_) {
 			for(int k=0; k < (int) node->size(); ++k) {
 				long double Q_ik = node->at(k);
-				verify_n_k.at(k) += Q_ik;
+				if(power==1)
+					verify_n_k.at(k) += Q_ik;
+				else
+					verify_n_k.at(k) += Q_ik * Q_ik;
 			}
 		}
 		assert(this->n_k == verify_n_k);
 	}
 };
+typedef Q_template_n_k<1> Q_mu_n_k;
+typedef Q_template_n_k<2> Q_squared_n_k;
 
 struct Q_entropy : public Q :: Q_listener {
 	long double entropy;
@@ -175,20 +188,24 @@ void vcsbm(const Network * net) {
 	const int J = 10; // fix the upper bound on K at 10.
 
 	Q q(N,J);
-	Q_mu_n_k n_k;
+	Q_mu_n_k mu_n_k;
+	Q_squared_n_k squared_n_k;
 	Q_entropy entropy;
 
 	PP(entropy.entropy);
 
-	q.add_listener(&n_k);
+	q.add_listener(&mu_n_k);
+	q.add_listener(&squared_n_k);
 	q.add_listener(&entropy);
 	entropy.verify(q);
 	q.set(0,3) = 0.3;
 	PP(q.get(0,3));
 	q.set(0,3) = 0.6;
 	PP(q.get(0,3));
-	n_k.dump_me();
+	mu_n_k.dump_me();
+	squared_n_k.dump_me();
 	PP(entropy.entropy);
 	entropy.verify(q);
-	n_k.verify(q);
+	mu_n_k.verify(q);
+	squared_n_k.verify(q);
 }
