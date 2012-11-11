@@ -220,8 +220,8 @@ const EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListF
 	assert(edges->edges.size() == line_num);
 	return edges;
 }
-network :: Junction :: Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_)
-			: edge_id(edge_id_), junction_type(junction_type_), this_node_id(this_node_id_), far_node_id(far_node_id_) {
+network :: Junction :: Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_, bool i_am_the_second_self_loop_junction_)
+			: edge_id(edge_id_), junction_type(junction_type_), this_node_id(this_node_id_), far_node_id(far_node_id_), i_am_the_second_self_loop_junction(i_am_the_second_self_loop_junction_) {
 }
 bool network :: Junction :: operator <(const Junction &other) const {
 	if(this->this_node_id < other.this_node_id) return true;
@@ -240,8 +240,8 @@ const network :: Junctions * network :: build_junctions_set_from_edges(const net
 	const int E = edge_set->E();
 	for(int e=0; e < E; ++e) {
 		const network :: EdgeSet :: Edge & edge = edge_set->edges.at(e);
-		network :: Junction l(e, directed ? 1 : 0, edge.left, edge.right);
-		network :: Junction r(e, directed ?-1 : 0, edge.right, edge.left);
+		network :: Junction l(e, directed ? 1 : 0, edge.left, edge.right, false);
+		network :: Junction r(e, directed ?-1 : 0, edge.right, edge.left, edge.right == edge.left);
 		junctions->all_junctions_sorted.push_back(l);
 		junctions->all_junctions_sorted.push_back(r);
 	}

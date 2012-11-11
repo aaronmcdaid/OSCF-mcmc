@@ -55,7 +55,8 @@ struct Junction {
 			   // 0: Undirected, so it doesn't matter.
 	int this_node_id; // id of this node at this end of the edge.
 	int far_node_id; // id of the node at the other end of this  edge.
-	Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_);
+	bool i_am_the_second_self_loop_junction;
+	Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_, bool i_am_the_second_self_loop_junction);
 	bool operator <(const Junction &other) const;
 };
 struct Junctions {
