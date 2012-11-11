@@ -101,9 +101,13 @@ struct Q {
 
 // Here are a few classes that will 'listen' to changes to Q
 // and record various convenient summaries of Q, such as n_k
-struct Q_n_k : public Q :: Q_listener {
+//
+// mu_n_k = \sum_{i=1}^N Q_{ik}
+// \sum_{i=1}^N Q_{ik}^2
+
+struct Q_mu_n_k : public Q :: Q_listener {
 	vector<long double> n_k;
-	Q_n_k() : n_k(10000) {}
+	Q_mu_n_k() : n_k(10000) {}
 	virtual void notify(int, int k, long double old_val, long double new_val) {
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
@@ -119,7 +123,18 @@ struct Q_n_k : public Q :: Q_listener {
 		}
 		cout << " ..." << endl;
 	}
-	virtual ~Q_n_k() {}
+	virtual ~Q_mu_n_k() {}
+	void verify(const Q &q) const {
+		vector<long double> verify_n_k(this->n_k.size());
+		assert(!verify_n_k.empty());
+		For(node, q.Q_) {
+			for(int k=0; k < (int) node->size(); ++k) {
+				long double Q_ik = node->at(k);
+				verify_n_k.at(k) += Q_ik;
+			}
+		}
+		assert(this->n_k == verify_n_k);
+	}
 };
 
 struct Q_entropy : public Q :: Q_listener {
@@ -160,7 +175,7 @@ void vcsbm(const Network * net) {
 	const int J = 10; // fix the upper bound on K at 10.
 
 	Q q(N,J);
-	Q_n_k n_k;
+	Q_mu_n_k n_k;
 	Q_entropy entropy;
 
 	PP(entropy.entropy);
@@ -175,4 +190,5 @@ void vcsbm(const Network * net) {
 	n_k.dump_me();
 	PP(entropy.entropy);
 	entropy.verify(q);
+	n_k.verify(q);
 }
