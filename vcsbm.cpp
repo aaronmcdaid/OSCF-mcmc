@@ -10,6 +10,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 
 #include<cassert>
 #include<stdexcept>
+#include<cmath>
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 
@@ -121,15 +122,57 @@ struct Q_n_k : public Q :: Q_listener {
 	virtual ~Q_n_k() {}
 };
 
+struct Q_entropy : public Q :: Q_listener {
+	long double entropy;
+	Q_entropy() : entropy(0.0L) {}
+	// this is          \EE ( - \log Q_ik )
+	// this is  \int (- Q_ik \log Q_ik)
+	// Note the minus, this is the entropy, not the negative entropy.
+	virtual void notify(int, int, long double old_val, long double new_val) {
+		assert_0_to_1(old_val);
+		assert_0_to_1(new_val);
+		if(old_val != 0.0L) {
+			this->entropy -= - old_val * logl(old_val);
+		}
+		assert(this->entropy <= 0.0L);
+		if(new_val != 0.0L) {
+			this->entropy += - new_val * logl(new_val);
+		}
+		assert(this->entropy >= 0.0L);
+	}
+	void verify(const Q &q) const {
+		long double verify_entropy = 0.0L;
+		For(node, q.Q_) {
+			For(cell, *node) {
+				long double Q_ik = *cell;
+				assert_0_to_1(Q_ik);
+				if(Q_ik>0.0)
+					verify_entropy += - Q_ik * logl(Q_ik);
+			}
+		}
+		PP2(verify_entropy , this->entropy);
+		assert(verify_entropy == this->entropy);
+	}
+};
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
+
 	Q q(N,J);
 	Q_n_k n_k;
+	Q_entropy entropy;
+
+	PP(entropy.entropy);
+
 	q.add_listener(&n_k);
+	q.add_listener(&entropy);
+	entropy.verify(q);
 	q.set(0,3) = 0.3;
 	PP(q.get(0,3));
 	q.set(0,3) = 0.6;
 	PP(q.get(0,3));
 	n_k.dump_me();
+	PP(entropy.entropy);
+	entropy.verify(q);
 }
