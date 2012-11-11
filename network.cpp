@@ -249,3 +249,40 @@ const network :: Junctions * network :: build_junctions_set_from_edges(const net
 	assert(junctions->all_junctions_sorted.size() == (size_t)2*E);
 	return junctions;
 }
+const network :: Network * network :: build_network(const std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag) {
+	assert(weighted_flag == false);
+	const network :: NodeSet * node_set = build_node_set_from_edge_list(file_name,
+			stringIDs_flag
+			?  network :: NODE_NAME_STRING
+			:  network :: NODE_NAME_INT64
+			);
+	const network :: EdgeSet * edge_set = build_edge_set_from_edge_list(file_name,
+			weighted_flag
+			? network :: EdgeSet :: WEIGHT_INT
+			: network :: EdgeSet :: WEIGHT_NONE
+			, node_set
+			);
+	const int N = node_set -> N();
+	const int E = edge_set->edges.size();
+	PP2(N,E);
+
+	// Finally, we create the list of Junctions - by doubling the list of Edges
+	const network :: Junctions * junctions = build_junctions_set_from_edges(edge_set, directed_flag);
+	PP(junctions->all_junctions_sorted.size());
+
+#if 0 // This was the validation code, print the network out again to check it
+	for(int i=0; i<10 && i<N; ++i) { // print the first ten nodes, to make sure the order is as expected.
+		PP(node_set -> as_string(i));
+	}
+	for(size_t e = 0; e < edge_set->edges.size(); ++e) {
+		string left_str = node_set->as_string(edge_set->edges.at(e).left);
+		string right_str = node_set->as_string(edge_set->edges.at(e).right);
+		cout << left_str << ' ' << right_str << endl;
+	}
+#endif
+	Network * net = new Network;
+	net->node_set = node_set;
+	net->edge_set = edge_set;
+	net->junctions = junctions;
+	return net;
+}

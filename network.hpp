@@ -64,4 +64,11 @@ struct Junctions {
 };
 const Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool directed);
 
+struct Network { // bring all the above together
+	const network :: NodeSet * node_set;
+	const network :: EdgeSet * edge_set;
+	const network :: Junctions * junctions;
+};
+const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
+
 } // namespace network
