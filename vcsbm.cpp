@@ -11,6 +11,8 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<cassert>
 #include<stdexcept>
 
+#define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
+
 using namespace std;
 using namespace network;
 
@@ -63,7 +65,7 @@ struct Q {
 		return Setter(this, i, k);
 	}
 	void set_one_cell(int i, int k, long double val) {
-		assert(val >= 0.0L && val <= 1.0L);
+		assert_0_to_1(val);
 		try {
 			const long double old_val = this->Q_.at(i).at(k);
 			this->Q_.at(i).at(k) = val;
@@ -98,7 +100,6 @@ struct Q {
 
 // Here are a few classes that will 'listen' to changes to Q
 // and record various convenient summaries of Q, such as n_k
-#define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 struct Q_n_k : public Q :: Q_listener {
 	vector<long double> n_k;
 	Q_n_k() : n_k(10000) {}
