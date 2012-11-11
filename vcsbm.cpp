@@ -44,6 +44,10 @@ int main(int argc, char **argv) {
 	const int E = edge_set->edges.size();
 	PP2(N,E);
 
+	// Finally, we create the list of Junctions - by doubling the list of Edges
+	network :: Junctions * junctions = build_junctions_set_from_edges(edge_set, args_info.directed_flag);
+	PP(junctions->all_junctions_sorted.size());
+
 #if 0 // This was the validation code, print the network out again to check it
 	for(int i=0; i<10 && i<N; ++i) { // print the first ten nodes, to make sure the order is as expected.
 		PP(node_set -> as_string(i));
@@ -54,16 +58,4 @@ int main(int argc, char **argv) {
 		cout << left_str << ' ' << right_str << endl;
 	}
 #endif
-
-	// Finally, we create the list of Junctions - by doubling the list of Edges
-	network :: Junctions junctions;
-	for(int e=0; e<E; ++e) {
-		const network :: EdgeSet :: Edge & edge = edge_set->edges.at(e);
-		network :: Junction l(e, args_info.directed_flag ? 1 : 0, edge.left, edge.right);
-		network :: Junction r(e, args_info.directed_flag ?-1 : 0, edge.right, edge.left);
-		junctions.all_junctions_sorted.push_back(l);
-		junctions.all_junctions_sorted.push_back(r);
-	}
-	junctions.finish(); // tell junctions that we've finished telling it about the edges, it's ready to sort itself.
-	assert(junctions.all_junctions_sorted.size() == (size_t)2*E);
 }

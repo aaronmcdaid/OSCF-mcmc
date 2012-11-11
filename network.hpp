@@ -44,6 +44,7 @@ struct EdgeSet {
 		} w_union;
 	};
 	std :: vector< Edge > edges;
+	inline int E() const { return this->edges.size(); }
 };
 EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet * node_set);
 
@@ -61,5 +62,6 @@ struct Junctions {
 	std :: vector<Junction> all_junctions_sorted; // we'll sort this later
 	void finish();
 };
+Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool directed);
 
 } // namespace network

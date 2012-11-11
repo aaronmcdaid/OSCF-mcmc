@@ -235,3 +235,17 @@ bool network :: Junction :: operator <(const Junction &other) const {
 void network :: Junctions :: finish() {
 	std :: sort(this->all_junctions_sorted.begin(), this->all_junctions_sorted.end());
 }
+network :: Junctions * network :: build_junctions_set_from_edges(const network :: EdgeSet * edge_set, const bool directed) {
+	network :: Junctions * junctions = new network :: Junctions;
+	const int E = edge_set->E();
+	for(int e=0; e < E; ++e) {
+		const network :: EdgeSet :: Edge & edge = edge_set->edges.at(e);
+		network :: Junction l(e, directed ? 1 : 0, edge.left, edge.right);
+		network :: Junction r(e, directed ?-1 : 0, edge.right, edge.left);
+		junctions->all_junctions_sorted.push_back(l);
+		junctions->all_junctions_sorted.push_back(r);
+	}
+	junctions->finish(); // tell junctions that we've finished telling it about the edges, it's ready to sort itself.
+	assert(junctions->all_junctions_sorted.size() == (size_t)2*E);
+	return junctions;
+}
