@@ -22,7 +22,7 @@ struct NodeSet_ : public NodeSet {
 	set<T> set_of_names;
 	vector<T> vector_of_names;
 	virtual void insert_string_version_of_name(string);
-	virtual string as_string(int);
+	virtual string as_string(int) const;
 	virtual void finish_me();
 	virtual int N() const;
 	virtual NodeNameType get_NodeNameType() const;
@@ -47,13 +47,13 @@ struct NodeSet_ : public NodeSet {
 		assert(this->set_of_names.empty());
 	}
 	template<>
-	string NodeSet_<string> :: as_string(int node_id) {
+	string NodeSet_<string> :: as_string(int node_id) const {
 		assert(node_id >= 0);
 		assert(node_id < (int)this->vector_of_names.size());
 		return this->vector_of_names.at(node_id);
 	}
 	template<>
-	string NodeSet_<int64_t> :: as_string(int node_id) {
+	string NodeSet_<int64_t> :: as_string(int node_id) const {
 		assert(node_id >= 0);
 		assert(node_id < (int)this->vector_of_names.size());
 		const int64_t node_name = this->vector_of_names.at(node_id);
@@ -137,7 +137,7 @@ struct NodeSet_Impl : public NodeSet_I {
 	}
 };
 
-NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type) {
+const NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type) {
 	ifstream edgelist(edgeListFileName);
 	if(!edgelist) {
 		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
@@ -170,7 +170,7 @@ NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListFileNam
 	nodes->finish_me();
 	return nodes;
 }
-EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet * node_set) {
+const EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, const NodeSet * node_set) {
 	ifstream edgelist(edgeListFileName);
 	if(!edgelist) {
 		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
@@ -235,7 +235,7 @@ bool network :: Junction :: operator <(const Junction &other) const {
 void network :: Junctions :: finish() {
 	std :: sort(this->all_junctions_sorted.begin(), this->all_junctions_sorted.end());
 }
-network :: Junctions * network :: build_junctions_set_from_edges(const network :: EdgeSet * edge_set, const bool directed) {
+const network :: Junctions * network :: build_junctions_set_from_edges(const network :: EdgeSet * edge_set, const bool directed) {
 	network :: Junctions * junctions = new network :: Junctions;
 	const int E = edge_set->E();
 	for(int e=0; e < E; ++e) {

@@ -29,12 +29,12 @@ int main(int argc, char **argv) {
 
 	const char * edgeListFileName   = args_info.inputs[0];
 
-	network :: NodeSet * node_set = build_node_set_from_edge_list(edgeListFileName,
+	const network :: NodeSet * node_set = build_node_set_from_edge_list(edgeListFileName,
 			args_info.stringIDs_flag
 			?  network :: NODE_NAME_STRING
 			:  network :: NODE_NAME_INT64
 			);
-	network :: EdgeSet * edge_set = build_edge_set_from_edge_list(edgeListFileName,
+	const network :: EdgeSet * edge_set = build_edge_set_from_edge_list(edgeListFileName,
 			args_info.weighted_flag
 			? network :: EdgeSet :: WEIGHT_INT
 			: network :: EdgeSet :: WEIGHT_NONE
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	PP2(N,E);
 
 	// Finally, we create the list of Junctions - by doubling the list of Edges
-	network :: Junctions * junctions = build_junctions_set_from_edges(edge_set, args_info.directed_flag);
+	const network :: Junctions * junctions = build_junctions_set_from_edges(edge_set, args_info.directed_flag);
 	PP(junctions->all_junctions_sorted.size());
 
 #if 0 // This was the validation code, print the network out again to check it

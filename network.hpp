@@ -10,7 +10,7 @@ struct NodeSet {
 	// So yes, the interface is entirely string-based, as this is all that you will need
 	// most of the time.  But under the hood they may be stored, and sorted, as strings.
 	virtual void insert_string_version_of_name(std :: string) = 0;
-	virtual std :: string as_string(int) = 0;
+	virtual std :: string as_string(int) const = 0;
 	virtual void finish_me() = 0;
 	virtual int N() const = 0;
 	virtual ~NodeSet() {}
@@ -26,7 +26,7 @@ struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
 	}
 };
 
-NodeSet * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
+const NodeSet * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
 
 struct EdgeSet {
 	// This is a pretty dumb object, it just knows the edges in the order in which they appeared in the text file.
@@ -46,7 +46,7 @@ struct EdgeSet {
 	std :: vector< Edge > edges;
 	inline int E() const { return this->edges.size(); }
 };
-EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, NodeSet * node_set);
+const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, const NodeSet * node_set);
 
 struct Junction {
 	int edge_id; // edge_id: a number between 0 and E
@@ -62,6 +62,6 @@ struct Junctions {
 	std :: vector<Junction> all_junctions_sorted; // we'll sort this later
 	void finish();
 };
-Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool directed);
+const Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool directed);
 
 } // namespace network
