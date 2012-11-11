@@ -55,8 +55,11 @@ struct Q {
 		int i;
 		int k;
 		Setter(Q* q_, int i_, int k_) : q(q_), i(i_), k(k_) {}
+		void operator = (long double val) const {
+			this->q->set_one_cell(this->i, this->k, val);
+		}
 	};
-	const Setter setter (int i, int k) {
+	const Setter set (int i, int k) {
 		return Setter(this, i, k);
 	}
 	void set_one_cell(int i, int k, long double val) {
@@ -75,6 +78,6 @@ void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
 	Q q(N,J);
-	q.set_one_cell(0,0,0.5);
+	q.set(0,0) = 0.3;
 	PP(q.get(0,0));
 }
