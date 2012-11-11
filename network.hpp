@@ -68,6 +68,7 @@ struct Network { // bring all the above together
 	const network :: NodeSet * node_set;
 	const network :: EdgeSet * edge_set;
 	const network :: Junctions * junctions;
+	inline int N() const { return this->node_set->N(); }
 };
 const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
 
