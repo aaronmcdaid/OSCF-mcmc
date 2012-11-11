@@ -11,10 +11,12 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<cassert>
 #include<stdexcept>
 #include<cmath>
+#include<tr1/unordered_map>
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 
 using namespace std;
+using namespace std :: tr1;
 using namespace network;
 
 void vcsbm(const Network * net);
@@ -183,6 +185,31 @@ struct Q_entropy : public Q :: Q_listener {
 	}
 };
 
+template<int power>
+struct Q_templated_y_kl : public Q :: Q_listener {
+	// Summing ONLY across the edges,
+	// this will store Q_ik \times Q_jl,
+	// or their square.
+	// Must take care of direction too.
+	// If directed, y_kl is the edges from k to l
+	// If undirected, make k the smaller cluster-id
+	unordered_map< pair<int,int> , long double> y_kl;
+	const Network * const net;
+	Q_templated_y_kl(const Network *net_) : net(net_) {}
+
+	virtual void notify(int i, int , long double , long double ) {
+		// Must consider all the Junctions at node i
+		// .. but beware of self loops.
+		For(junc_id, net->i.at(i).my_junctions) {
+			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
+			PP2(junc.this_node_id, junc.far_node_id);
+			assert(junc.this_node_id == i);
+		}
+	}
+};
+typedef Q_templated_y_kl<1> Q_mu_y_kl;
+typedef Q_templated_y_kl<2> Q_squared_y_kl;
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
@@ -191,12 +218,14 @@ void vcsbm(const Network * net) {
 	Q_mu_n_k mu_n_k;
 	Q_squared_n_k squared_n_k;
 	Q_entropy entropy;
+	Q_squared_y_kl squared_y_kl(net);
 
 	PP(entropy.entropy);
 
 	q.add_listener(&mu_n_k);
 	q.add_listener(&squared_n_k);
 	q.add_listener(&entropy);
+	q.add_listener(&squared_y_kl);
 	entropy.verify(q);
 	q.set(0,3) = 0.3;
 	PP(q.get(0,3));
