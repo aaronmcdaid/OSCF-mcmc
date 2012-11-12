@@ -124,7 +124,10 @@ struct Q_template_n_k : public Q :: Q_listener {
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
 		this->n_k.at(k) -= old_val;
-		assert(this->n_k.at(k) >= 0.0L);
+		if(this->n_k.at(k)<0.0L) {
+			assert(VERYCLOSE(this->n_k.at(k) , 0.0L));
+			this->n_k.at(k) = 0.0L;
+		}
 		this->n_k.at(k) += new_val;
 	}
 	void dump_me() const {
