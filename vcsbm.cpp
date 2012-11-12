@@ -235,6 +235,85 @@ static long double gamma_k(const int k) {
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
+long double calculate_everything_slowly(const Q *q, Network * net) {
+	const int N = q->N;
+	const int E = net->edge_set->E();
+	const int J = 10;
+	long double entropy = 0.0L;
+	vector<long double> mu_n_k(J);
+	vector<long double> sq_n_k(J);
+	for(int i=0; i<N; ++i) {
+		for(int k=0; k<J; ++k) {
+			mu_n_k.at(k) += q->get(i,k);
+			sq_n_k.at(k) += q->get(i,k)*q->get(i,k);
+		}
+	}
+	{ // assert that the sum over mu_n_k == N
+		long double  sum_of_mu_n_k = 0;
+		For(x, mu_n_k) {
+			sum_of_mu_n_k += *x;
+		}
+		assert(sum_of_mu_n_k == N);
+	}
+
+	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
+	vector< vector<long double> > sq_y_kl(J, vector<long double>(J) );
+	assert(E == (int)net->edge_set->edges.size());
+	for(int m=0; m<E; ++m) {
+		EdgeSet :: Edge edge = net->edge_set->edges.at(m);
+		int i = edge.left;
+		int j = edge.right;
+		for(int k=0; k<J; ++k) {
+			for(int l=0; l<J; ++l) {
+				const long double Qik = q->get(i,k);
+				const long double Qjl = q->get(j,l);
+				mu_y_kl.at(k).at(l) += Qik * Qjl;
+				sq_y_kl.at(k).at(l) += Qik * Qjl * Qik * Qjl;
+			}
+		}
+	}
+	{ // assert that the sum over mu_y_kl == E
+		long double sum_of_edge_partial_memberships = 0;
+		For(one_cluster, mu_y_kl) {
+			For(one_block, *one_cluster) {
+				sum_of_edge_partial_memberships += *one_block;
+			}
+		}
+		assert(sum_of_edge_partial_memberships == E);
+	}
+
+	long double first_4_terms = 0.0L;
+
+	// First term, E log Gamma( n_k + gamma_k )
+	for(int k=0; k<J; k++) {
+		const long double mu = mu_n_k.at(k) + gamma_k(k);
+		const long double var = mu - sq_n_k.at(k);
+		first_4_terms += exp_log_Gamma_Normal( mu, var );
+	}
+	// Second term, E log Gamma (y_kl + Beta_1)
+	for(int k=0; k<J; k++) {
+		for(int l=k; l<J; l++) {
+			const long double mu = mu_y_kl.at(k).at(l) + beta_1;
+			const long double var = mu - sq_y_kl.at(k).at(l);
+			first_4_terms += exp_log_Gamma_Normal( mu, var );
+
+			const long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l) + beta_1 + beta_2;
+			const long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
+			first_4_terms -= exp_log_Gamma_Normal( mu_p_kl, var_p_kl );
+
+			//for the non-edges
+			const long double nonEdge_mu = mu_p_kl - mu;
+			const long double nonEdge_var = var_p_kl - var;
+			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu, nonEdge_var );
+		}
+	}
+
+	// NOTE, we DO NOT include the entropy term in the return.
+
+	return first_4_terms;
+}
+// The code above calculates stuff, below we have the actual algorithm.
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
