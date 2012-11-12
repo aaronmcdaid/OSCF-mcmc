@@ -15,6 +15,8 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<gsl/gsl_rng.h>
 #include<gsl/gsl_randist.h>
 #include<algorithm>
+#include<iomanip>
+#include"format_flag_stack/format_flag_stack.hpp"
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -24,6 +26,8 @@ using namespace std :: tr1;
 using namespace network;
 
 void vcsbm(const Network * net);
+
+format_flag_stack :: FormatFlagStack stack;
 
 int main(int argc, char **argv) {
 	// Parse the args - there should be exactly one arg, the edge list
@@ -46,6 +50,9 @@ int main(int argc, char **argv) {
 
 	vcsbm(net);
 }
+
+const int J = 10; // fix the upper bound on K at 10.
+
 struct Q {
 	// the variational lower bound is a function of Q.
 	// We must keep track of various convenient summaries of Q, such as n_k,
@@ -106,6 +113,15 @@ struct Q {
 		}
 	}
 };
+
+void dump(const Q *q) {
+	for(int i=0; i<q->N; i++) {
+		for(int k=0; k<J; ++k) {
+			cout << '\t' << stack.push << fixed << setw(4) << setprecision(2) << q->get(i,k) << stack.pop;
+		}
+		cout << endl;
+	}
+}
 
 // Here are a few classes that will 'listen' to changes to Q
 // and record various convenient summaries of Q, such as n_k
@@ -221,8 +237,6 @@ gsl_rng * global_r = NULL;
 
 // A few globals (sorry) but they only help in verification and assertions
 const Q_entropy *global_q_entropy;
-
-const int J = 10; // fix the upper bound on K at 10.
 
 // Hyperparameters
 const long double alpha_for_stick_breaking = 1.0L;
@@ -427,10 +441,13 @@ void vcsbm(const Network * net) {
 	// everything assigned somewhere
 	cout << "everything assigned somewhere" << endl;
 	calculate_everything_slowly(&q, net, true);
-	for(int repeat = 0; repeat < 100; ++repeat)
-	for(int i=0; i<N; i++) {
-		one_node_all_k(&q, net, i, true);
-		PP(entropy.entropy);
-		mu_n_k.dump_me();
+	for(int repeat = 0; repeat < 3; ++repeat) {
+		PP(repeat);
+		for(int i=0; i<N; i++) {
+			one_node_all_k(&q, net, i, true);
+			PP(entropy.entropy);
+			mu_n_k.dump_me();
+		}
 	}
+	dump(&q);
 }
