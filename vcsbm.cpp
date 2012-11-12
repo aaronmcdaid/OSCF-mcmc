@@ -12,6 +12,9 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<stdexcept>
 #include<cmath>
 #include<tr1/unordered_map>
+#include<gsl/gsl_rng.h>
+#include<gsl/gsl_randist.h>
+
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 
@@ -213,9 +216,14 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 typedef Q_templated_y_kl<1> Q_mu_y_kl;
 typedef Q_templated_y_kl<2> Q_squared_y_kl;
 
+gsl_rng * r = NULL;
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
+
+	r = gsl_rng_alloc (gsl_rng_taus);
+	gsl_rng_set(r, args_info.seed_arg);
 
 	Q q(N,J);
 	Q_mu_n_k mu_n_k;
