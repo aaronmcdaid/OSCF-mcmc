@@ -365,9 +365,11 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 
 	// First term, E log Gamma( n_k + gamma_k )
 	for(int k=0; k<J; k++) {
-		const long double mu = mu_n_k.at(k) + gamma_k(k);
+		const long double mu = mu_n_k.at(k);
 		const long double var = mu - sq_n_k.at(k);
-		first_4_terms += exp_log_Gamma_Normal( mu, var );
+		assert(mu >= 0.0L);
+		assert(var >= 0.0L);
+		first_4_terms += exp_log_Gamma_Normal( mu + gamma_k(k), var );
 	}
 	// Second term, E log Gamma (y_kl + Beta_1)
 //*
