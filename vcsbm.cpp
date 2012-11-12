@@ -218,6 +218,23 @@ typedef Q_templated_y_kl<2> Q_squared_y_kl;
 
 gsl_rng * r = NULL;
 
+// Hyperparameters
+const long double alpha_for_stick_breaking = 1.0L;
+const long double beta_1 = 1.0L;
+const long double beta_2 = 1.0L;
+
+static long double exp_log_Gamma_Normal(const long double mean, const long double variance) {
+	return (mean - 0.5L) * logl(mean)
+		+ (0.5L) * variance * ( 1.0L/mean + 0.25L/mean/mean )
+		- mean
+		+ 0.5L * logl(2 * M_PI);
+}
+static long double gamma_k(const int k) {
+	assert(k>=0);
+	assert(k<J);
+	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
+}
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
 	const int J = 10; // fix the upper bound on K at 10.
