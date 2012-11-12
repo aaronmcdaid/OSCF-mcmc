@@ -53,6 +53,18 @@ int main(int argc, char **argv) {
 }
 
 const int J = 10; // fix the upper bound on K at 10.
+static void should_be_positive_(long double &x, const int line_no) {
+	assert(x==x); // it's non NaN
+	if(x<0.0L) {
+		if(!VERYCLOSE(x,0.0L)) {
+			PP2(line_no, x);
+		}
+		assert(VERYCLOSE(x,0.0L));
+		x = 0.0L;
+	}
+}
+#define SHOULD_BE_POSITIVE(x) should_be_positive_(x, __LINE__);
+
 
 struct Q {
 	// the variational lower bound is a function of Q.
@@ -391,7 +403,7 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 				verify_num_pairs += mu_slowp_kl.at(k).at(l);
 			}
 		}
-		assert(verify_num_pairs == N * (N+1) / 2);
+		assert(VERYCLOSE(verify_num_pairs , N * (N+1) / 2));
 	}
 
 	if(everything_assigned_therefore_test) { // assert that the sum over mu_y_kl == E
@@ -442,8 +454,8 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 				assert(0 == sq_y_kl.at(k).at(l));
 				continue;
 			}
-			const long double mu = mu_y_kl.at(k).at(l);
-			const long double var_y_kl = mu - sq_y_kl.at(k).at(l);
+			long double mu = mu_y_kl.at(k).at(l);
+			long double var_y_kl = mu - sq_y_kl.at(k).at(l);
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
@@ -460,8 +472,8 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 			}
 
 			//for the non-edges
-			const long double nonEdge_mu = mu_p_kl - mu;
-			const long double nonEdge_var = var_p_kl - var_y_kl;
+			long double nonEdge_mu = mu_p_kl - mu;
+			long double nonEdge_var = var_p_kl - var_y_kl;
 
 			/*
 			cout << k << ',' << l
@@ -471,12 +483,12 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 				<< endl;
 				*/
 
-			assert(mu >= 0.0L);
-			assert(var_y_kl >= 0.0L);
-			assert(mu_p_kl >= 0.0L);
-			assert(var_p_kl >= 0.0L);
-			assert(nonEdge_mu >= 0.0L);
-			assert(nonEdge_var >= 0.0L);
+			SHOULD_BE_POSITIVE(mu);
+			SHOULD_BE_POSITIVE(var_y_kl);
+			SHOULD_BE_POSITIVE(mu_p_kl);
+			SHOULD_BE_POSITIVE(var_p_kl);
+			SHOULD_BE_POSITIVE(nonEdge_mu);
+			SHOULD_BE_POSITIVE(nonEdge_var);
 
 			first_4_terms += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
 			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
