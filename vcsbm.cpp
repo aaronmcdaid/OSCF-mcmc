@@ -129,9 +129,8 @@ void dump(const Q *q, const Network *net) {
 		cout << net->i.at(i).total_degree();
 		for(int k=0; k<J; ++k) {
 			const long double Q_ik = q->get(i,k);
-			cout << '\t' << stack.push << fixed << setw(5) << setprecision(3) << Q_ik << stack.pop;
-			if(Q_ik > 0.5)
-				cout << '+';
+			cout << '\t' << stack.push << fixed << setw(7) << setprecision(5) << Q_ik << stack.pop;
+			// if(Q_ik > 0.5) cout << '+';
 		}
 		cout << endl;
 	}
@@ -355,6 +354,44 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 				sq_y_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
 			}
 		}
+	}
+
+	// These next structures should be removed sometimes.  For now,
+	// they are just for paranoid testing of p_kl
+	vector< vector<long double> > mu_slowp_kl(J, vector<long double>(J) );
+	vector< vector<long double> > sq_slowp_kl(J, vector<long double>(J) );
+	for(int i=0; i<N; ++i) {
+	for(int j=i; j<N; ++j) { // undirected j starts at i
+		for(int k=0; k<J; ++k) {
+			for(int l=0; l<J; ++l) {
+				const long double Qik = q->get(i,k);
+				const long double Qjl = q->get(j,l);
+				int k2 = k;
+				int l2 = l;
+				{ // if undirected, we should have k2 <= j2
+					if(k2>l2)
+						swap(k2,l2);
+				}
+				mu_slowp_kl.at(k2).at(l2) += Qik * Qjl;
+				sq_slowp_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
+			}
+		}
+	}
+	}
+	{
+		long double verify_num_pairs = 0.0L;
+		for(int k=0; k<J; ++k) {
+			for(int l=0; l<J; ++l) {
+				if(l<k) {
+					assert(0==mu_slowp_kl.at(k).at(l));
+					assert(0==sq_slowp_kl.at(k).at(l));
+					continue;
+				}
+				PP2(mu_slowp_kl.at(k).at(l), sq_slowp_kl.at(k).at(l));
+				verify_num_pairs += mu_slowp_kl.at(k).at(l);
+			}
+		}
+		assert(verify_num_pairs == N * (N+1) / 2);
 	}
 
 	if(everything_assigned_therefore_test) { // assert that the sum over mu_y_kl == E
