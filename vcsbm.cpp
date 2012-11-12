@@ -14,6 +14,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<tr1/unordered_map>
 #include<gsl/gsl_rng.h>
 #include<gsl/gsl_randist.h>
+#include<algorithm>
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -216,12 +217,18 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 typedef Q_templated_y_kl<1> Q_mu_y_kl;
 typedef Q_templated_y_kl<2> Q_squared_y_kl;
 
-gsl_rng * r = NULL;
+gsl_rng * global_r = NULL;
+
+// A few globals (sorry) but they only help in verification and assertions
+const Q_entropy *global_q_entropy;
+
+const int J = 10; // fix the upper bound on K at 10.
 
 // Hyperparameters
 const long double alpha_for_stick_breaking = 1.0L;
 const long double beta_1 = 1.0L;
 const long double beta_2 = 1.0L;
+
 
 static long double exp_log_Gamma_Normal(const long double mean, const long double variance) {
 	return (mean - 0.5L) * logl(mean)
@@ -235,11 +242,10 @@ static long double gamma_k(const int k) {
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
-long double calculate_everything_slowly(const Q *q, Network * net) {
+
+long double calculate_everything_slowly(const Q *q, const Network * net, const bool everything_assigned_therefore_test = false) {
 	const int N = q->N;
 	const int E = net->edge_set->E();
-	const int J = 10;
-	long double entropy = 0.0L;
 	vector<long double> mu_n_k(J);
 	vector<long double> sq_n_k(J);
 	for(int i=0; i<N; ++i) {
@@ -248,12 +254,13 @@ long double calculate_everything_slowly(const Q *q, Network * net) {
 			sq_n_k.at(k) += q->get(i,k)*q->get(i,k);
 		}
 	}
-	{ // assert that the sum over mu_n_k == N
+
+	if(everything_assigned_therefore_test) { // assert that the sum over mu_n_k == N
 		long double  sum_of_mu_n_k = 0;
 		For(x, mu_n_k) {
 			sum_of_mu_n_k += *x;
 		}
-		assert(sum_of_mu_n_k == N);
+		assert(VERYCLOSE(sum_of_mu_n_k, N));
 	}
 
 	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
@@ -272,14 +279,15 @@ long double calculate_everything_slowly(const Q *q, Network * net) {
 			}
 		}
 	}
-	{ // assert that the sum over mu_y_kl == E
+
+	if(everything_assigned_therefore_test) { // assert that the sum over mu_y_kl == E
 		long double sum_of_edge_partial_memberships = 0;
 		For(one_cluster, mu_y_kl) {
 			For(one_block, *one_cluster) {
 				sum_of_edge_partial_memberships += *one_block;
 			}
 		}
-		assert(sum_of_edge_partial_memberships == E);
+		assert(VERYCLOSE(sum_of_edge_partial_memberships , E));
 	}
 
 	long double first_4_terms = 0.0L;
@@ -291,6 +299,8 @@ long double calculate_everything_slowly(const Q *q, Network * net) {
 		first_4_terms += exp_log_Gamma_Normal( mu, var );
 	}
 	// Second term, E log Gamma (y_kl + Beta_1)
+//*
+	// cout << endl;
 	for(int k=0; k<J; k++) {
 		for(int l=k; l<J; l++) {
 			const long double mu = mu_y_kl.at(k).at(l) + beta_1;
@@ -305,8 +315,17 @@ long double calculate_everything_slowly(const Q *q, Network * net) {
 			const long double nonEdge_mu = mu_p_kl - mu;
 			const long double nonEdge_var = var_p_kl - var;
 			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu, nonEdge_var );
+
+			/*
+			cout << k << ',' << l
+				<< '\t' << mu << '(' << var << ')'
+				<< '\t' << mu_p_kl << '(' << var_p_kl << ')'
+				<< '\t' << nonEdge_mu << '(' << nonEdge_var << ')'
+				<< endl;
+				*/
 		}
 	}
+// */
 
 	// NOTE, we DO NOT include the entropy term in the return.
 
@@ -314,12 +333,64 @@ long double calculate_everything_slowly(const Q *q, Network * net) {
 }
 // The code above calculates stuff, below we have the actual algorithm.
 
+void one_node_all_k(Q *q, const Network * net, const int node_id, const bool every_node_already_assigned = false /* *probably* not all assigned */);
+
+void one_random_node_all_k(Q *q, const Network * net) {
+	const int N = q->N;
+	const double unif = gsl_rng_uniform(global_r);
+	const int random_node = N * unif;
+	one_node_all_k(q, net, random_node);
+}
+
+void one_node_all_k(Q *q, const Network * net, const int node_id, const bool every_node_already_assigned /* = false *probably* not all assigned */) {
+	// pick one node at random,
+	// remove it from all its clusters,
+	// reassign to one cluster at a time
+	const int num_clusters = q->Q_.at(node_id).size();
+	assert(J==num_clusters);
+	for (int k = 0; k < num_clusters; ++k) {
+		q->set(node_id, k) = 0;
+	}
+	// store the baseline ?
+	vector<long double> scores(J);
+	for (int k = 0; k < num_clusters; ++k) {
+		q->set(node_id, k) = 1;
+		scores.at(k) = calculate_everything_slowly(q, net, every_node_already_assigned);
+		q->set(node_id, k) = 0;
+	}
+	const long double max_score = *max_element(scores.begin(), scores.end());
+	For(score, scores) {
+		// PP(*score);
+		*score -= max_score;
+	}
+	// For(score, scores) { PP(*score); }
+	long double total = 0.0L;
+	For(score, scores) {
+		total += expl(*score);
+	}
+	For(score, scores) {
+		*score  = expl(*score) / total;
+	}
+	long double check_new_total_is_1 = 0.0L;
+	For(score, scores) {
+		// PP(*score);
+		check_new_total_is_1 += *score;
+	}
+	// PP(check_new_total_is_1 - 1.0L);
+	assert(VERYCLOSE(check_new_total_is_1, 1.0L));
+	// scores.front() += 1.0L - check_new_total_is_1;
+	// assert(scores.front()>=0.0L);
+
+	for(int k=0; k<J; ++k) {
+		q->set(node_id, k) = scores.at(k);
+	}
+}
+
 void vcsbm(const Network * net) {
 	const int N = net->N();
-	const int J = 10; // fix the upper bound on K at 10.
 
-	r = gsl_rng_alloc (gsl_rng_taus);
-	gsl_rng_set(r, args_info.seed_arg);
+	global_r = gsl_rng_alloc (gsl_rng_taus);
+	gsl_rng_set(global_r, args_info.seed_arg);
 
 	Q q(N,J);
 	Q_mu_n_k mu_n_k;
@@ -333,6 +404,9 @@ void vcsbm(const Network * net) {
 	q.add_listener(&squared_n_k);
 	q.add_listener(&entropy);
 	q.add_listener(&squared_y_kl);
+	global_q_entropy = &entropy;
+
+
 	entropy.verify(q);
 	q.set(0,3) = 0.3;
 	PP(q.get(0,3));
@@ -344,4 +418,19 @@ void vcsbm(const Network * net) {
 	entropy.verify(q);
 	mu_n_k.verify(q);
 	squared_n_k.verify(q);
+
+	for(int i=0; i<N; i++) {
+		one_node_all_k(&q, net, i);
+		PP(entropy.entropy);
+		mu_n_k.dump_me();
+	}
+	// everything assigned somewhere
+	cout << "everything assigned somewhere" << endl;
+	calculate_everything_slowly(&q, net, true);
+	for(int repeat = 0; repeat < 100; ++repeat)
+	for(int i=0; i<N; i++) {
+		one_node_all_k(&q, net, i, true);
+		PP(entropy.entropy);
+		mu_n_k.dump_me();
+	}
 }
