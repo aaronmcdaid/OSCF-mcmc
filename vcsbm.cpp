@@ -422,10 +422,6 @@ void vcsbm(const Network * net) {
 
 
 	entropy.verify(q);
-	q.set(0,3) = 0.3;
-	PP(q.get(0,3));
-	q.set(0,3) = 0.6;
-	PP(q.get(0,3));
 	mu_n_k.dump_me();
 	squared_n_k.dump_me();
 	PP(entropy.entropy);
