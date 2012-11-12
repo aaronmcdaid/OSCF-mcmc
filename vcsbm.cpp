@@ -206,7 +206,6 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 		// .. but beware of self loops.
 		For(junc_id, net->i.at(i).my_junctions) {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
-			PP2(junc.this_node_id, junc.far_node_id);
 			assert(junc.this_node_id == i);
 		}
 	}
