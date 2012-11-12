@@ -345,8 +345,14 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 			for(int l=0; l<J; ++l) {
 				const long double Qik = q->get(i,k);
 				const long double Qjl = q->get(j,l);
-				mu_y_kl.at(k).at(l) += Qik * Qjl;
-				sq_y_kl.at(k).at(l) += Qik * Qjl * Qik * Qjl;
+				int k2 = k;
+				int l2 = l;
+				{ // if undirected, we should have k2 <= j2
+					if(k2>l2)
+						swap(k2,l2);
+				}
+				mu_y_kl.at(k2).at(l2) += Qik * Qjl;
+				sq_y_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
 			}
 		}
 	}
@@ -375,7 +381,14 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 //*
 	// cout << endl;
 	for(int k=0; k<J; k++) {
-		for(int l=k; l<J; l++) {
+		for(int l=0; l<J; l++) {
+			if(l<k) {
+				// if undirected, these block don't really count.
+				// In particular y_kl should be zero
+				assert(0 == mu_y_kl.at(k).at(l));
+				assert(0 == sq_y_kl.at(k).at(l));
+				continue;
+			}
 			const long double mu = mu_y_kl.at(k).at(l);
 			const long double var_y_kl = mu - sq_y_kl.at(k).at(l);
 			assert(mu >= 0.0L);
