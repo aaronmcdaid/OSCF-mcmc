@@ -71,6 +71,8 @@ struct Q {
 		assert_0_to_1(val);
 		try {
 			const long double old_val = this->Q_.at(i).at(k);
+			if(old_val == val)
+				return;
 			this->Q_.at(i).at(k) = val;
 			this->notify_listeners(i,k,old_val, val);
 		} catch (std :: out_of_range &e) {
@@ -122,9 +124,8 @@ struct Q_template_n_k : public Q :: Q_listener {
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
 		this->n_k.at(k) -= old_val;
-		assert_0_to_1(this->n_k.at(k));
+		assert(this->n_k.at(k) >= 0.0L);
 		this->n_k.at(k) += new_val;
-		assert_0_to_1(this->n_k.at(k));
 	}
 	void dump_me() const {
 		cout << " n_k[0:20] : ";
@@ -164,7 +165,7 @@ struct Q_entropy : public Q :: Q_listener {
 		if(old_val != 0.0L) {
 			this->entropy -= - old_val * logl(old_val);
 		}
-		assert(this->entropy <= 0.0L);
+		assert(this->entropy >= 0.0L);
 		if(new_val != 0.0L) {
 			this->entropy += - new_val * logl(new_val);
 		}
