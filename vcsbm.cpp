@@ -114,10 +114,23 @@ struct Q {
 	}
 };
 
-void dump(const Q *q) {
-	for(int i=0; i<q->N; i++) {
+void dump(const Q *q, const Network *net) {
+		cout << "node_id\t";
+		cout << "node_name\t";
+		cout << "degree\t";
 		for(int k=0; k<J; ++k) {
-			cout << '\t' << stack.push << fixed << setw(4) << setprecision(2) << q->get(i,k) << stack.pop;
+			cout << "\tn_" << k;
+		}
+		cout << endl;
+	for(int i=0; i<q->N; i++) {
+		cout << i << '\t';
+		cout << net->i.at(i).total_degree() << '\t';
+		cout << net->node_set->as_string(i);
+		for(int k=0; k<J; ++k) {
+			const long double Q_ik = q->get(i,k);
+			cout << '\t' << stack.push << fixed << setw(4) << setprecision(2) << Q_ik << stack.pop;
+			if(Q_ik > 0.5)
+				cout << '+';
 		}
 		cout << endl;
 	}

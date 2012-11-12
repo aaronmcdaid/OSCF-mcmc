@@ -67,6 +67,7 @@ const Junctions * build_junctions_set_from_edges(const EdgeSet * edge_set, bool 
 
 struct OneNode {
 	std :: vector<int> my_junctions; // all of the junction ids associated with this node
+	inline int total_degree() const { return this->my_junctions.size(); }
 };
 
 struct Network { // bring all the above together
