@@ -259,6 +259,8 @@ const long double beta_2 = 1.0L;
 
 
 static long double exp_log_Gamma_Normal(const long double mean, const long double variance) {
+	assert(variance >= 0.0L);
+	assert(mean >= 0.0L);
 	return (mean - 0.5L) * logl(mean)
 		+ (0.5L) * variance * ( 1.0L/mean + 0.25L/mean/mean )
 		- mean
