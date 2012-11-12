@@ -125,11 +125,11 @@ void dump(const Q *q, const Network *net) {
 		cout << endl;
 	for(int i=0; i<q->N; i++) {
 		cout << i << '\t';
-		cout << net->i.at(i).total_degree() << '\t';
-		cout << net->node_set->as_string(i);
+		cout << net->node_set->as_string(i) << '\t';
+		cout << net->i.at(i).total_degree();
 		for(int k=0; k<J; ++k) {
 			const long double Q_ik = q->get(i,k);
-			cout << '\t' << stack.push << fixed << setw(4) << setprecision(2) << Q_ik << stack.pop;
+			cout << '\t' << stack.push << fixed << setw(5) << setprecision(3) << Q_ik << stack.pop;
 			if(Q_ik > 0.5)
 				cout << '+';
 		}
