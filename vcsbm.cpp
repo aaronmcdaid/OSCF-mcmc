@@ -390,7 +390,7 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 		}
 	}
 	}
-	{
+	if(everything_assigned_therefore_test) {
 		long double verify_num_pairs = 0.0L;
 		for(int k=0; k<J; ++k) {
 			for(int l=0; l<J; ++l) {
