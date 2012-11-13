@@ -18,6 +18,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<algorithm>
 #include<iomanip>
 #include"format_flag_stack/format_flag_stack.hpp"
+#include<limits>
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -583,6 +584,9 @@ void vcsbm(const Network * net) {
 	q.add_listener(&squared_y_kl);
 	global_q_entropy = &entropy;
 
+	// To store the best one found so far.
+	Q q_copy(N,J);
+	long double best_lower_bound_found = - numeric_limits<long double> :: max();
 
 	entropy.verify(q);
 	mu_n_k.dump_me();
@@ -606,6 +610,16 @@ void vcsbm(const Network * net) {
 			one_node_all_k(&q, net, i, true);
 			PP(entropy.entropy);
 			mu_n_k.dump_me();
+		}
+		entropy.verify(q);
+		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+		PP(lower_bound);
+		{
+			if(best_lower_bound_found < lower_bound) {
+				best_lower_bound_found = lower_bound;
+				q_copy.Q_ = q.Q_;
+				PP(best_lower_bound_found);
+			}
 		}
 	}
 	dump(&q);
