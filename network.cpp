@@ -105,7 +105,7 @@ const NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListF
 	nodes->finish_me();
 	return nodes;
 }
-const EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, const NodeSet * node_set) {
+static const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, const NodeSet * node_set, const bool directed_flag) {
 	ifstream edgelist(edgeListFileName);
 	if(!edgelist) {
 		cerr << "Error: edge list file (" << edgeListFileName << ") not found. Exiting" << endl;
@@ -153,6 +153,33 @@ const EdgeSet * network :: build_edge_set_from_edge_list(std :: string edgeListF
 		edges->edges.push_back(e);
 	}
 	assert(edges->edges.size() == line_num);
+	{
+		// I should warn about duplicate edges
+		set< pair<int,int> > unique_edges;
+		For(edge, edges->edges) {
+			int n1 = edge->left;
+			int n2 = edge->right;
+			if(!directed_flag) {
+				if(n1 > n2) {
+					swap(n1,n2);
+				}
+				assert(n1<=n2);
+			}
+			const bool was_inserted = unique_edges.insert( make_pair(n1,n2) ).second;
+			if(!was_inserted)
+				cout << "Duplicate edge. Discarding it as I don't support weights yet." << endl;
+		}
+		unless(unique_edges.size() == edges->edges.size()) {
+			edges->edges.clear();
+			For(node_pair, unique_edges) {
+				EdgeSet :: Edge e;
+				e.left = node_pair->first;
+				e.right = node_pair->second;
+				edges->edges.push_back(e);
+			}
+		}
+		assert(unique_edges.size() == edges->edges.size());
+	}
 	return edges;
 }
 network :: Junction :: Junction(int edge_id_, int junction_type_, int this_node_id_, int far_node_id_, bool i_am_the_second_self_loop_junction_)
@@ -196,6 +223,7 @@ const network :: Network * network :: build_network(const std :: string file_nam
 			? network :: EdgeSet :: WEIGHT_INT
 			: network :: EdgeSet :: WEIGHT_NONE
 			, node_set
+			, directed_flag
 			);
 	const int N = node_set -> N();
 	const int E = edge_set->edges.size();

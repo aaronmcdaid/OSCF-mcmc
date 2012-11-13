@@ -37,7 +37,6 @@ struct EdgeSet {
 	std :: vector< Edge > edges;
 	inline int E() const { return this->edges.size(); }
 };
-const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileName, enum network :: EdgeSet :: WeightType weight_type, const NodeSet * node_set);
 
 struct Junction {
 	int edge_id; // edge_id: a number between 0 and E
