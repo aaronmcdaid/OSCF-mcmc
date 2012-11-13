@@ -17,15 +17,6 @@ struct NodeSet {
 	virtual NodeNameType get_NodeNameType() const = 0;
 };
 
-struct NodeSet_I { // the interface to a set of nodes. Either int64, or strings
-	virtual NodeNameType get_NodeNameType() const = 0;
-	virtual int N() const = 0;
-	virtual std :: string as_string(int node_id) const = 0;
-	virtual int64_t as_int64(int node_id) const = 0;
-	virtual ~NodeSet_I() {
-	}
-};
-
 const NodeSet * build_node_set_from_edge_list(std :: string edgeListFileName, enum network :: NodeNameType node_name_type);
 
 struct EdgeSet {
