@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
 	vcsbm(net);
 }
 
-const int J = 10; // fix the upper bound on K at 10.
 static void should_be_positive_(long double &x, const int line_no) {
 	assert(x==x); // it's non NaN
 	if(x<0.0L) {
@@ -66,6 +65,7 @@ static void should_be_positive_(long double &x, const int line_no) {
 }
 #define SHOULD_BE_POSITIVE(x) should_be_positive_(x, __LINE__);
 
+const int J = 3; // fix the upper bound on K at 10.
 
 struct Q {
 	// the variational lower bound is a function of Q.
@@ -322,6 +322,7 @@ void test_exp_log_Gamma_Normal() {
 static long double gamma_k(const int k) {
 	assert(k>=0);
 	assert(k<J);
+	if(k<3) return 1; else return 0.001;
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
@@ -601,9 +602,13 @@ void vcsbm(const Network * net) {
 	mu_n_k.verify(q);
 	squared_n_k.verify(q);
 
-	if(0)
+	if(1)
 	for(int i=0; i<N; i++) {
 		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
+		// if(i<6) q.set(i,0) = 1; else q.set(i,1) = 1;
+		// if(i>0) q.set(i,(i-1)/4)=1;
+		// if(i>0) q.set(i,(i-1)/4)=1;
+		// q.set(i,gsl_rng_uniform(global_r)*3)=1;
 		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
 		// one_node_all_k(&q, net, i);
 		PP(entropy.entropy);
@@ -612,13 +617,19 @@ void vcsbm(const Network * net) {
 	dump(&q, net);
 	// everything assigned somewhere
 	// calculate_first_four_terms_slowly(&q, net, true);
-	cout << endl << "random (re)initialization" << endl;
 for(int restart = 0; restart<1000; ++restart) {
 	PP(restart);
-	for(int i=0; i<N; i++) {
-		q.set(i,0) = 0.0; q.set(i,1) = 0.0;
-		const double rand_unif = gsl_rng_uniform(global_r);
-		q.set(i,0) = rand_unif; q.set(i,1) = 1-rand_unif;
+	if(1) {
+		cout << endl << "random (re)initialization" << endl;
+		for(int i=0; i<N; i++) {
+			double rand_unif1 = gsl_rng_uniform(global_r);
+			double rand_unif2 = gsl_rng_uniform(global_r);
+			if(rand_unif1 > rand_unif2)
+				swap(rand_unif1, rand_unif2);
+			q.set(i,0) = 0.0; q.set(i,1) = 0.0; q.set(i,2) = 0.0;
+			q.set(i,0) = rand_unif1; q.set(i,1) = rand_unif2-rand_unif1; q.set(i,2) = 1-rand_unif2;
+		}
+		dump(&q, net);
 	}
 	cout << endl << endl << "into the repeats now" << endl;
 	for(int repeat = 0; repeat < 10; ++repeat) {
