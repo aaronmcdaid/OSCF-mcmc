@@ -470,6 +470,8 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 				mu_p_kl  += mu_psl_kl.at(k).at(l);
 				var_p_kl += mu_psl_kl.at(k).at(l) - sq_psl_kl.at(k).at(l);
 			}
+			const long double mu_slowp_KL = mu_slowp_kl.at(k).at(l);
+			const long double var_slowp_KL = mu_slowp_kl.at(k).at(l) - sq_slowp_kl.at(k).at(l);
 
 			//for the non-edges
 			long double nonEdge_mu = mu_p_kl - mu;
@@ -479,6 +481,7 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 			cout << k << ',' << l
 				<< '\t' << mu << '(' << var_y_kl << ')'
 				<< '\t' << mu_p_kl << '(' << var_p_kl << ')'
+				<< '=' << mu_slowp_KL << '(' << var_slowp_KL << ')'
 				<< '\t' << nonEdge_mu << '(' << nonEdge_var << ')'
 				<< endl;
 				*/
@@ -489,6 +492,8 @@ long double calculate_everything_slowly(const Q *q, const Network * net, const b
 			SHOULD_BE_POSITIVE(var_p_kl);
 			SHOULD_BE_POSITIVE(nonEdge_mu);
 			SHOULD_BE_POSITIVE(nonEdge_var);
+			assert(VERYCLOSE(mu_slowp_KL , mu_p_kl));
+			assert(VERYCLOSE(var_slowp_KL , var_p_kl));
 
 			first_4_terms += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
 			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
