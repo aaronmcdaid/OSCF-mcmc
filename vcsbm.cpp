@@ -613,12 +613,13 @@ void vcsbm(const Network * net) {
 	// everything assigned somewhere
 	// calculate_first_four_terms_slowly(&q, net, true);
 	cout << endl << "random (re)initialization" << endl;
+for(int restart = 0; restart<1000; ++restart) {
 	for(int i=0; i<N; i++) {
 		q.set(i,0) = 0.0; q.set(i,1) = 0.0;
 		const double rand_unif = gsl_rng_uniform(global_r);
 		q.set(i,0) = rand_unif; q.set(i,1) = 1-rand_unif;
 	}
-	cout << endl << "start changing the assignments" << endl;
+	cout << endl << endl << "into the repeats now" << endl;
 	for(int repeat = 0; repeat < 10; ++repeat) {
 		PP(repeat);
 		for(int i=0; i<N; i++) {
@@ -640,5 +641,5 @@ void vcsbm(const Network * net) {
 			}
 		}
 	}
-	dump(&q);
+}
 }
