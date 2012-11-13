@@ -202,7 +202,7 @@ typedef Q_template_n_k<1> Q_mu_n_k;
 typedef Q_template_n_k<2> Q_squared_n_k;
 
 struct Q_entropy : public Q :: Q_listener {
-	long double entropy;
+	mutable long double entropy;
 	Q_entropy() : entropy(0.0L) {}
 	// this is          \EE ( - \log Q_ik )
 	// this is  \int (- Q_ik \log Q_ik)
@@ -229,8 +229,8 @@ struct Q_entropy : public Q :: Q_listener {
 					verify_entropy += - Q_ik * logl(Q_ik);
 			}
 		}
-		PP2(verify_entropy , this->entropy);
-		assert(verify_entropy == this->entropy);
+		assert(VERYCLOSE(verify_entropy, this->entropy));
+		this->entropy = verify_entropy;
 	}
 };
 
