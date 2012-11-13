@@ -325,7 +325,7 @@ static long double gamma_k(const int k) {
 }
 
 
-long double calculate_everything_slowly(const Q *q, const Network * net, const bool everything_assigned_therefore_test = false) {
+long double calculate_first_four_terms_slowly(const Q *q, const Network * net, const bool everything_assigned_therefore_test = false) {
 	const int N = q->N;
 	const int E = net->edge_set->E();
 	vector<long double> mu_n_k(J);
@@ -530,7 +530,7 @@ void one_node_all_k(Q *q, const Network * net, const int node_id, const bool eve
 	vector<long double> scores(J);
 	for (int k = 0; k < num_clusters; ++k) {
 		q->set(node_id, k) = 1;
-		scores.at(k) = calculate_everything_slowly(q, net, every_node_already_assigned);
+		scores.at(k) = calculate_first_four_terms_slowly(q, net, every_node_already_assigned);
 		q->set(node_id, k) = 0;
 	}
 	const long double max_score = *max_element(scores.begin(), scores.end());
@@ -599,7 +599,7 @@ void vcsbm(const Network * net) {
 	}
 	// everything assigned somewhere
 	cout << "everything assigned somewhere" << endl;
-	calculate_everything_slowly(&q, net, true);
+	// calculate_first_four_terms_slowly(&q, net, true);
 	for(int repeat = 0; repeat < 3; ++repeat) {
 		PP(repeat);
 		for(int i=0; i<N; i++) {
