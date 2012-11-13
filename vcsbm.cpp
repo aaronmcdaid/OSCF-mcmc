@@ -443,9 +443,9 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 		assert(var >= 0.0L);
 		first_4_terms += exp_log_Gamma_Normal( mu + gamma_k(k), var );
 	}
-	// Second term, E log Gamma (y_kl + Beta_1)
+	// Second third and fourth terms, E log Gamma (y_kl + Beta_1)
 //*
-	// cout << endl;
+	cout << endl;
 	for(int k=0; k<J; k++) {
 		for(int l=0; l<J; l++) {
 			if(l<k) {
@@ -478,14 +478,14 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 			long double nonEdge_mu = mu_p_kl - mu;
 			long double nonEdge_var = var_p_kl - var_y_kl;
 
-			/*
+			//*
 			cout << k << ',' << l
 				<< '\t' << mu << '(' << var_y_kl << ')'
 				<< '\t' << mu_p_kl << '(' << var_p_kl << ')'
 				<< '=' << mu_slowp_KL << '(' << var_slowp_KL << ')'
 				<< '\t' << nonEdge_mu << '(' << nonEdge_var << ')'
 				<< endl;
-				*/
+				// */
 
 			SHOULD_BE_POSITIVE(mu);
 			SHOULD_BE_POSITIVE(var_y_kl);
@@ -530,14 +530,19 @@ void one_node_all_k(Q *q, const Network * net, const int node_id, const bool eve
 	// store the baseline ?
 	vector<long double> scores(J);
 	for (int k = 0; k < num_clusters; ++k) {
+		cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
+		dump(q, net);
 		scores.at(k) = calculate_first_four_terms_slowly(q, net, every_node_already_assigned);
+		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
+		// exit(1);
 	}
 	const long double max_score = *max_element(scores.begin(), scores.end());
 	For(score, scores) {
-		// PP(*score);
+		PP(*score);
 		*score -= max_score;
+		// const long double jitter=gsl_ran_gaussian(global_r, 0.0001); *score += jitter;
 	}
 	// For(score, scores) { PP(*score); }
 	long double total = 0.0L;
@@ -596,20 +601,33 @@ void vcsbm(const Network * net) {
 	mu_n_k.verify(q);
 	squared_n_k.verify(q);
 
+	if(0)
 	for(int i=0; i<N; i++) {
-		one_node_all_k(&q, net, i);
+		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
+		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
+		// one_node_all_k(&q, net, i);
 		PP(entropy.entropy);
 		mu_n_k.dump_me();
 	}
+	dump(&q, net);
 	// everything assigned somewhere
-	cout << "everything assigned somewhere" << endl;
 	// calculate_first_four_terms_slowly(&q, net, true);
-	for(int repeat = 0; repeat < 3; ++repeat) {
+	cout << endl << "random (re)initialization" << endl;
+	for(int i=0; i<N; i++) {
+		q.set(i,0) = 0.0; q.set(i,1) = 0.0;
+		const double rand_unif = gsl_rng_uniform(global_r);
+		q.set(i,0) = rand_unif; q.set(i,1) = 1-rand_unif;
+	}
+	cout << endl << "start changing the assignments" << endl;
+	for(int repeat = 0; repeat < 10; ++repeat) {
 		PP(repeat);
 		for(int i=0; i<N; i++) {
-			one_node_all_k(&q, net, i, true);
-			PP(entropy.entropy);
+			cout << endl << " == node: " << i << " ==" << endl;
+			one_node_all_k(&q, net, i, false);
 			mu_n_k.dump_me();
+			dump(&q, net);
+			PP(entropy.entropy);
+			cout << endl;
 		}
 		entropy.verify(q);
 		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net);
