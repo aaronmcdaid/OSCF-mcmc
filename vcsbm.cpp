@@ -642,7 +642,7 @@ void vcsbm(const Network * net) {
 	// calculate_first_four_terms_slowly(&q, net, true);
 for(int restart = 0; restart<1000; ++restart) {
 	PP(restart);
-	if(1) {
+	if(0) {
 		cout << endl << "random (re)initialization" << endl;
 		for(int i=0; i<N; i++) {
 			double rand_unif1 = gsl_rng_uniform(global_r);
