@@ -129,6 +129,17 @@ struct Q {
 	}
 };
 
+/*
+ * We will have a number of Q_listener objects, tracking
+ * useful summaries of the data in Q.
+ *
+ * There will also be a single Tracker object, which
+ * will store all the Q_listener objects.
+ * We can ask the Tracker for the score every now
+ * and then, and also ask it to force a verification
+ * of *everything*
+ */
+
 void dump(const Q *q, Network *net) {
 		cout << "node_id\t";
 		cout << "node_name\t";
@@ -236,6 +247,25 @@ struct Q_entropy : public Q :: Q_listener {
 		this->entropy = verify_entropy;
 	}
 };
+struct Q_sum_of_mu_n_k : public Q :: Q_listener {
+	mutable long double sum_of_mu_n_k;
+	Q_sum_of_mu_n_k() : sum_of_mu_n_k(0.0L) {}
+	virtual void notify(int, int, long double old_val, long double new_val) {
+		this->sum_of_mu_n_k -= old_val;
+		SHOULD_BE_POSITIVE(this->sum_of_mu_n_k);
+		this->sum_of_mu_n_k += new_val;
+	}
+	void verify(const Q &q) const {
+		long double verify_sum = 0.0L;
+		For(node, q.Q_) {
+			For(cell, *node) {
+				verify_sum += *cell;
+			}
+		}
+		PP2(verify_sum , this->sum_of_mu_n_k);
+		assert(verify_sum == this->sum_of_mu_n_k);
+	}
+};
 
 template<int power>
 struct Q_templated_y_kl : public Q :: Q_listener {
@@ -264,7 +294,25 @@ typedef Q_templated_y_kl<2> Q_squared_y_kl;
 gsl_rng * global_r = NULL;
 
 // A few globals (sorry) but they only help in verification and assertions
-const Q_entropy *global_q_entropy;
+struct Tracker {
+	const Q * const q;
+	Network * const net;
+	const Q_entropy * const q_entropy;
+	const Q_sum_of_mu_n_k * const q_sum_of_mu_n_k;
+	Tracker(const Q *q_, Network * net_
+			, const Q_entropy *q_entropy_
+			, const Q_sum_of_mu_n_k *q_sum_of_mu_n_k_
+			)
+		: q(q_), net(net_)
+		  , q_entropy(q_entropy_)
+		  , q_sum_of_mu_n_k(q_sum_of_mu_n_k_)
+	{}
+	void verify_all() const {
+		q_entropy->verify(*this->q);
+		q_sum_of_mu_n_k->verify(*this->q);
+	}
+};
+Tracker * global_tracker = NULL;
 
 // Hyperparameters
 const long double alpha_for_stick_breaking = 1.0L;
@@ -290,7 +338,7 @@ static long double gamma_k(const int k) {
 struct BreakdownOfCompleteRecalculation {
 	const Q * const q;
 	Network * const net;
-	long double  sum_of_mu_n_k;
+	long double sum_of_mu_n_k;
 	long double verify_num_pairs;
 	long double sum_of_edge_partial_memberships;
 	BreakdownOfCompleteRecalculation(const Q* q_, Network * net_) : q(q_), net(net_) {
@@ -576,6 +624,7 @@ static void vacate_a_node(Q *q, const int node_id) {
 }
 
 static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
+	global_tracker->verify_all();
 	BreakdownOfCompleteRecalculation breakdown(q,net);
 	const int N = q->N;
 	for(int i=0; i<N; i++) {
@@ -593,6 +642,7 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	}
 	dump(q,net);
 	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
+	global_tracker->verify_all();
 }
 
 void vcsbm(Network * net) {
@@ -607,6 +657,7 @@ void vcsbm(Network * net) {
 	Q_mu_n_k mu_n_k;
 	Q_squared_n_k squared_n_k;
 	Q_entropy entropy;
+	Q_sum_of_mu_n_k q_sum_of_mu_n_k;
 	Q_squared_y_kl squared_y_kl(net);
 
 	PP(entropy.entropy);
@@ -615,7 +666,10 @@ void vcsbm(Network * net) {
 	q.add_listener(&squared_n_k);
 	q.add_listener(&entropy);
 	q.add_listener(&squared_y_kl);
-	global_q_entropy = &entropy;
+
+	assert(global_tracker == NULL);
+	global_tracker = new Tracker(&q, net, &entropy, &q_sum_of_mu_n_k);
+	assert(global_tracker);
 
 	// To store the best one found so far.
 	Q q_copy(N,J);
@@ -648,6 +702,7 @@ void vcsbm(Network * net) {
 	// calculate_first_four_terms_slowly(&q, net, true);
 for(int restart = 0; restart<1; ++restart) {
 	PP(restart);
+	global_tracker->verify_all();
 	if(0) {
 		cout << endl << "random (re)initialization" << endl;
 		for(int i=0; i<N; i++) {
