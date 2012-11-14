@@ -280,47 +280,6 @@ static long double exp_log_Gamma_Normal(const long double mean, const long doubl
 		- mean
 		+ 0.5L * logl(2 * M_PI);
 }
-void test_exp_log_Gamma_Normal(const long double mu, const long double stddev) {
-	long double total = 0.0;
-	const int S = 10000;
-	for(int s = 0; s<S; ++s) {
-		const long double random = mu + gsl_ran_gaussian(global_r, stddev);
-		const long double x = log(gsl_sf_gamma(random));
-		total += x;
-	}
-	PP4(mu, stddev, total/S, exp_log_Gamma_Normal(mu, stddev * stddev));
-}
-void test_exp_log_Gamma_Normal() {
-	test_exp_log_Gamma_Normal(15,0.3);
-	test_exp_log_Gamma_Normal(15,0.1);
-	test_exp_log_Gamma_Normal(15,0.01);
-	test_exp_log_Gamma_Normal(15,0.001);
-
-	test_exp_log_Gamma_Normal(5,0.3);
-	test_exp_log_Gamma_Normal(5,0.1);
-	test_exp_log_Gamma_Normal(5,0.01);
-	test_exp_log_Gamma_Normal(5,0.001);
-
-	test_exp_log_Gamma_Normal(4,0.3);
-	test_exp_log_Gamma_Normal(4,0.1);
-	test_exp_log_Gamma_Normal(4,0.01);
-	test_exp_log_Gamma_Normal(4,0.001);
-
-	test_exp_log_Gamma_Normal(3,0.3);
-	test_exp_log_Gamma_Normal(3,0.1);
-	test_exp_log_Gamma_Normal(3,0.01);
-	test_exp_log_Gamma_Normal(3,0.001);
-
-	test_exp_log_Gamma_Normal(2,0.3);
-	test_exp_log_Gamma_Normal(2,0.1);
-	test_exp_log_Gamma_Normal(2,0.01);
-	test_exp_log_Gamma_Normal(2,0.001);
-
-	test_exp_log_Gamma_Normal(0.1,0.01);
-	test_exp_log_Gamma_Normal(0.1,0.001);
-	test_exp_log_Gamma_Normal(0.1,0.0001);
-	test_exp_log_Gamma_Normal(0.1,0.00001);
-}
 static long double gamma_k(const int k) {
 	assert(k>=0);
 	assert(k<J);
