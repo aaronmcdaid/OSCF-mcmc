@@ -510,7 +510,7 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 }
 // The code above calculates stuff, below we have the actual algorithm.
 
-void one_node_all_k(Q *q, const Network * net, const int node_id, const bool every_node_already_assigned = false /* *probably* not all assigned */);
+void one_node_all_k(Q *q, const Network * net, const int node_id);
 
 void one_random_node_all_k(Q *q, const Network * net) {
 	const int N = q->N;
@@ -519,7 +519,7 @@ void one_random_node_all_k(Q *q, const Network * net) {
 	one_node_all_k(q, net, random_node);
 }
 
-void one_node_all_k(Q *q, const Network * net, const int node_id, const bool every_node_already_assigned /* = false *probably* not all assigned */) {
+void one_node_all_k(Q *q, const Network * net, const int node_id) {
 	// pick one node at random,
 	// remove it from all its clusters,
 	// reassign to one cluster at a time
@@ -534,7 +534,7 @@ void one_node_all_k(Q *q, const Network * net, const int node_id, const bool eve
 		cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
 		dump(q, net);
-		scores.at(k) = calculate_first_four_terms_slowly(q, net, every_node_already_assigned);
+		scores.at(k) = calculate_first_four_terms_slowly(q, net);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
@@ -636,7 +636,7 @@ for(int restart = 0; restart<1000; ++restart) {
 		PP2(restart,repeat);
 		for(int i=0; i<N; i++) {
 			cout << endl << " == node: " << i << " ==" << endl;
-			one_node_all_k(&q, net, i, false);
+			one_node_all_k(&q, net, i);
 			mu_n_k.dump_me();
 			dump(&q, net);
 			PP(entropy.entropy);
