@@ -262,8 +262,8 @@ struct Q_sum_of_mu_n_k : public Q :: Q_listener {
 				verify_sum += *cell;
 			}
 		}
-		PP2(verify_sum , this->sum_of_mu_n_k);
-		assert(verify_sum == this->sum_of_mu_n_k);
+		assert(VERYCLOSE(this->sum_of_mu_n_k , verify_sum));
+		this->sum_of_mu_n_k = verify_sum;
 	}
 };
 
@@ -298,18 +298,18 @@ struct Tracker {
 	const Q * const q;
 	Network * const net;
 	const Q_entropy * const q_entropy;
-	const Q_sum_of_mu_n_k * const q_sum_of_mu_n_k;
+	const Q_sum_of_mu_n_k * const ql_sum_of_mu_n_k;
 	Tracker(const Q *q_, Network * net_
 			, const Q_entropy *q_entropy_
-			, const Q_sum_of_mu_n_k *q_sum_of_mu_n_k_
+			, const Q_sum_of_mu_n_k *ql_sum_of_mu_n_k_
 			)
 		: q(q_), net(net_)
 		  , q_entropy(q_entropy_)
-		  , q_sum_of_mu_n_k(q_sum_of_mu_n_k_)
+		  , ql_sum_of_mu_n_k(ql_sum_of_mu_n_k_)
 	{}
 	void verify_all() const {
 		q_entropy->verify(*this->q);
-		q_sum_of_mu_n_k->verify(*this->q);
+		ql_sum_of_mu_n_k->verify(*this->q);
 	}
 };
 Tracker * global_tracker = NULL;
@@ -657,7 +657,7 @@ void vcsbm(Network * net) {
 	Q_mu_n_k mu_n_k;
 	Q_squared_n_k squared_n_k;
 	Q_entropy entropy;
-	Q_sum_of_mu_n_k q_sum_of_mu_n_k;
+	Q_sum_of_mu_n_k ql_sum_of_mu_n_k;
 	Q_squared_y_kl squared_y_kl(net);
 
 	PP(entropy.entropy);
@@ -665,10 +665,11 @@ void vcsbm(Network * net) {
 	q.add_listener(&mu_n_k);
 	q.add_listener(&squared_n_k);
 	q.add_listener(&entropy);
+	q.add_listener(&ql_sum_of_mu_n_k);
 	q.add_listener(&squared_y_kl);
 
 	assert(global_tracker == NULL);
-	global_tracker = new Tracker(&q, net, &entropy, &q_sum_of_mu_n_k);
+	global_tracker = new Tracker(&q, net, &entropy, &ql_sum_of_mu_n_k);
 	assert(global_tracker);
 
 	// To store the best one found so far.
