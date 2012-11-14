@@ -336,27 +336,20 @@ static long double gamma_k(const int k) {
 }
 
 struct BreakdownOfCompleteRecalculation {
-	const Q * const q;
-	Network * const net;
-	long double sum_of_mu_n_k;
 	long double verify_num_pairs;
 	long double sum_of_edge_partial_memberships;
-	BreakdownOfCompleteRecalculation(const Q* q_, Network * net_) : q(q_), net(net_) {
-	}
-	// assert(VERYCLOSE(sum_of_mu_n_k, N));
+	BreakdownOfCompleteRecalculation() {}
 	BreakdownOfCompleteRecalculation & reset() {
-		this -> sum_of_mu_n_k = 0.0L;
+		assert(global_tracker);
 		this -> verify_num_pairs = 0.0L;
 		this -> sum_of_edge_partial_memberships = 0.0L;
 		return *this;
 	}
 	void test_assuming_full() const {
-		const int N = q->N;
-		const int E = net->E();
-		unless(VERYCLOSE(this->sum_of_mu_n_k, N)) {
-			PP2(this->sum_of_mu_n_k, N);
-			assert(VERYCLOSE(this->sum_of_mu_n_k, N));
-		}
+		assert(global_tracker);
+		const int N = global_tracker->q->N;
+		const int E = global_tracker->net->E();
+		assert(VERYCLOSE(N, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
 		assert(VERYCLOSE(this->verify_num_pairs , N * (N+1) / 2));
 		assert(VERYCLOSE(this->sum_of_edge_partial_memberships , E));
 	}
@@ -373,10 +366,6 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * net, Breakdo
 			mu_n_k.at(k) += q->get(i,k);
 			sq_n_k.at(k) += q->get(i,k)*q->get(i,k);
 		}
-	}
-
-	For(x, mu_n_k) {
-		breakdown.sum_of_mu_n_k += *x;
 	}
 
 	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
@@ -586,7 +575,7 @@ static bool check_total_score_is_1(const vector<long double> &scores) {
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id) {
 	vacate_a_node(q, node_id);
-	BreakdownOfCompleteRecalculation breakdown(q,net);
+	BreakdownOfCompleteRecalculation breakdown;
 	// store the baseline ?
 	vector<long double> scores(J);
 	const int num_clusters = q->Q_.at(node_id).size();
@@ -625,13 +614,13 @@ static void vacate_a_node(Q *q, const int node_id) {
 
 static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
 	global_tracker->verify_all();
-	BreakdownOfCompleteRecalculation breakdown(q,net);
+	BreakdownOfCompleteRecalculation breakdown;
 	const int N = q->N;
 	for(int i=0; i<N; i++) {
 		vacate_a_node(q, i);
 	}
+	assert(VERYCLOSE(0, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
 	calculate_first_four_terms_slowly(q, net, breakdown);
-	assert(0 == breakdown.sum_of_mu_n_k);
 	for(int i=0; i<N; i++) {
 		one_node_all_k_M3(q, net, i);
 	}
@@ -684,7 +673,7 @@ void vcsbm(Network * net) {
 	mu_n_k.verify(q);
 	squared_n_k.verify(q);
 
-	BreakdownOfCompleteRecalculation breakdown(&q,net);
+	BreakdownOfCompleteRecalculation breakdown;
 
 	if(1)
 	for(int i=0; i<N; i++) {
