@@ -519,10 +519,31 @@ void one_random_node_all_k(Q *q, const Network * net) {
 	one_node_all_k(q, net, random_node);
 }
 
+static const vector<long double> one_nodes_scores(Q *q, const Network *net, const int node_id);
+
 void one_node_all_k(Q *q, const Network * net, const int node_id) {
 	// pick one node at random,
 	// remove it from all its clusters,
 	// reassign to one cluster at a time
+	// For(score, scores) { PP(*score); }
+	const vector<long double> scores = one_nodes_scores(q, net, node_id);
+	assert((int)scores.size() == J);
+	long double check_new_total_is_1 = 0.0L;
+	For(score, scores) {
+		// PP(*score);
+		check_new_total_is_1 += *score;
+	}
+	// PP(check_new_total_is_1 - 1.0L);
+	assert(VERYCLOSE(check_new_total_is_1, 1.0L));
+	// scores.front() += 1.0L - check_new_total_is_1;
+	// assert(scores.front()>=0.0L);
+
+	for(int k=0; k<J; ++k) {
+		q->set(node_id, k) = scores.at(k);
+	}
+}
+
+static const vector<long double> one_nodes_scores(Q *q, const Network *net, const int node_id) {
 	const int num_clusters = q->Q_.at(node_id).size();
 	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
@@ -545,7 +566,6 @@ void one_node_all_k(Q *q, const Network * net, const int node_id) {
 		*score -= max_score;
 		// const long double jitter=gsl_ran_gaussian(global_r, 0.0001); *score += jitter;
 	}
-	// For(score, scores) { PP(*score); }
 	long double total = 0.0L;
 	For(score, scores) {
 		total += expl(*score);
@@ -553,19 +573,7 @@ void one_node_all_k(Q *q, const Network * net, const int node_id) {
 	For(score, scores) {
 		*score  = expl(*score) / total;
 	}
-	long double check_new_total_is_1 = 0.0L;
-	For(score, scores) {
-		// PP(*score);
-		check_new_total_is_1 += *score;
-	}
-	// PP(check_new_total_is_1 - 1.0L);
-	assert(VERYCLOSE(check_new_total_is_1, 1.0L));
-	// scores.front() += 1.0L - check_new_total_is_1;
-	// assert(scores.front()>=0.0L);
-
-	for(int k=0; k<J; ++k) {
-		q->set(node_id, k) = scores.at(k);
-	}
+	return scores;
 }
 
 void vcsbm(const Network * net) {
