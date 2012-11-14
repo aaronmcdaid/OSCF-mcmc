@@ -246,7 +246,7 @@ const network :: Network * network :: build_network(const std :: string file_nam
 		cout << left_str << ' ' << right_str << endl;
 	}
 #endif
-	Network * net = new Network;
+	Network__unConst * net = new Network__unConst;
 	// I should be these next few lines into the Network constructor
 	net->node_set = node_set;
 	net->edge_set = edge_set;

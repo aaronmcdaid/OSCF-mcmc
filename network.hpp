@@ -60,7 +60,7 @@ struct OneNode {
 	inline int total_degree() const { return this->my_junctions.size(); }
 };
 
-struct Network { // bring all the above together
+struct Network__unConst { // bring all the above together
 	const network :: NodeSet * node_set;
 	const network :: EdgeSet * edge_set;
 	const network :: Junctions * junctions;
@@ -68,6 +68,9 @@ struct Network { // bring all the above together
 	inline int N() const { return this->node_set->N(); }
 	inline int E() const { return this->edge_set->E(); }
 };
+typedef const Network__unConst Network; // The exposed Network should always be const.
+
+
 const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
 
 } // namespace network

@@ -27,7 +27,7 @@ using namespace std;
 using namespace std :: tr1;
 using namespace network;
 
-void vcsbm(const Network * net);
+void vcsbm(Network * net);
 
 format_flag_stack :: FormatFlagStack stack;
 
@@ -128,7 +128,7 @@ struct Q {
 	}
 };
 
-void dump(const Q *q, const Network *net) {
+void dump(const Q *q, Network *net) {
 		cout << "node_id\t";
 		cout << "node_name\t";
 		cout << "degree\t";
@@ -245,8 +245,8 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 	// If directed, y_kl is the edges from k to l
 	// If undirected, make k the smaller cluster-id
 	unordered_map< pair<int,int> , long double> y_kl;
-	const Network * const net;
-	Q_templated_y_kl(const Network *net_) : net(net_) {}
+	Network * const net;
+	Q_templated_y_kl(Network *net_) : net(net_) {}
 
 	virtual void notify(int i, int , long double , long double ) {
 		// Must consider all the Junctions at node i
@@ -323,17 +323,17 @@ void test_exp_log_Gamma_Normal() {
 static long double gamma_k(const int k) {
 	assert(k>=0);
 	assert(k<J);
-	if(k<3) return 1; else return 0.001;
+	if(k<FIXED_K) return 1; else return 0.001;
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
 struct BreakdownOfCompleteRecalculation {
 	const Q * const q;
-	const Network * const net;
+	Network * const net;
 	long double  sum_of_mu_n_k;
 	long double verify_num_pairs;
 	long double sum_of_edge_partial_memberships;
-	BreakdownOfCompleteRecalculation(const Q* q_, const Network * net_) : q(q_), net(net_) {
+	BreakdownOfCompleteRecalculation(const Q* q_, Network * net_) : q(q_), net(net_) {
 	}
 	// assert(VERYCLOSE(sum_of_mu_n_k, N));
 	BreakdownOfCompleteRecalculation & reset() {
@@ -354,7 +354,7 @@ struct BreakdownOfCompleteRecalculation {
 	}
 };
 
-long double calculate_first_four_terms_slowly(const Q *q, const Network * net, BreakdownOfCompleteRecalculation &breakdown) {
+long double calculate_first_four_terms_slowly(const Q *q, Network * net, BreakdownOfCompleteRecalculation &breakdown) {
 	breakdown.reset();
 	const int N = q->N;
 	const int E = net->edge_set->E();
@@ -527,9 +527,9 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, B
 }
 // The code above calculates stuff, below we have the actual algorithm.
 
-void one_node_all_k(Q *q, const Network * net, const int node_id);
+void one_node_all_k(Q *q, Network * net, const int node_id);
 
-void one_random_node_all_k(Q *q, const Network * net) {
+void one_random_node_all_k(Q *q, Network * net) {
 	// pick one node at random, and call one_node_all_k on it
 	const int N = q->N;
 	const double unif = gsl_rng_uniform(global_r);
@@ -538,10 +538,10 @@ void one_random_node_all_k(Q *q, const Network * net) {
 }
 
 static void vacate_a_node(Q *q, const int node_id);
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id);
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id);
 static bool check_total_score_is_1(const vector<long double> &scores);
 
-void one_node_all_k(Q *q, const Network * net, const int node_id) {
+void one_node_all_k(Q *q, Network * net, const int node_id) {
 	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
 	assert((int)scores.size() == J);
 	assert(check_total_score_is_1(scores));
@@ -550,7 +550,7 @@ void one_node_all_k(Q *q, const Network * net, const int node_id) {
 		q->set(node_id, k) = scores.at(k);
 	}
 }
-void one_node_all_k_M3(Q *q, const Network * net, const int node_id) {
+void one_node_all_k_M3(Q *q, Network * net, const int node_id) {
 	// assign a node totally to one cluster selected at random
 	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
 	assert((int)scores.size() == J);
@@ -576,7 +576,7 @@ static bool check_total_score_is_1(const vector<long double> &scores) {
 	return VERYCLOSE(check_new_total_is_1, 1.0L);
 }
 
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id) {
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id) {
 	vacate_a_node(q, node_id);
 	BreakdownOfCompleteRecalculation breakdown(q,net);
 	// store the baseline ?
@@ -615,7 +615,7 @@ static void vacate_a_node(Q *q, const int node_id) {
 	}
 }
 
-void vcsbm(const Network * net) {
+void vcsbm(Network * net) {
 	const int N = net->N();
 
 	global_r = gsl_rng_alloc (gsl_rng_taus);
