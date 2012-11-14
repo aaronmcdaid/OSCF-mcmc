@@ -655,8 +655,10 @@ for(int restart = 0; restart<1000; ++restart) {
 		PP(lower_bound);
 		{
 			if(best_lower_bound_found < lower_bound) {
+				cout << "New best lower bound found" << endl;
 				best_lower_bound_found = lower_bound;
 				q_copy.Q_ = q.Q_;
+				dump(&q, net);
 				PP(best_lower_bound_found);
 			}
 		}
