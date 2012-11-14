@@ -376,19 +376,35 @@ gsl_rng * global_r = NULL;
 struct Tracker {
 	const Q * const q;
 	Network * const net;
-	const Q_entropy * const q_entropy;
+	const Q_mu_n_k        * const ql_mu_n_k;
+	const Q_squared_n_k   * const ql_squared_n_k;
+	const Q_entropy       * const ql_entropy;
 	const Q_sum_of_mu_n_k * const ql_sum_of_mu_n_k;
+	const Q_mu_y_kl       * const ql_mu_y_kl;
+	const Q_squared_y_kl  * const ql_squared_y_kl;
 	Tracker(const Q *q_, Network * net_
-			, const Q_entropy *q_entropy_
+			, const Q_mu_n_k *ql_mu_n_k_
+			, const Q_squared_n_k *ql_squared_n_k_
+			, const Q_entropy *ql_entropy_
 			, const Q_sum_of_mu_n_k *ql_sum_of_mu_n_k_
+			, const Q_mu_y_kl *ql_mu_y_kl_
+			, const Q_squared_y_kl *ql_squared_y_kl_
 			)
 		: q(q_), net(net_)
-		  , q_entropy(q_entropy_)
+		  , ql_mu_n_k(ql_mu_n_k_)
+		  , ql_squared_n_k(ql_squared_n_k_)
+		  , ql_entropy(ql_entropy_)
 		  , ql_sum_of_mu_n_k(ql_sum_of_mu_n_k_)
+		  , ql_mu_y_kl(ql_mu_y_kl_)
+		  , ql_squared_y_kl(ql_squared_y_kl_)
 	{}
 	void verify_all() const {
-		q_entropy->verify(*this->q);
+		ql_mu_n_k->verify(*this->q);
+		ql_squared_n_k->verify(*this->q);
+		ql_entropy->verify(*this->q);
 		ql_sum_of_mu_n_k->verify(*this->q);
+		ql_mu_y_kl->verify(*this->q);
+		ql_squared_y_kl->verify(*this->q);
 	}
 };
 Tracker * global_tracker = NULL;
@@ -722,35 +738,37 @@ void vcsbm(Network * net) {
 	// test_exp_log_Gamma_Normal(); return;
 
 	Q q(N,J);
-	Q_mu_n_k mu_n_k;
-	Q_squared_n_k squared_n_k;
-	Q_entropy entropy;
+	Q_mu_n_k ql_mu_n_k;
+	Q_squared_n_k ql_squared_n_k;
+	Q_entropy ql_entropy;
 	Q_sum_of_mu_n_k ql_sum_of_mu_n_k;
-	Q_squared_y_kl squared_y_kl(net);
+	Q_mu_y_kl ql_mu_y_kl(net);
+	Q_squared_y_kl ql_squared_y_kl(net);
 
-	PP(entropy.entropy);
+	PP(ql_entropy.entropy);
 
-	q.add_listener(&mu_n_k);
-	q.add_listener(&squared_n_k);
-	q.add_listener(&entropy);
+	q.add_listener(&ql_mu_n_k);
+	q.add_listener(&ql_squared_n_k);
+	q.add_listener(&ql_entropy);
 	q.add_listener(&ql_sum_of_mu_n_k);
-	q.add_listener(&squared_y_kl);
+	q.add_listener(&ql_mu_y_kl);
+	q.add_listener(&ql_squared_y_kl);
 
 	assert(global_tracker == NULL);
-	global_tracker = new Tracker(&q, net, &entropy, &ql_sum_of_mu_n_k);
+	global_tracker = new Tracker(&q, net, &ql_mu_n_k, &ql_squared_n_k, &ql_entropy, &ql_sum_of_mu_n_k, &ql_mu_y_kl, &ql_squared_y_kl);
 	assert(global_tracker);
 
 	// To store the best one found so far.
 	Q q_copy(N,J);
 	long double best_lower_bound_found = - numeric_limits<long double> :: max();
 
-	entropy.verify(q);
-	mu_n_k.dump_me();
-	squared_n_k.dump_me();
-	PP(entropy.entropy);
-	entropy.verify(q);
-	mu_n_k.verify(q);
-	squared_n_k.verify(q);
+	ql_entropy.verify(q);
+	ql_mu_n_k.dump_me();
+	ql_squared_n_k.dump_me();
+	PP(ql_entropy.entropy);
+	ql_entropy.verify(q);
+	ql_mu_n_k.verify(q);
+	ql_squared_n_k.verify(q);
 
 	BreakdownOfCompleteRecalculation breakdown;
 
@@ -763,8 +781,8 @@ void vcsbm(Network * net) {
 		// q.set(i,gsl_rng_uniform(global_r)*3)=1;
 		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
 		// one_node_all_k(&q, net, i);
-		PP(entropy.entropy);
-		mu_n_k.dump_me();
+		PP(ql_entropy.entropy);
+		ql_mu_n_k.dump_me();
 	}
 	dump(&q, net);
 	// everything assigned somewhere
@@ -788,7 +806,7 @@ for(int restart = 0; restart<3; ++restart) {
 	for(int repeat = 0; repeat < 3; ++repeat) {
 		PP2(restart,repeat);
 		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
-		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net, breakdown);
+		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net, breakdown);
 		PP(lower_bound);
 		{
 			if(best_lower_bound_found < lower_bound) {
