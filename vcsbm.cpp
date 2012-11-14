@@ -513,6 +513,7 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 void one_node_all_k(Q *q, const Network * net, const int node_id);
 
 void one_random_node_all_k(Q *q, const Network * net) {
+	// pick one node at random, and call one_node_all_k on it
 	const int N = q->N;
 	const double unif = gsl_rng_uniform(global_r);
 	const int random_node = N * unif;
@@ -520,23 +521,25 @@ void one_random_node_all_k(Q *q, const Network * net) {
 }
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id);
+static bool check_total_score_is_1(const vector<long double> &scores);
 
 void one_node_all_k(Q *q, const Network * net, const int node_id) {
 	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
 	assert((int)scores.size() == J);
+	assert(check_total_score_is_1(scores));
+
+	for(int k=0; k<J; ++k) {
+		q->set(node_id, k) = scores.at(k);
+	}
+}
+
+static bool check_total_score_is_1(const vector<long double> &scores) {
 	long double check_new_total_is_1 = 0.0L;
 	For(score, scores) {
 		// PP(*score);
 		check_new_total_is_1 += *score;
 	}
-	// PP(check_new_total_is_1 - 1.0L);
-	assert(VERYCLOSE(check_new_total_is_1, 1.0L));
-	// scores.front() += 1.0L - check_new_total_is_1;
-	// assert(scores.front()>=0.0L);
-
-	for(int k=0; k<J; ++k) {
-		q->set(node_id, k) = scores.at(k);
-	}
+	return VERYCLOSE(check_new_total_is_1, 1.0L);
 }
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id) {
