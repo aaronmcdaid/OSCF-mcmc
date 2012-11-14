@@ -214,6 +214,7 @@ struct Q_entropy : public Q :: Q_listener {
 		if(old_val != 0.0L) {
 			this->entropy -= - old_val * logl(old_val);
 		}
+		SHOULD_BE_POSITIVE(this->entropy);
 		assert(this->entropy >= 0.0L);
 		if(new_val != 0.0L) {
 			this->entropy += - new_val * logl(new_val);
