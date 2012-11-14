@@ -327,8 +327,35 @@ static long double gamma_k(const int k) {
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
+struct BreakdownOfCompleteRecalculation {
+	const Q * const q;
+	const Network * const net;
+	long double  sum_of_mu_n_k;
+	long double verify_num_pairs;
+	long double sum_of_edge_partial_memberships;
+	BreakdownOfCompleteRecalculation(const Q* q_, const Network * net_) : q(q_), net(net_) {
+	}
+	// assert(VERYCLOSE(sum_of_mu_n_k, N));
+	BreakdownOfCompleteRecalculation & reset() {
+		this -> sum_of_mu_n_k = 0.0L;
+		this -> verify_num_pairs = 0.0L;
+		this -> sum_of_edge_partial_memberships = 0.0L;
+		return *this;
+	}
+	void test_assuming_full() const {
+		const int N = q->N;
+		const int E = net->E();
+		unless(VERYCLOSE(this->sum_of_mu_n_k, N)) {
+			PP2(this->sum_of_mu_n_k, N);
+			assert(VERYCLOSE(this->sum_of_mu_n_k, N));
+		}
+		assert(VERYCLOSE(this->verify_num_pairs , N * (N+1) / 2));
+		assert(VERYCLOSE(this->sum_of_edge_partial_memberships , E));
+	}
+};
 
-long double calculate_first_four_terms_slowly(const Q *q, const Network * net, const bool everything_assigned_therefore_test = false) {
+long double calculate_first_four_terms_slowly(const Q *q, const Network * net, BreakdownOfCompleteRecalculation &breakdown) {
+	breakdown.reset();
 	const int N = q->N;
 	const int E = net->edge_set->E();
 	vector<long double> mu_n_k(J);
@@ -340,12 +367,8 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 		}
 	}
 
-	if(everything_assigned_therefore_test) { // assert that the sum over mu_n_k == N
-		long double  sum_of_mu_n_k = 0;
-		For(x, mu_n_k) {
-			sum_of_mu_n_k += *x;
-		}
-		assert(VERYCLOSE(sum_of_mu_n_k, N));
+	For(x, mu_n_k) {
+		breakdown.sum_of_mu_n_k += *x;
 	}
 
 	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
@@ -393,30 +416,23 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 		}
 	}
 	}
-	if(everything_assigned_therefore_test) {
-		long double verify_num_pairs = 0.0L;
-		for(int k=0; k<J; ++k) {
-			for(int l=0; l<J; ++l) {
-				if(l<k) {
-					assert(0==mu_slowp_kl.at(k).at(l));
-					assert(0==sq_slowp_kl.at(k).at(l));
-					continue;
-				}
-				PP2(mu_slowp_kl.at(k).at(l), sq_slowp_kl.at(k).at(l));
-				verify_num_pairs += mu_slowp_kl.at(k).at(l);
+
+	for(int k=0; k<J; ++k) {
+		for(int l=0; l<J; ++l) {
+			if(l<k) {
+				assert(0==mu_slowp_kl.at(k).at(l));
+				assert(0==sq_slowp_kl.at(k).at(l));
+				continue;
 			}
+			// PP2(mu_slowp_kl.at(k).at(l), sq_slowp_kl.at(k).at(l));
+			breakdown.verify_num_pairs += mu_slowp_kl.at(k).at(l);
 		}
-		assert(VERYCLOSE(verify_num_pairs , N * (N+1) / 2));
 	}
 
-	if(everything_assigned_therefore_test) { // assert that the sum over mu_y_kl == E
-		long double sum_of_edge_partial_memberships = 0;
-		For(one_cluster, mu_y_kl) {
-			For(one_block, *one_cluster) {
-				sum_of_edge_partial_memberships += *one_block;
-			}
+	For(one_cluster, mu_y_kl) {
+		For(one_block, *one_cluster) {
+			breakdown.sum_of_edge_partial_memberships += *one_block;
 		}
-		assert(VERYCLOSE(sum_of_edge_partial_memberships , E));
 	}
 
 	// Need to count the p_kl for the self loops.
@@ -560,6 +576,7 @@ static bool check_total_score_is_1(const vector<long double> &scores) {
 }
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id) {
+	BreakdownOfCompleteRecalculation breakdown(q,net);
 	const int num_clusters = q->Q_.at(node_id).size();
 	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
@@ -570,7 +587,7 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, co
 	for (int k = 0; k < num_clusters; ++k) {
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
-		scores.at(k) = calculate_first_four_terms_slowly(q, net);
+		scores.at(k) = calculate_first_four_terms_slowly(q, net, breakdown);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
@@ -626,6 +643,8 @@ void vcsbm(const Network * net) {
 	mu_n_k.verify(q);
 	squared_n_k.verify(q);
 
+	BreakdownOfCompleteRecalculation breakdown(&q,net);
+
 	if(1)
 	for(int i=0; i<N; i++) {
 		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
@@ -667,12 +686,14 @@ for(int restart = 0; restart<1000; ++restart) {
 			// cout << endl;
 		}
 		dump(&q,net);
+		calculate_first_four_terms_slowly(&q, net, breakdown); breakdown.test_assuming_full();
 		for(int i=0; i<N; i++) {
 			one_node_all_k(&q, net, i);
 		}
 		dump(&q,net);
+		calculate_first_four_terms_slowly(&q, net, breakdown); breakdown.test_assuming_full();
 		entropy.verify(q);
-		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net, breakdown);
 		PP(lower_bound);
 		{
 			if(best_lower_bound_found < lower_bound) {

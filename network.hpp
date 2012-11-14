@@ -66,6 +66,7 @@ struct Network { // bring all the above together
 	const network :: Junctions * junctions;
 	std :: vector<OneNode> i;
 	inline int N() const { return this->node_set->N(); }
+	inline int E() const { return this->edge_set->E(); }
 };
 const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
 
