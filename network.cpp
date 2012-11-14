@@ -156,6 +156,7 @@ static const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileN
 	{
 		// I should warn about duplicate edges
 		set< pair<int,int> > unique_edges;
+		bool seen_duplicates_already = false;
 		For(edge, edges->edges) {
 			int n1 = edge->left;
 			int n2 = edge->right;
@@ -166,8 +167,10 @@ static const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileN
 				assert(n1<=n2);
 			}
 			const bool was_inserted = unique_edges.insert( make_pair(n1,n2) ).second;
-			if(!was_inserted)
-				cout << "Duplicate edge. Discarding it as I don't support weights yet." << endl;
+			if(!was_inserted && !seen_duplicates_already) {
+				cout << "Duplicate edge(s). Discarding it as I don't support weights yet." << endl;
+				seen_duplicates_already = true;
+			}
 		}
 		unless(unique_edges.size() == edges->edges.size()) {
 			edges->edges.clear();
