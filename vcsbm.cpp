@@ -115,7 +115,7 @@ struct Q {
 	struct Q_listener {
 		// any struct that wants to be notified of any changes to Q must
 		// implement this interface.
-		virtual void notify(int i, int k, long double old_val, long double new_val) = 0;
+		virtual void notify(int i, int k, long double old_val, long double new_val, const Q * q) = 0;
 		virtual ~Q_listener() {}
 	};
 	vector<Q_listener *> listeners;
@@ -124,7 +124,7 @@ struct Q {
 	}
 	void notify_listeners(int i,int k,long double old_val, long double new_val) {
 		For(l, this->listeners) {
-			(*l)->notify(i, k, old_val, new_val);
+			(*l)->notify(i, k, old_val, new_val, this);
 		}
 	}
 };
@@ -175,7 +175,7 @@ public:
 	Q_template_n_k() : n_k(10000) {
 		assert(power == 1 || power == 2);
 	}
-	virtual void notify(int, int k, long double old_val, long double new_val) {
+	virtual void notify(int, int k, long double old_val, long double new_val, const Q *) {
 		if(power!=1) {
 			assert(power==2);
 			old_val = old_val * old_val;
@@ -226,7 +226,7 @@ struct Q_entropy : public Q :: Q_listener {
 	// this is          \EE ( - \log Q_ik )
 	// this is  \int (- Q_ik \log Q_ik)
 	// Note the minus, this is the entropy, not the negative entropy.
-	virtual void notify(int, int, long double old_val, long double new_val) {
+	virtual void notify(int, int, long double old_val, long double new_val, const Q *) {
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
 		if(old_val != 0.0L) {
@@ -256,7 +256,7 @@ struct Q_entropy : public Q :: Q_listener {
 struct Q_sum_of_mu_n_k : public Q :: Q_listener {
 	mutable long double sum_of_mu_n_k;
 	Q_sum_of_mu_n_k() : sum_of_mu_n_k(0.0L) {}
-	virtual void notify(int, int, long double old_val, long double new_val) {
+	virtual void notify(int, int, long double old_val, long double new_val, const Q *) {
 		this->sum_of_mu_n_k -= old_val;
 		SHOULD_BE_POSITIVE(this->sum_of_mu_n_k);
 		this->sum_of_mu_n_k += new_val;
@@ -285,7 +285,7 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 	Network * const net;
 	Q_templated_y_kl(Network *net_) : net(net_) {}
 
-	virtual void notify(int i, int , long double , long double ) {
+	virtual void notify(int i, int k, long double old_val, long double new_val, const Q *q) {
 		// Must consider all the Junctions at node i
 		// .. but beware of self loops.
 		For(junc_id, net->i.at(i).my_junctions) {
