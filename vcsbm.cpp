@@ -533,6 +533,21 @@ void one_node_all_k(Q *q, const Network * net, const int node_id) {
 		q->set(node_id, k) = scores.at(k);
 	}
 }
+void one_node_all_k_M3(Q *q, const Network * net, const int node_id) {
+	// assign a node totally to one cluster selected at random
+	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
+	assert((int)scores.size() == J);
+	assert(check_total_score_is_1(scores));
+
+	long double unif = gsl_rng_uniform(global_r);
+	int random_cluster = 0;
+	while(random_cluster+1 < (int)scores.size() && unif > scores.at(random_cluster)) {
+		unif -= scores.at(random_cluster);
+		++ random_cluster;
+	}
+
+	q->set(node_id, random_cluster) = 1;
+}
 
 static bool check_total_score_is_1(const vector<long double> &scores) {
 	long double check_new_total_is_1 = 0.0L;
@@ -644,11 +659,14 @@ for(int restart = 0; restart<1000; ++restart) {
 		PP2(restart,repeat);
 		for(int i=0; i<N; i++) {
 			cout << endl << " == node: " << i << " ==" << endl;
-			one_node_all_k(&q, net, i);
-			mu_n_k.dump_me();
-			dump(&q, net);
-			PP(entropy.entropy);
+			one_node_all_k_M3(&q, net, i);
+			// mu_n_k.dump_me();
+			// dump(&q, net);
+			// PP(entropy.entropy);
 			cout << endl;
+		}
+		for(int i=0; i<N; i++) {
+			one_node_all_k(&q, net, i);
 		}
 		entropy.verify(q);
 		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net);
