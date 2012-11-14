@@ -519,14 +519,10 @@ void one_random_node_all_k(Q *q, const Network * net) {
 	one_node_all_k(q, net, random_node);
 }
 
-static const vector<long double> one_nodes_scores(Q *q, const Network *net, const int node_id);
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id);
 
 void one_node_all_k(Q *q, const Network * net, const int node_id) {
-	// pick one node at random,
-	// remove it from all its clusters,
-	// reassign to one cluster at a time
-	// For(score, scores) { PP(*score); }
-	const vector<long double> scores = one_nodes_scores(q, net, node_id);
+	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
 	assert((int)scores.size() == J);
 	long double check_new_total_is_1 = 0.0L;
 	For(score, scores) {
@@ -543,7 +539,7 @@ void one_node_all_k(Q *q, const Network * net, const int node_id) {
 	}
 }
 
-static const vector<long double> one_nodes_scores(Q *q, const Network *net, const int node_id) {
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id) {
 	const int num_clusters = q->Q_.at(node_id).size();
 	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
