@@ -616,6 +616,26 @@ static void vacate_a_node(Q *q, const int node_id) {
 	}
 }
 
+static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
+	BreakdownOfCompleteRecalculation breakdown(q,net);
+	const int N = q->N;
+	for(int i=0; i<N; i++) {
+		vacate_a_node(q, i);
+	}
+	calculate_first_four_terms_slowly(q, net, breakdown);
+	assert(0 == breakdown.sum_of_mu_n_k);
+	for(int i=0; i<N; i++) {
+		one_node_all_k_M3(q, net, i);
+	}
+	dump(q,net);
+	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
+	for(int i=0; i<N; i++) {
+		one_node_all_k(q, net, i);
+	}
+	dump(q,net);
+	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
+}
+
 void vcsbm(Network * net) {
 	const int N = net->N();
 
@@ -667,7 +687,7 @@ void vcsbm(Network * net) {
 	dump(&q, net);
 	// everything assigned somewhere
 	// calculate_first_four_terms_slowly(&q, net, true);
-for(int restart = 0; restart<1000; ++restart) {
+for(int restart = 0; restart<1; ++restart) {
 	PP(restart);
 	if(0) {
 		cout << endl << "random (re)initialization" << endl;
@@ -682,30 +702,9 @@ for(int restart = 0; restart<1000; ++restart) {
 		dump(&q, net);
 	}
 	cout << endl << endl << "into the repeats now" << endl;
-	for(int repeat = 0; repeat < 10; ++repeat) {
+	for(int repeat = 0; repeat < 1; ++repeat) {
 		PP2(restart,repeat);
-		for(int i=0; i<N; i++) {
-			vacate_a_node(&q, i);
-		}
-		calculate_first_four_terms_slowly(&q, net, breakdown);
-		PP(breakdown.sum_of_mu_n_k);
-		assert(0 == breakdown.sum_of_mu_n_k);
-		for(int i=0; i<N; i++) {
-			// cout << " == node: " << i << " ==" << endl;
-			one_node_all_k_M3(&q, net, i);
-			// mu_n_k.dump_me();
-			// dump(&q, net);
-			// PP(entropy.entropy);
-			// cout << endl;
-		}
-		dump(&q,net);
-		calculate_first_four_terms_slowly(&q, net, breakdown); breakdown.test_assuming_full();
-		for(int i=0; i<N; i++) {
-			one_node_all_k(&q, net, i);
-		}
-		dump(&q,net);
-		calculate_first_four_terms_slowly(&q, net, breakdown); breakdown.test_assuming_full();
-		entropy.verify(q);
+		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
 		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net, breakdown);
 		PP(lower_bound);
 		{
