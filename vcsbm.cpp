@@ -447,7 +447,7 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 	}
 	// Second third and fourth terms, E log Gamma (y_kl + Beta_1)
 //*
-	cout << endl;
+	// cout << endl;
 	for(int k=0; k<J; k++) {
 		for(int l=0; l<J; l++) {
 			if(l<k) {
@@ -480,7 +480,7 @@ long double calculate_first_four_terms_slowly(const Q *q, const Network * net, c
 			long double nonEdge_mu = mu_p_kl - mu;
 			long double nonEdge_var = var_p_kl - var_y_kl;
 
-			//*
+			/*
 			cout << k << ',' << l
 				<< '\t' << mu << '(' << var_y_kl << ')'
 				<< '\t' << mu_p_kl << '(' << var_p_kl << ')'
@@ -546,6 +546,7 @@ void one_node_all_k_M3(Q *q, const Network * net, const int node_id) {
 		++ random_cluster;
 	}
 
+	PP2(node_id, random_cluster);
 	q->set(node_id, random_cluster) = 1;
 }
 
@@ -567,18 +568,18 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, co
 	// store the baseline ?
 	vector<long double> scores(J);
 	for (int k = 0; k < num_clusters; ++k) {
-		cout << "trying node " << node_id << " in cluster " << k << endl;
+		// cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
-		dump(q, net);
 		scores.at(k) = calculate_first_four_terms_slowly(q, net);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
 	}
 	const long double max_score = *max_element(scores.begin(), scores.end());
-	For(score, scores) {
-		PP(*score);
-		*score -= max_score;
+	for(int k=0; k< (int)scores.size(); ++k) {
+		long double & score = scores.at(k);
+		// PP2(k, score);
+		score -= max_score;
 		// const long double jitter=gsl_ran_gaussian(global_r, 0.0001); *score += jitter;
 	}
 	long double total = 0.0L;
@@ -658,16 +659,18 @@ for(int restart = 0; restart<1000; ++restart) {
 	for(int repeat = 0; repeat < 10; ++repeat) {
 		PP2(restart,repeat);
 		for(int i=0; i<N; i++) {
-			cout << endl << " == node: " << i << " ==" << endl;
+			// cout << " == node: " << i << " ==" << endl;
 			one_node_all_k_M3(&q, net, i);
 			// mu_n_k.dump_me();
 			// dump(&q, net);
 			// PP(entropy.entropy);
-			cout << endl;
+			// cout << endl;
 		}
+		dump(&q,net);
 		for(int i=0; i<N; i++) {
 			one_node_all_k(&q, net, i);
 		}
+		dump(&q,net);
 		entropy.verify(q);
 		const long double lower_bound = entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 		PP(lower_bound);
