@@ -169,9 +169,7 @@ void dump(const Q *q, Network *net) {
 
 template<int power>
 struct Q_template_n_k : public Q :: Q_listener {
-private:
 	mutable vector<long double> n_k;
-public:
 	Q_template_n_k() : n_k(10000) {
 		assert(power == 1 || power == 2);
 	}
@@ -451,6 +449,8 @@ struct BreakdownOfCompleteRecalculation {
 };
 
 long double calculate_first_four_terms_slowly(const Q *q, Network * net, BreakdownOfCompleteRecalculation &breakdown) {
+	assert(global_tracker);
+	global_tracker->verify_all();
 	breakdown.reset();
 	const int N = q->N;
 	const int E = net->edge_set->E();
@@ -461,6 +461,10 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * net, Breakdo
 			mu_n_k.at(k) += q->get(i,k);
 			sq_n_k.at(k) += q->get(i,k)*q->get(i,k);
 		}
+	}
+	for(int k=0; k<J; ++k) {
+		assert(mu_n_k.at(k) == global_tracker->ql_mu_n_k->n_k.at(k));
+		assert(sq_n_k.at(k) == global_tracker->ql_squared_n_k->n_k.at(k));
 	}
 
 	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
