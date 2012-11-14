@@ -454,18 +454,8 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * net, Breakdo
 	breakdown.reset();
 	const int N = q->N;
 	const int E = net->edge_set->E();
-	vector<long double> mu_n_k(J);
-	vector<long double> sq_n_k(J);
-	for(int i=0; i<N; ++i) {
-		for(int k=0; k<J; ++k) {
-			mu_n_k.at(k) += q->get(i,k);
-			sq_n_k.at(k) += q->get(i,k)*q->get(i,k);
-		}
-	}
-	for(int k=0; k<J; ++k) {
-		assert(mu_n_k.at(k) == global_tracker->ql_mu_n_k->n_k.at(k));
-		assert(sq_n_k.at(k) == global_tracker->ql_squared_n_k->n_k.at(k));
-	}
+	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
+	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
 	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
 	vector< vector<long double> > sq_y_kl(J, vector<long double>(J) );
