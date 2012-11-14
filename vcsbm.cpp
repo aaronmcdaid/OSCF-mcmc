@@ -169,7 +169,9 @@ void dump(const Q *q, Network *net) {
 
 template<int power>
 struct Q_template_n_k : public Q :: Q_listener {
-	vector<long double> n_k;
+private:
+	mutable vector<long double> n_k;
+public:
 	Q_template_n_k() : n_k(10000) {
 		assert(power == 1 || power == 2);
 	}
@@ -208,7 +210,11 @@ struct Q_template_n_k : public Q :: Q_listener {
 					verify_n_k.at(k) += Q_ik * Q_ik;
 			}
 		}
-		assert(this->n_k == verify_n_k);
+		assert(this->n_k.size() == verify_n_k.size());
+		for(size_t k=0; k<this->n_k.size(); ++k) {
+			assert(VERYCLOSE( this->n_k.at(k),   verify_n_k.at(k) ));
+		}
+		this->n_k = verify_n_k;
 	}
 };
 typedef Q_template_n_k<1> Q_mu_n_k;
