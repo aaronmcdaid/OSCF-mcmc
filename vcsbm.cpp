@@ -537,6 +537,7 @@ void one_random_node_all_k(Q *q, const Network * net) {
 	one_node_all_k(q, net, random_node);
 }
 
+static void vacate_a_node(Q *q, const int node_id);
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id);
 static bool check_total_score_is_1(const vector<long double> &scores);
 
@@ -576,14 +577,12 @@ static bool check_total_score_is_1(const vector<long double> &scores) {
 }
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, const Network *net, const int node_id) {
+	vacate_a_node(q, node_id);
 	BreakdownOfCompleteRecalculation breakdown(q,net);
-	const int num_clusters = q->Q_.at(node_id).size();
-	assert(J==num_clusters);
-	for (int k = 0; k < num_clusters; ++k) {
-		q->set(node_id, k) = 0;
-	}
 	// store the baseline ?
 	vector<long double> scores(J);
+	const int num_clusters = q->Q_.at(node_id).size();
+	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
@@ -607,6 +606,13 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, co
 		*score  = expl(*score) / total;
 	}
 	return scores;
+}
+static void vacate_a_node(Q *q, const int node_id) {
+	const int num_clusters = q->Q_.at(node_id).size();
+	assert(J==num_clusters);
+	for (int k = 0; k < num_clusters; ++k) {
+		q->set(node_id, k) = 0;
+	}
 }
 
 void vcsbm(const Network * net) {
