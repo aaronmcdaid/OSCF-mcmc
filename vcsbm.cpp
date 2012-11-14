@@ -65,7 +65,8 @@ static void should_be_positive_(long double &x, const int line_no) {
 }
 #define SHOULD_BE_POSITIVE(x) should_be_positive_(x, __LINE__);
 
-const int J = 3; // fix the upper bound on K at 10.
+#define FIXED_K 4
+const int J = FIXED_K; // fix the upper bound on K at 10.
 
 struct Q {
 	// the variational lower bound is a function of Q.
