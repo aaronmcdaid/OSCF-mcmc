@@ -309,6 +309,61 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 		For(junc_id, net->i.at(i).my_junctions) {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
 			assert(junc.this_node_id == i);
+			// each of these junctions corresponds to an edge
+			// we should consider all possible clusters for the other endpoint
+			for(int l = 0; l < J; ++l) {
+				const int j = junc.far_node_id;
+				const long double Qjl = q->get(j,l);
+				int k2 = k;
+				int l2 = l;
+				{ // if undirected, we should have k2 <= j2
+					if(k2>l2)
+						swap(k2,l2);
+				}
+				switch(power) {
+						break; case 1: this->y_kl[make_pair(k2,l2)] -= old_val * Qjl;
+						               this->y_kl[make_pair(k2,l2)] += new_val * Qjl;
+						break; case 2: this->y_kl[make_pair(k2,l2)] -= old_val * Qjl * old_val * Qjl;
+						               this->y_kl[make_pair(k2,l2)] += new_val * Qjl * new_val * Qjl;
+						break; default: assert(1==2);
+				}
+			}
+		}
+	}
+	void verify(const Q &q) const {
+		vector< vector<long double> > verify_y_kl(J, vector<long double>(J) );
+		const int E = net->edge_set->E();
+		for(int m=0; m<E; ++m) {
+			EdgeSet :: Edge edge = net->edge_set->edges.at(m);
+			int i = edge.left;
+			int j = edge.right;
+			for(int k=0; k<J; ++k) {
+				for(int l=0; l<J; ++l) {
+					const long double Qik = q.get(i,k);
+					const long double Qjl = q.get(j,l);
+					int k2 = k;
+					int l2 = l;
+					{ // if undirected, we should have k2 <= j2
+						if(k2>l2)
+							swap(k2,l2);
+					}
+					switch(power) {
+						break; case 1: verify_y_kl.at(k2).at(l2) += Qik * Qjl;
+						break; case 2: verify_y_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
+						break; default: assert(1==2);
+					}
+				}
+			}
+		}
+		// PP( this->y_kl.size() );
+		For( entry, this->y_kl ) {
+			// PP2(               entry->second   ,  verify_y_kl.at(entry->first.first).at(entry->first.second)  );
+			assert(VERYCLOSE(  entry->second   ,  verify_y_kl.at(entry->first.first).at(entry->first.second) ));
+			verify_y_kl.at(entry->first.first).at(entry->first.second) = 0.0L;
+		}
+		For(verify_row, verify_y_kl) {
+			const long double sum = accumulate(verify_row->begin(), verify_row->end(), 0);
+			assert(VERYCLOSE(sum, 0.0L));
 		}
 	}
 };
