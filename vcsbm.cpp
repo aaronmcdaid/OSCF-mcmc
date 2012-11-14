@@ -273,6 +273,24 @@ struct Q_sum_of_mu_n_k : public Q :: Q_listener {
 	}
 };
 
+namespace std {
+namespace tr1 {
+
+template<typename a, typename b>
+struct hash< std::pair<a, b> > {
+private:
+   const hash<a> ah;
+   const hash<b> bh;
+public:
+   hash() : ah(), bh() {}
+   size_t operator()(const std::pair<a, b> &p) const {
+      return ah(1+p.first) ^ bh(-p.second);
+   }
+};
+
+}} // namespaces;
+template struct std :: tr1 :: hash< pair<int,int> >;
+
 template<int power>
 struct Q_templated_y_kl : public Q :: Q_listener {
 	// Summing ONLY across the edges,
