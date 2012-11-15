@@ -697,7 +697,6 @@ static void vacate_a_node(Q *q, const int node_id) {
 }
 
 static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
-	global_tracker->verify_all();
 	const int N = q->N;
 	for(int i=0; i<N; i++) {
 		vacate_a_node(q, i);
@@ -715,7 +714,6 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	dump(q,net);
 	global_tracker->ql_mu_n_k->dump_me();
 	calculate_first_four_terms_slowly(q, net);
-	global_tracker->verify_all();
 }
 
 void vcsbm(Network * net) {
