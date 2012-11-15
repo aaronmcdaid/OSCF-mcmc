@@ -496,21 +496,26 @@ long double mapat (const T &container, int k, int l) {
 		return location->second;
 }
 
-long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownOfCompleteRecalculation &breakdown) {
+long double calculate_first_four_terms_slowly(const Q *
+#ifdef SLOW_P_KL
+		q
+#endif
+		, Network * , BreakdownOfCompleteRecalculation &breakdown) {
 	assert(global_tracker);
 	global_tracker->verify_all();
 	breakdown.reset();
-	const int N = q->N;
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
 	const unordered_map< pair<int,int> , long double> &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
 	const unordered_map< pair<int,int> , long double> &sq_y_kl = global_tracker->ql_squared_y_kl->y_kl;
 
+#ifdef SLOW_P_KL
 	// These next structures should be removed sometimes.  For now,
 	// they are just for paranoid testing of p_kl
 	vector< vector<long double> > mu_slowp_kl(J, vector<long double>(J) );
 	vector< vector<long double> > sq_slowp_kl(J, vector<long double>(J) );
+	const int N = q->N;
 	for(int i=0; i<N; ++i) {
 	for(int j=i; j<N; ++j) { // undirected j starts at i
 		for(int k=0; k<J; ++k) {
@@ -540,6 +545,7 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 			// PP2(mu_slowp_kl.at(k).at(l), sq_slowp_kl.at(k).at(l));
 		}
 	}
+#endif
 
 	For(one_cell, mu_y_kl) {
 		breakdown.sum_of_edge_partial_memberships += one_cell->second;
@@ -581,8 +587,10 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 			} else { // bizarrelly, the self loops can contribute
 			         // to between-cluster blocks.
 			}
+#ifdef SLOW_P_KL
 			const long double mu_slowp_KL = mu_slowp_kl.at(k).at(l);
 			const long double var_slowp_KL = mu_slowp_kl.at(k).at(l) - sq_slowp_kl.at(k).at(l);
+#endif
 
 			//for the non-edges
 			long double nonEdge_mu = mu_p_kl - mu;
@@ -592,7 +600,9 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 			cout << k << ',' << l
 				<< '\t' << mu << '(' << var_y_kl << ')'
 				<< '\t' << mu_p_kl << '(' << var_p_kl << ')'
+#ifdef SLOW_P_KL
 				<< '=' << mu_slowp_KL << '(' << var_slowp_KL << ')'
+#endif
 				<< '\t' << nonEdge_mu << '(' << nonEdge_var << ')'
 				<< endl;
 				// */
@@ -603,8 +613,10 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 			SHOULD_BE_POSITIVE(var_p_kl);
 			SHOULD_BE_POSITIVE(nonEdge_mu);
 			SHOULD_BE_POSITIVE(nonEdge_var);
+#ifdef SLOW_P_KL
 			assert(VERYCLOSE(mu_slowp_KL , mu_p_kl));
 			assert(VERYCLOSE(var_slowp_KL , var_p_kl));
+#endif
 
 			first_4_terms += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
 			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
