@@ -450,6 +450,14 @@ struct BreakdownOfCompleteRecalculation {
 	}
 };
 
+template<typename T>
+long double mapat (const T &container, int k, int l) {
+	const typename T :: const_iterator location = container.find(make_pair(k,l));
+	if(location == container.end())
+		return 0.0L;
+	else
+		return location->second;
+}
 long double calculate_first_four_terms_slowly(const Q *q, Network * net, BreakdownOfCompleteRecalculation &breakdown) {
 	assert(global_tracker);
 	global_tracker->verify_all();
