@@ -791,7 +791,7 @@ for(int restart = 0; restart<3; ++restart) {
 		dump(&q, net);
 	}
 	cout << endl << endl << "into the repeats now" << endl;
-	for(int repeat = 0; repeat < 100; ++repeat) {
+	for(int repeat = 0; repeat < 500; ++repeat) {
 		PP2(restart,repeat);
 		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
 		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
