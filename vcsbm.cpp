@@ -458,37 +458,17 @@ long double mapat (const T &container, int k, int l) {
 	else
 		return location->second;
 }
-long double calculate_first_four_terms_slowly(const Q *q, Network * net, BreakdownOfCompleteRecalculation &breakdown) {
+
+long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownOfCompleteRecalculation &breakdown) {
 	assert(global_tracker);
 	global_tracker->verify_all();
 	breakdown.reset();
 	const int N = q->N;
-	const int E = net->edge_set->E();
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
-	vector< vector<long double> > mu_y_kl(J, vector<long double>(J) );
-	vector< vector<long double> > sq_y_kl(J, vector<long double>(J) );
-	assert(E == (int)net->edge_set->edges.size());
-	for(int m=0; m<E; ++m) {
-		EdgeSet :: Edge edge = net->edge_set->edges.at(m);
-		int i = edge.left;
-		int j = edge.right;
-		for(int k=0; k<J; ++k) {
-			for(int l=0; l<J; ++l) {
-				const long double Qik = q->get(i,k);
-				const long double Qjl = q->get(j,l);
-				int k2 = k;
-				int l2 = l;
-				{ // if undirected, we should have k2 <= j2
-					if(k2>l2)
-						swap(k2,l2);
-				}
-				mu_y_kl.at(k2).at(l2) += Qik * Qjl;
-				sq_y_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
-			}
-		}
-	}
+	const unordered_map< pair<int,int> , long double> &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
+	const unordered_map< pair<int,int> , long double> &sq_y_kl = global_tracker->ql_squared_y_kl->y_kl;
 
 	// These next structures should be removed sometimes.  For now,
 	// they are just for paranoid testing of p_kl
@@ -525,10 +505,8 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * net, Breakdo
 		}
 	}
 
-	For(one_cluster, mu_y_kl) {
-		For(one_block, *one_cluster) {
-			breakdown.sum_of_edge_partial_memberships += *one_block;
-		}
+	For(one_cell, mu_y_kl) {
+		breakdown.sum_of_edge_partial_memberships += one_cell->second;
 	}
 
 	// Need to count the p_kl for the self loops.
@@ -565,12 +543,12 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * net, Breakdo
 			if(l<k) {
 				// if undirected, these block don't really count.
 				// In particular y_kl should be zero
-				assert(0 == mu_y_kl.at(k).at(l));
-				assert(0 == sq_y_kl.at(k).at(l));
+				assert(0 == mapat(mu_y_kl,k,l));
+				assert(0 == mapat(sq_y_kl,k,l));
 				continue;
 			}
-			long double mu = mu_y_kl.at(k).at(l);
-			long double var_y_kl = mu - sq_y_kl.at(k).at(l);
+			long double mu = mapat(mu_y_kl,k,l);
+			long double var_y_kl = mu - mapat(sq_y_kl,k,l);
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
