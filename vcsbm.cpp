@@ -549,22 +549,6 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 		breakdown.sum_of_edge_partial_memberships += one_cell->second;
 	}
 
-	// Need to count the p_kl for the self loops.
-	// .. maybe this can be ignored for the directed+selfloop model,
-	// but otherwise it's important.
-	vector< vector<long double> > mu_psl_kl(J, vector<long double>(J) );
-	vector< vector<long double> > sq_psl_kl(J, vector<long double>(J) );
-	for(int i=0; i<N; ++i) {
-		for(int k=0; k<J; ++k) {
-			for(int l=0; l<J; ++l) {
-				const long double Qik = q->get(i,k);
-				const long double Qil = q->get(i,l);
-				mu_psl_kl.at(k).at(l) += Qik * Qil;
-				sq_psl_kl.at(k).at(l) += Qik * Qil * Qik * Qil;
-			}
-		}
-	}
-
 	long double first_4_terms = 0.0L;
 
 	// First term, E log Gamma( n_k + gamma_k )
@@ -592,16 +576,14 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
+			mu_p_kl  += mapat(global_tracker->ql_mu_psl_kl->psl_kl,k,l);
+			var_p_kl += mapat(global_tracker->ql_mu_psl_kl->psl_kl,k,l) - mapat(global_tracker->ql_sq_psl_kl->psl_kl,k,l);
 			if(l==k) { // if undirected
 				// Add in the self loops and then divide everything by two
-				mu_p_kl  += mu_psl_kl.at(k).at(l);
-				var_p_kl += mu_psl_kl.at(k).at(l) - sq_psl_kl.at(k).at(l);
 				mu_p_kl /= 2;
 				var_p_kl /= 2;
 			} else { // bizarrelly, the self loops can contribute
 			         // to between-cluster blocks.
-				mu_p_kl  += mu_psl_kl.at(k).at(l);
-				var_p_kl += mu_psl_kl.at(k).at(l) - sq_psl_kl.at(k).at(l);
 			}
 			const long double mu_slowp_KL = mu_slowp_kl.at(k).at(l);
 			const long double var_slowp_KL = mu_slowp_kl.at(k).at(l) - sq_slowp_kl.at(k).at(l);
