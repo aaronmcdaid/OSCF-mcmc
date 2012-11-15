@@ -769,7 +769,7 @@ void vcsbm(Network * net) {
 
 	BreakdownOfCompleteRecalculation breakdown;
 
-	if(1)
+	if(0)
 	for(int i=0; i<N; i++) {
 		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
 		// if(i<6) q.set(i,0) = 1; else q.set(i,1) = 1;
@@ -778,7 +778,6 @@ void vcsbm(Network * net) {
 		// q.set(i,gsl_rng_uniform(global_r)*3)=1;
 		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
 		// one_node_all_k(&q, net, i);
-		PP(ql_entropy.entropy);
 		ql_mu_n_k.dump_me();
 	}
 	dump(&q, net);
