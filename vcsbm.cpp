@@ -359,6 +359,49 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 typedef Q_templated_y_kl<1> Q_mu_y_kl;
 typedef Q_templated_y_kl<2> Q_squared_y_kl;
 
+template<int Power>
+struct Q_templated_psl_kl : public Q :: Q_listener {
+	unordered_map< pair<int,int> , long double> psl_kl;
+
+	virtual void notify(int i, int k, long double old_val, long double new_val, const Q *q) {
+		for(int l=0; l<J; ++l) {
+			if(l==k) {
+				this->psl_kl[make_pair(k,l)] += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
+			} else {
+				const long double Qil = q->get(i,l);
+				this->psl_kl[make_pair(k,l)] += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
+				this->psl_kl[make_pair(l,k)] += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
+			}
+		}
+	}
+	void verify(const Q &q) const {
+		unordered_map< pair<int,int> , long double> verify_psl_kl;
+		for(int i=0; i<q.N; ++i) {
+			for(int k=0; k<J; ++k) {
+				for(int l=0; l<J; ++l) {
+					const long double Qik = q.get(i,k);
+					const long double Qil = q.get(i,l);
+					verify_psl_kl[make_pair(k,l)] += power<Power>(Qik * Qil);
+				}
+			}
+		}
+		For(cell, this->psl_kl) {
+			const int k = cell->first.first;
+			const int l = cell->first.second;
+			const long double val = cell->second;
+			assert(VERYCLOSE(verify_psl_kl[make_pair(k,l)] , val));
+		}
+		For(cell, verify_psl_kl) {
+			const int k = cell->first.first;
+			const int l = cell->first.second;
+			const long double val = cell->second;
+			assert(VERYCLOSE(mapat(this->psl_kl,k,l) , val));
+		}
+	}
+};
+typedef Q_templated_psl_kl<1> Q_mu_psl_kl;
+typedef Q_templated_psl_kl<2> Q_sq_psl_kl;
+
 gsl_rng * global_r = NULL;
 
 // A few globals (sorry) but they only help in verification and assertions
@@ -371,6 +414,8 @@ struct Tracker {
 	const Q_sum_of_mu_n_k * const ql_sum_of_mu_n_k;
 	const Q_mu_y_kl       * const ql_mu_y_kl;
 	const Q_squared_y_kl  * const ql_squared_y_kl;
+	const Q_mu_psl_kl     * const ql_mu_psl_kl;
+	const Q_sq_psl_kl     * const ql_sq_psl_kl;
 	Tracker(const Q *q_, Network * net_
 			, const Q_mu_n_k *ql_mu_n_k_
 			, const Q_squared_n_k *ql_squared_n_k_
@@ -378,6 +423,8 @@ struct Tracker {
 			, const Q_sum_of_mu_n_k *ql_sum_of_mu_n_k_
 			, const Q_mu_y_kl *ql_mu_y_kl_
 			, const Q_squared_y_kl *ql_squared_y_kl_
+			, const Q_mu_psl_kl *ql_mu_psl_kl_
+			, const Q_sq_psl_kl *ql_sq_psl_kl_
 			)
 		: q(q_), net(net_)
 		  , ql_mu_n_k(ql_mu_n_k_)
@@ -386,6 +433,8 @@ struct Tracker {
 		  , ql_sum_of_mu_n_k(ql_sum_of_mu_n_k_)
 		  , ql_mu_y_kl(ql_mu_y_kl_)
 		  , ql_squared_y_kl(ql_squared_y_kl_)
+		  , ql_mu_psl_kl(ql_mu_psl_kl_)
+		  , ql_sq_psl_kl(ql_sq_psl_kl_)
 	{}
 	void verify_all() const {
 		ql_mu_n_k->verify(*this->q);
@@ -394,6 +443,8 @@ struct Tracker {
 		ql_sum_of_mu_n_k->verify(*this->q);
 		ql_mu_y_kl->verify(*this->q);
 		ql_squared_y_kl->verify(*this->q);
+		ql_mu_psl_kl->verify(*this->q);
+		ql_sq_psl_kl->verify(*this->q);
 	}
 };
 Tracker * global_tracker = NULL;
@@ -716,6 +767,8 @@ void vcsbm(Network * net) {
 	Q_sum_of_mu_n_k ql_sum_of_mu_n_k;
 	Q_mu_y_kl ql_mu_y_kl(net);
 	Q_squared_y_kl ql_squared_y_kl(net);
+	Q_mu_psl_kl ql_mu_psl_kl;
+	Q_sq_psl_kl ql_sq_psl_kl;
 
 	q.add_listener(&ql_mu_n_k);
 	q.add_listener(&ql_squared_n_k);
@@ -723,9 +776,14 @@ void vcsbm(Network * net) {
 	q.add_listener(&ql_sum_of_mu_n_k);
 	q.add_listener(&ql_mu_y_kl);
 	q.add_listener(&ql_squared_y_kl);
+	q.add_listener(&ql_mu_psl_kl);
+	q.add_listener(&ql_sq_psl_kl);
 
 	assert(global_tracker == NULL);
-	global_tracker = new Tracker(&q, net, &ql_mu_n_k, &ql_squared_n_k, &ql_entropy, &ql_sum_of_mu_n_k, &ql_mu_y_kl, &ql_squared_y_kl);
+	global_tracker = new Tracker(&q, net, &ql_mu_n_k, &ql_squared_n_k, &ql_entropy, &ql_sum_of_mu_n_k
+			, &ql_mu_y_kl, &ql_squared_y_kl
+			, &ql_mu_psl_kl, &ql_sq_psl_kl
+			);
 	assert(global_tracker);
 
 	// To store the best one found so far.
