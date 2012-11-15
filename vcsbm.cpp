@@ -533,10 +533,10 @@ long double calculate_first_four_terms_slowly(const Q *
 
 	// First term, E log Gamma( n_k + gamma_k )
 	for(int k=0; k<J; k++) {
-		const long double mu = mu_n_k.at(k);
-		const long double var = mu - sq_n_k.at(k);
-		assert(mu >= 0.0L);
-		assert(var >= 0.0L);
+		long double mu = mu_n_k.at(k);
+		long double var = mu - sq_n_k.at(k);
+		SHOULD_BE_POSITIVE(mu);
+		SHOULD_BE_POSITIVE(var);
 		first_4_terms += exp_log_Gamma_Normal( mu + gamma_k(k), var );
 	}
 	// Second third and fourth terms, E log Gamma (y_kl + Beta_1)
