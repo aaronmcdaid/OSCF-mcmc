@@ -485,7 +485,7 @@ long double calculate_first_four_terms_slowly(const Q *
 #endif
 		, Network *) {
 	assert(global_tracker);
-	global_tracker->verify_all();
+	// global_tracker->verify_all();
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
@@ -808,4 +808,5 @@ for(int restart = 0; restart<3; ++restart) {
 		}
 	}
 }
+	global_tracker->verify_all();
 }
