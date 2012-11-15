@@ -471,12 +471,10 @@ static long double gamma_k(const int k) {
 }
 
 struct BreakdownOfCompleteRecalculation {
-	long double verify_num_pairs;
 	long double sum_of_edge_partial_memberships;
 	BreakdownOfCompleteRecalculation() {}
 	BreakdownOfCompleteRecalculation & reset() {
 		assert(global_tracker);
-		this -> verify_num_pairs = 0.0L;
 		this -> sum_of_edge_partial_memberships = 0.0L;
 		return *this;
 	}
@@ -485,7 +483,6 @@ struct BreakdownOfCompleteRecalculation {
 		const int N = global_tracker->q->N;
 		const int E = global_tracker->net->E();
 		assert(VERYCLOSE(N, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
-		assert(VERYCLOSE(this->verify_num_pairs , N * (N+1) / 2));
 		assert(VERYCLOSE(this->sum_of_edge_partial_memberships , E));
 	}
 };
@@ -541,7 +538,6 @@ long double calculate_first_four_terms_slowly(const Q *q, Network * , BreakdownO
 				continue;
 			}
 			// PP2(mu_slowp_kl.at(k).at(l), sq_slowp_kl.at(k).at(l));
-			breakdown.verify_num_pairs += mu_slowp_kl.at(k).at(l);
 		}
 	}
 
