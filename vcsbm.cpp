@@ -53,6 +53,8 @@ int main(int argc, char **argv) {
 	vcsbm(net);
 }
 
+typedef vector< vector<long double> > VVL;
+
 static void should_be_positive_(long double &x, const int line_no) {
 	assert(x==x); // it's non NaN
 	if(x<0.0L) {
@@ -68,6 +70,7 @@ static void should_be_positive_(long double &x, const int line_no) {
 #define FIXED_K 4
 const int J = FIXED_K; // fix the upper bound on K at 10.
 
+
 struct Q {
 	// the variational lower bound is a function of Q.
 	// We must keep track of various convenient summaries of Q, such as n_k,
@@ -75,7 +78,7 @@ struct Q {
 	// This Q class will be kept very simple
 	const int N;
 	const int J;
-	vector< vector<long double> > Q_;
+	VVL Q_;
 	Q(const int N_, const int J_) : N(N_), J(J_), Q_(N, vector<long double>(J) ) {
 	}
 	long double get(int i, int k) const {
@@ -298,9 +301,9 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 	// Must take care of direction too.
 	// If directed, y_kl is the edges from k to l
 	// If undirected, make k the smaller cluster-id
-	unordered_map< pair<int,int> , long double> y_kl;
+	VVL y_kl;
 	Network * const net;
-	Q_templated_y_kl(Network *net_) : net(net_) {}
+	Q_templated_y_kl(Network *net_) : y_kl(J, vector<long double>(J, 0.0L)), net(net_) {}
 
 	virtual void notify(int i, int k, long double old_val, long double new_val, const Q *q) {
 		// Must consider all the Junctions at node i
@@ -319,12 +322,12 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 					if(k2>l2)
 						swap(k2,l2);
 				}
-				this->y_kl[make_pair(k2,l2)] += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+				this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
 			}
 		}
 	}
 	void verify(const Q &q) const {
-		vector< vector<long double> > verify_y_kl(J, vector<long double>(J) );
+		VVL verify_y_kl(J, vector<long double>(J) );
 		const int E = net->edge_set->E();
 		for(int m=0; m<E; ++m) {
 			EdgeSet :: Edge edge = net->edge_set->edges.at(m);
@@ -345,14 +348,14 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 			}
 		}
 		// PP( this->y_kl.size() );
-		For( entry, this->y_kl ) {
-			// PP2(               entry->second   ,  verify_y_kl.at(entry->first.first).at(entry->first.second)  );
-			assert(VERYCLOSE(  entry->second   ,  verify_y_kl.at(entry->first.first).at(entry->first.second) ));
-			verify_y_kl.at(entry->first.first).at(entry->first.second) = 0.0L;
-		}
-		For(verify_row, verify_y_kl) {
-			const long double sum = accumulate(verify_row->begin(), verify_row->end(), 0);
-			assert(VERYCLOSE(sum, 0.0L));
+		assert(this->y_kl.size() == J);
+		assert(verify_y_kl.size() == J);
+		for(int k=0; k<J; ++k) {
+			for(int l=0; l<J; ++l) {
+				assert(VERYCLOSE(  this->y_kl.at(k).at(l)
+			                  ,       verify_y_kl.at(k).at(l)
+				));
+			}
 		}
 	}
 };
@@ -489,8 +492,8 @@ long double calculate_first_four_terms_slowly(const Q *
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
-	const unordered_map< pair<int,int> , long double> &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
-	const unordered_map< pair<int,int> , long double> &sq_y_kl = global_tracker->ql_squared_y_kl->y_kl;
+	const VVL &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
+	const VVL &sq_y_kl = global_tracker->ql_squared_y_kl->y_kl;
 
 #ifdef SLOW_P_KL
 	// These next structures should be removed sometimes.  For now,
@@ -547,12 +550,12 @@ long double calculate_first_four_terms_slowly(const Q *
 			if(l<k) {
 				// if undirected, these block don't really count.
 				// In particular y_kl should be zero
-				assert(0 == mapat(mu_y_kl,k,l));
-				assert(0 == mapat(sq_y_kl,k,l));
+				assert(0 == mu_y_kl.at(k).at(l));
+				assert(0 == sq_y_kl.at(k).at(l));
 				continue;
 			}
-			long double mu = mapat(mu_y_kl,k,l);
-			long double var_y_kl = mu - mapat(sq_y_kl,k,l);
+			long double mu = mu_y_kl.at(k).at(l);
+			long double var_y_kl = mu - sq_y_kl.at(k).at(l);
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
