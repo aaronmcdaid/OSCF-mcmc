@@ -351,6 +351,8 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 		assert(this->y_kl.size() == J);
 		assert(verify_y_kl.size() == J);
 		for(int k=0; k<J; ++k) {
+			assert(this-> y_kl.at(k).size() == J);
+			assert(verify_y_kl.at(k).size() == J);
 			for(int l=0; l<J; ++l) {
 				assert(VERYCLOSE(  this->y_kl.at(k).at(l)
 			                  ,       verify_y_kl.at(k).at(l)
@@ -364,41 +366,41 @@ typedef Q_templated_y_kl<2> Q_squared_y_kl;
 
 template<int Power>
 struct Q_templated_psl_kl : public Q :: Q_listener {
-	unordered_map< pair<int,int> , long double> psl_kl;
+	VVL psl_kl;
+	Q_templated_psl_kl(): psl_kl(J, vector<long double>(J,0)) {}
 
 	virtual void notify(int i, int k, long double old_val, long double new_val, const Q *q) {
 		for(int l=0; l<J; ++l) {
 			if(l==k) {
-				this->psl_kl[make_pair(k,l)] += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
+				this->psl_kl.at(k).at(l) += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
 			} else {
 				const long double Qil = q->get(i,l);
-				this->psl_kl[make_pair(k,l)] += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
-				this->psl_kl[make_pair(l,k)] += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
+				this->psl_kl.at(k).at(l) += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
+				this->psl_kl.at(l).at(k) += power<Power>(new_val * Qil) - power<Power>(old_val * Qil);
 			}
 		}
 	}
 	void verify(const Q &q) const {
-		unordered_map< pair<int,int> , long double> verify_psl_kl;
+		VVL verify_psl_kl(J, vector<long double>(J,0));
 		for(int i=0; i<q.N; ++i) {
 			for(int k=0; k<J; ++k) {
 				for(int l=0; l<J; ++l) {
 					const long double Qik = q.get(i,k);
 					const long double Qil = q.get(i,l);
-					verify_psl_kl[make_pair(k,l)] += power<Power>(Qik * Qil);
+					verify_psl_kl.at(k).at(l) += power<Power>(Qik * Qil);
 				}
 			}
 		}
-		For(cell, this->psl_kl) {
-			const int k = cell->first.first;
-			const int l = cell->first.second;
-			const long double val = cell->second;
-			assert(VERYCLOSE(verify_psl_kl[make_pair(k,l)] , val));
-		}
-		For(cell, verify_psl_kl) {
-			const int k = cell->first.first;
-			const int l = cell->first.second;
-			const long double val = cell->second;
-			assert(VERYCLOSE(mapat(this->psl_kl,k,l) , val));
+		assert(this->psl_kl.size() == J);
+		assert(verify_psl_kl.size() == J);
+		for(int k=0; k<J; ++k) {
+			assert(this-> psl_kl.at(k).size() == J);
+			assert(verify_psl_kl.at(k).size() == J);
+			for(int l=0; l<J; ++l) {
+				assert(VERYCLOSE(  this->psl_kl.at(k).at(l)
+			                  ,       verify_psl_kl.at(k).at(l)
+				));
+			}
 		}
 	}
 };
@@ -559,8 +561,8 @@ long double calculate_first_four_terms_slowly(const Q *
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
-			mu_p_kl  += mapat(global_tracker->ql_mu_psl_kl->psl_kl,k,l);
-			var_p_kl += mapat(global_tracker->ql_mu_psl_kl->psl_kl,k,l) - mapat(global_tracker->ql_sq_psl_kl->psl_kl,k,l);
+			mu_p_kl  += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l);
+			var_p_kl += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l) - global_tracker->ql_sq_psl_kl->psl_kl.at(k).at(l);
 			if(l==k) { // if undirected
 				// Add in the self loops and then divide everything by two
 				mu_p_kl /= 2;
