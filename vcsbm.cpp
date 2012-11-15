@@ -742,8 +742,6 @@ void vcsbm(Network * net) {
 	Q_mu_y_kl ql_mu_y_kl(net);
 	Q_squared_y_kl ql_squared_y_kl(net);
 
-	PP(ql_entropy.entropy);
-
 	q.add_listener(&ql_mu_n_k);
 	q.add_listener(&ql_squared_n_k);
 	q.add_listener(&ql_entropy);
@@ -762,7 +760,6 @@ void vcsbm(Network * net) {
 	ql_entropy.verify(q);
 	ql_mu_n_k.dump_me();
 	ql_squared_n_k.dump_me();
-	PP(ql_entropy.entropy);
 	ql_entropy.verify(q);
 	ql_mu_n_k.verify(q);
 	ql_squared_n_k.verify(q);
