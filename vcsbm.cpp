@@ -161,24 +161,26 @@ void dump(const Q *q, Network *net) {
 	}
 }
 
+template<int Power>
+static inline long double power(long double x);
+template<>
+inline long double power<1>(long double x) { return x; }
+template<>
+inline long double power<2>(long double x) { return x*x; }
+
 // Here are a few classes that will 'listen' to changes to Q
 // and record various convenient summaries of Q, such as n_k
 //
 // mu_n_k = \sum_{i=1}^N Q_{ik}
 // \sum_{i=1}^N Q_{ik}^2
 
-template<int power>
+template<int Power>
 struct Q_template_n_k : public Q :: Q_listener {
 	mutable vector<long double> n_k;
-	Q_template_n_k() : n_k(10000) {
-		assert(power == 1 || power == 2);
-	}
+	Q_template_n_k() : n_k(10000) { }
 	virtual void notify(int, int k, long double old_val, long double new_val, const Q *) {
-		if(power!=1) {
-			assert(power==2);
-			old_val = old_val * old_val;
-			new_val = new_val * new_val;
-		}
+		old_val = power<Power>(old_val);
+		new_val = power<Power>(new_val);
 		assert_0_to_1(old_val);
 		assert_0_to_1(new_val);
 		this->n_k.at(k) -= old_val;
@@ -204,10 +206,7 @@ struct Q_template_n_k : public Q :: Q_listener {
 		For(node, q.Q_) {
 			for(int k=0; k < (int) node->size(); ++k) {
 				long double Q_ik = node->at(k);
-				if(power==1)
-					verify_n_k.at(k) += Q_ik;
-				else
-					verify_n_k.at(k) += Q_ik * Q_ik;
+				verify_n_k.at(k) += power<Power>(Q_ik);
 			}
 		}
 		assert(this->n_k.size() == verify_n_k.size());
@@ -291,7 +290,7 @@ public:
 }} // namespaces;
 template struct std :: tr1 :: hash< pair<int,int> >;
 
-template<int power>
+template<int Power>
 struct Q_templated_y_kl : public Q :: Q_listener {
 	// Summing ONLY across the edges,
 	// this will store Q_ik \times Q_jl,
@@ -320,13 +319,7 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 					if(k2>l2)
 						swap(k2,l2);
 				}
-				switch(power) {
-						break; case 1: this->y_kl[make_pair(k2,l2)] -= old_val * Qjl;
-						               this->y_kl[make_pair(k2,l2)] += new_val * Qjl;
-						break; case 2: this->y_kl[make_pair(k2,l2)] -= old_val * Qjl * old_val * Qjl;
-						               this->y_kl[make_pair(k2,l2)] += new_val * Qjl * new_val * Qjl;
-						break; default: assert(1==2);
-				}
+				this->y_kl[make_pair(k2,l2)] += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
 			}
 		}
 	}
@@ -347,11 +340,7 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 						if(k2>l2)
 							swap(k2,l2);
 					}
-					switch(power) {
-						break; case 1: verify_y_kl.at(k2).at(l2) += Qik * Qjl;
-						break; case 2: verify_y_kl.at(k2).at(l2) += Qik * Qjl * Qik * Qjl;
-						break; default: assert(1==2);
-					}
+					verify_y_kl.at(k2).at(l2) += power<Power>(Qik * Qjl);
 				}
 			}
 		}
