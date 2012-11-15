@@ -470,19 +470,6 @@ static long double gamma_k(const int k) {
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
-struct BreakdownOfCompleteRecalculation {
-	BreakdownOfCompleteRecalculation() {}
-	BreakdownOfCompleteRecalculation & reset() {
-		assert(global_tracker);
-		return *this;
-	}
-	void test_assuming_full() const {
-		assert(global_tracker);
-		const int N = global_tracker->q->N;
-		assert(VERYCLOSE(N, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
-	}
-};
-
 template<typename T>
 long double mapat (const T &container, int k, int l) {
 	const typename T :: const_iterator location = container.find(make_pair(k,l));
@@ -496,10 +483,9 @@ long double calculate_first_four_terms_slowly(const Q *
 #ifdef SLOW_P_KL
 		q
 #endif
-		, Network * , BreakdownOfCompleteRecalculation &breakdown) {
+		, Network *) {
 	assert(global_tracker);
 	global_tracker->verify_all();
-	breakdown.reset();
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	const vector<long double> & sq_n_k = global_tracker->ql_squared_n_k->n_k;
 
@@ -674,7 +660,6 @@ static bool check_total_score_is_1(const vector<long double> &scores) {
 
 static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id) {
 	vacate_a_node(q, node_id);
-	BreakdownOfCompleteRecalculation breakdown;
 	// store the baseline ?
 	vector<long double> scores(J);
 	const int num_clusters = q->Q_.at(node_id).size();
@@ -682,7 +667,7 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 	for (int k = 0; k < num_clusters; ++k) {
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
 		q->set(node_id, k) = 1;
-		scores.at(k) = calculate_first_four_terms_slowly(q, net, breakdown);
+		scores.at(k) = calculate_first_four_terms_slowly(q, net);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
@@ -713,24 +698,23 @@ static void vacate_a_node(Q *q, const int node_id) {
 
 static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
 	global_tracker->verify_all();
-	BreakdownOfCompleteRecalculation breakdown;
 	const int N = q->N;
 	for(int i=0; i<N; i++) {
 		vacate_a_node(q, i);
 	}
 	assert(VERYCLOSE(0, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
-	calculate_first_four_terms_slowly(q, net, breakdown);
+	calculate_first_four_terms_slowly(q, net);
 	for(int i=0; i<N; i++) {
 		one_node_all_k_M3(q, net, i);
 	}
 	dump(q,net);
-	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
+	calculate_first_four_terms_slowly(q, net);
 	for(int i=0; i<N; i++) {
 		one_node_all_k(q, net, i);
 	}
 	dump(q,net);
 	global_tracker->ql_mu_n_k->dump_me();
-	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
+	calculate_first_four_terms_slowly(q, net);
 	global_tracker->verify_all();
 }
 
@@ -779,8 +763,6 @@ void vcsbm(Network * net) {
 	ql_mu_n_k.verify(q);
 	ql_squared_n_k.verify(q);
 
-	BreakdownOfCompleteRecalculation breakdown;
-
 	if(0)
 	for(int i=0; i<N; i++) {
 		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
@@ -814,7 +796,7 @@ for(int restart = 0; restart<3; ++restart) {
 	for(int repeat = 0; repeat < 100; ++repeat) {
 		PP2(restart,repeat);
 		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
-		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net, breakdown);
+		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 		PP(lower_bound);
 		{
 			if(best_lower_bound_found < lower_bound) {
