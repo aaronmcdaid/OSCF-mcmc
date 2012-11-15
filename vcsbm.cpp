@@ -151,10 +151,10 @@ void dump(const Q *q, Network *net) {
 	for(int i=0; i<q->N; i++) {
 		cout << i << '\t';
 		cout << net->node_set->as_string(i) << '\t';
-		cout << net->i.at(i).total_degree();
+		cout << net->i.at(i).total_degree() << '\t';
 		for(int k=0; k<J; ++k) {
 			const long double Q_ik = q->get(i,k);
-			cout << '\t' << stack.push << fixed << setw(7) << setprecision(5) << Q_ik << stack.pop;
+			cout << stack.push << fixed << setw(8) << setprecision(5) << Q_ik << stack.pop;
 			// if(Q_ik > 0.5) cout << '+';
 		}
 		cout << endl;
@@ -189,9 +189,11 @@ struct Q_template_n_k : public Q :: Q_listener {
 		this->n_k.at(k) += new_val;
 	}
 	void dump_me() const {
-		cout << " n_k[0:20] : ";
-		for(int k=0; k<20; ++k) {
-			cout << ' ' << this->n_k.at(k);
+		cout << " n_k[0:J]\t\t";
+		for(int k=0; k<J; ++k) {
+			cout << stack.push << fixed << setw(8) << setprecision(3)
+				<< this->n_k.at(k)
+				<< stack.pop;
 		}
 		cout << " ..." << endl;
 	}
@@ -719,6 +721,7 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 		one_node_all_k(q, net, i);
 	}
 	dump(q,net);
+	global_tracker->ql_mu_n_k->dump_me();
 	calculate_first_four_terms_slowly(q, net, breakdown); breakdown.test_assuming_full();
 	global_tracker->verify_all();
 }
