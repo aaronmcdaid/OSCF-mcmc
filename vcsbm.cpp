@@ -577,6 +577,7 @@ for(int x = Ratio; x<Done; ++x) {
 }
 
 long double calculate_first_four_terms_slowly(const Q *
+// #define SLOW_P_KL
 #ifdef SLOW_P_KL
 		q
 #endif
@@ -745,7 +746,6 @@ void one_node_all_k_M3(Q *q, Network * net, const int node_id) {
 		++ random_cluster;
 	}
 
-	PP2(node_id, random_cluster);
 	q->set(node_id, random_cluster) = 1;
 }
 
@@ -802,20 +802,17 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 		vacate_a_node(q, i);
 	}
 	assert(VERYCLOSE(0, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
-	calculate_first_four_terms_slowly(q, net);
 	for(int i=0; i<N; i++) {
 		one_node_all_k_M3(q, net, i);
 	}
-	dump(q,net);
-	calculate_first_four_terms_slowly(q, net);
 for(int multiVar=0; multiVar < 20; ++multiVar) {
 	for(int i=0; i<N; i++) {
 		one_node_all_k(q, net, i);
 	}
 }
 	dump(q,net);
+	dump_block_summary();
 	global_tracker->ql_mu_n_k->dump_me();
-	calculate_first_four_terms_slowly(q, net);
 }
 
 void vcsbm(Network * net) {
