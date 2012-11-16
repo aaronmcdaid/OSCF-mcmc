@@ -496,6 +496,42 @@ long double mapat (const T &container, int k, int l) {
 		return location->second;
 }
 
+static void dump_block_summary() {
+	const VVL &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
+	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
+	enum X { Ratio=0, Percentage=1, Done=2 };
+	cout << stack.push << fixed << setprecision(1);
+for(int x = Ratio; x<Done; ++x) {
+	cout << (x==Ratio?"            ":"            ");
+	for(int l=0; l<J; ++l) {
+		cout << setw(x==Ratio?12:6) << mu_n_k.at(l);
+	}
+	cout << endl;
+	for(int k=0; k<J; ++k) {
+		cout << "<" << setw(3) << k << " > " << setw(5) << mu_n_k.at(k);
+		for(int l=0; l<J; ++l) {
+			int k2 = k;
+			int l2 = l;
+			if(!global_tracker->net->directed && k2>l2) {
+				swap(k2,l2);
+			}
+			const long double mu_y_kl_ = mu_y_kl.at(k2).at(l2);
+			long double mu_p_kl = mu_n_k.at(k2)*mu_n_k.at(l2) + global_tracker->ql_mu_psl_kl->psl_kl.at(k2).at(l2);
+			if(l2==k2) { // if undirected
+				mu_p_kl /= 2;
+			}
+			const long double nonEdge_mu = mu_p_kl - mu_y_kl_;
+			switch(x) {
+				break; case Ratio: cout << '|' << setw(5) << mu_y_kl_ << '/' << setw(5) << mu_p_kl;
+				break; case Percentage: cout << '|' << setw(5) << mu_y_kl_/mu_p_kl*100.0L;
+			}
+		}
+		cout << endl;
+	}
+}
+	cout << stack.pop;
+}
+
 long double calculate_first_four_terms_slowly(const Q *
 #ifdef SLOW_P_KL
 		q
@@ -821,6 +857,7 @@ for(int restart = 0; restart<3; ++restart) {
 				ql_mu_n_k.dump_me();
 				dump(&q, net);
 				ql_mu_n_k.dump_me();
+				dump_block_summary();
 				PP3(best_lower_bound_found, restart, repeat);
 			}
 		}
