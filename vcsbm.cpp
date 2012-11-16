@@ -145,10 +145,10 @@ struct Q {
 
 void dump(const Q *q, Network *net) {
 		cout << "node_id\t";
-		cout << "node_name\t";
-		cout << "degree\t";
+		cout << "nodename";
+		cout << " degree\t";
 		for(int k=0; k<J; ++k) {
-			cout << "\tn_" << k;
+			cout << "     n_" << k;
 		}
 		cout << endl;
 	for(int i=0; i<q->N; i++) {
@@ -463,7 +463,7 @@ struct Tracker {
 		ql_sq_psl_kl->verify(*this->q);
 	}
 };
-Tracker * global_tracker = NULL;
+const Tracker * global_tracker = NULL;
 
 // Hyperparameters
 const long double alpha_for_stick_breaking = 1.0L;
@@ -817,6 +817,7 @@ for(int restart = 0; restart<3; ++restart) {
 				cout << "New best lower bound found" << endl;
 				best_lower_bound_found = lower_bound;
 				q_copy.Q_ = q.Q_;
+				ql_mu_n_k.dump_me();
 				dump(&q, net);
 				ql_mu_n_k.dump_me();
 				PP3(best_lower_bound_found, restart, repeat);
