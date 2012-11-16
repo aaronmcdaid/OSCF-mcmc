@@ -527,6 +527,8 @@ for(int x = Ratio; x<Done; ++x) {
 		cout << setw(x==Ratio?12:6) << mu_n_k.at(l);
 	}
 	cout << endl;
+	long double count_all_edges = 0.0L;
+	long double count_all_pairs = 0.0L;
 	for(int k=0; k<J; ++k) {
 		cout << "<" << setw(3) << k << " > " << setw(5) << mu_n_k.at(k);
 		for(int l=0; l<J; ++l) {
@@ -536,18 +538,40 @@ for(int x = Ratio; x<Done; ++x) {
 				swap(k2,l2);
 			}
 			const long double mu_y_kl_ = mu_y_kl.at(k2).at(l2);
-			long double mu_p_kl = mu_n_k.at(k2)*mu_n_k.at(l2) + global_tracker->ql_mu_psl_kl->psl_kl.at(k2).at(l2);
-			if(l2==k2) { // if undirected
+			long double mu_p_kl = mu_n_k.at(k2)*mu_n_k.at(l2);
+			if(global_tracker->net->directed ==false) {
+				mu_p_kl  += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l);
+			}
+			if(global_tracker->net->directed == false && l2==k2) { // if undirected
 				mu_p_kl /= 2;
 			}
-			const long double nonEdge_mu = mu_p_kl - mu_y_kl_;
+			long double nonEdge_mu = mu_p_kl - mu_y_kl_;
+			SHOULD_BE_POSITIVE(nonEdge_mu);
 			switch(x) {
 				break; case Ratio: cout << '|' << setw(5) << mu_y_kl_ << '/' << setw(5) << mu_p_kl;
 				break; case Percentage: cout << '|' << setw(5) << mu_y_kl_/mu_p_kl*100.0L;
 			}
+
+			if(global_tracker->net->directed == false) {
+				if(k<=l) {
+					count_all_edges += mu_y_kl_;
+					count_all_pairs += mu_p_kl;
+				}
+			} else {
+				count_all_edges += mu_y_kl_;
+				count_all_pairs += mu_p_kl;
+			}
 		}
 		cout << endl;
 	}
+	const int N = global_tracker->q->N;
+	const int E = global_tracker->net->E();
+	const int expected_pairs = global_tracker->net->directed ? N*N : N*(N+1)/2;
+	assert(VERYCLOSE(count_all_edges, E));
+	if(global_tracker->net->directed)
+		assert(VERYCLOSE(count_all_pairs, N*N));
+	else
+		assert(VERYCLOSE(count_all_pairs, N*(N+1)/2));
 }
 	cout << stack.pop;
 }
