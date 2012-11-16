@@ -311,6 +311,9 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 		For(junc_id, net->i.at(i).my_junctions) {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
 			assert(junc.this_node_id == i);
+			if(junc.i_am_the_second_self_loop_junction) {
+				continue;
+			}
 			// each of these junctions corresponds to an edge
 			// we should consider all possible clusters for the other endpoint
 			for(int l = 0; l < J; ++l) {
@@ -322,7 +325,13 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 					if(k2>l2)
 						swap(k2,l2);
 				}
-				this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+				if(j==i) { // treat self loops specially
+					if(k==l) // y_kk
+						this->y_kl.at(k2).at(l2) += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
+					else // y_kl, where k != l
+						this->y_kl.at(k2).at(l2) += 2*power<Power>(new_val * Qjl) - 2*power<Power>(old_val * Qjl);
+				} else // not a self loop, proceed as normal
+					this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
 			}
 		}
 	}
@@ -354,9 +363,11 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 			assert(this-> y_kl.at(k).size() == J);
 			assert(verify_y_kl.at(k).size() == J);
 			for(int l=0; l<J; ++l) {
-				assert(VERYCLOSE(  this->y_kl.at(k).at(l)
+				DYINGWORDS(VERYCLOSE(  this->y_kl.at(k).at(l)
 			                  ,       verify_y_kl.at(k).at(l)
-				));
+				)) {
+					PP5(Power, k,l,  this->y_kl.at(k).at(l) ,       verify_y_kl.at(k).at(l) );
+				}
 			}
 		}
 	}
