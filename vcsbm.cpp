@@ -321,9 +321,17 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 				const long double Qjl = q->get(j,l);
 				int k2 = k;
 				int l2 = l;
-				{ // if undirected, we should have k2 <= j2
+				if(this->net->directed==false) { // if undirected, we should have k2 <= j2
 					if(k2>l2)
 						swap(k2,l2);
+					assert(junc.junction_type == 0);
+				} else {
+					// swap based on the Junction type
+					switch(junc.junction_type) {
+						break; case 1: /* do nothing */
+						break; case -1: swap(k2,l2);
+						break; default: assert(1==2);
+					}
 				}
 				if(j==i) { // treat self loops specially
 					if(k==l) // y_kk
@@ -348,7 +356,7 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 					const long double Qjl = q.get(j,l);
 					int k2 = k;
 					int l2 = l;
-					{ // if undirected, we should have k2 <= j2
+					if(this->net->directed == false) { // if undirected, we should have k2 <= j2
 						if(k2>l2)
 							swap(k2,l2);
 					}
@@ -536,7 +544,7 @@ long double calculate_first_four_terms_slowly(const Q *
 #ifdef SLOW_P_KL
 		q
 #endif
-		, Network *) {
+		, Network *net) {
 	assert(global_tracker);
 	// global_tracker->verify_all();
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
@@ -552,14 +560,14 @@ long double calculate_first_four_terms_slowly(const Q *
 	vector< vector<long double> > sq_slowp_kl(J, vector<long double>(J) );
 	const int N = q->N;
 	for(int i=0; i<N; ++i) {
-	for(int j=i; j<N; ++j) { // undirected j starts at i
+	for(int j= (net->directed?0:i) ; j<N; ++j) { // undirected j starts at i
 		for(int k=0; k<J; ++k) {
 			for(int l=0; l<J; ++l) {
 				const long double Qik = q->get(i,k);
 				const long double Qjl = q->get(j,l);
 				int k2 = k;
 				int l2 = l;
-				{ // if undirected, we should have k2 <= j2
+				if(net->directed == false) { // if undirected, we should have k2 <= j2
 					if(k2>l2)
 						swap(k2,l2);
 				}
@@ -570,6 +578,7 @@ long double calculate_first_four_terms_slowly(const Q *
 	}
 	}
 
+if(net->directed == false)
 	for(int k=0; k<J; ++k) {
 		for(int l=0; l<J; ++l) {
 			if(l<k) {
@@ -597,7 +606,7 @@ long double calculate_first_four_terms_slowly(const Q *
 	// cout << endl;
 	for(int k=0; k<J; k++) {
 		for(int l=0; l<J; l++) {
-			if(l<k) {
+			if(l<k && net->directed == false) {
 				// if undirected, these block don't really count.
 				// In particular y_kl should be zero
 				assert(0 == mu_y_kl.at(k).at(l));
@@ -609,14 +618,16 @@ long double calculate_first_four_terms_slowly(const Q *
 
 			long double mu_p_kl = mu_n_k.at(k)*mu_n_k.at(l);
 			long double var_p_kl = mu_n_k.at(k)*mu_n_k.at(l) - sq_n_k.at(k) * sq_n_k.at(l);
-			mu_p_kl  += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l);
-			var_p_kl += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l) - global_tracker->ql_sq_psl_kl->psl_kl.at(k).at(l);
-			if(l==k) { // if undirected
-				// Add in the self loops and then divide everything by two
+
+			// if undirected, the self loops sort of count twice
+			if(net->directed ==false) {
+				mu_p_kl  += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l);
+				var_p_kl += global_tracker->ql_mu_psl_kl->psl_kl.at(k).at(l) - global_tracker->ql_sq_psl_kl->psl_kl.at(k).at(l);
+			}
+
+			if(net->directed == false && l==k) { // if undirected, the diagonal blocks should be halved
 				mu_p_kl /= 2;
 				var_p_kl /= 2;
-			} else { // bizarrelly, the self loops can contribute
-			         // to between-cluster blocks.
 			}
 #ifdef SLOW_P_KL
 			const long double mu_slowp_KL = mu_slowp_kl.at(k).at(l);
