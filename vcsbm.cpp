@@ -472,12 +472,13 @@ const long double beta_2 = 1.0L;
 
 
 static long double exp_log_Gamma_Normal(const long double mean, const long double variance) {
-	assert(variance >= 0.0L);
-	assert(mean >= 0.0L);
+	static long double half_logl2pi = 0.5L * logl(2 * M_PI);
+	// assert(variance >= 0.0L);
+	// assert(mean >= 0.0L);
 	return (mean - 0.5L) * logl(mean)
 		+ (0.5L) * variance * ( 1.0L/mean + 0.25L/mean/mean )
 		- mean
-		+ 0.5L * logl(2 * M_PI);
+		+ half_logl2pi;
 }
 static long double gamma_k(const int k) {
 	assert(k>=0);
