@@ -312,6 +312,8 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
 			assert(junc.this_node_id == i);
 			if(junc.i_am_the_second_self_loop_junction) {
+				// it might make sense, in the directed case, to change this so that self-loops
+				// are dealt with twice.  But for now, just double-up below
 				continue;
 			}
 			// each of these junctions corresponds to an edge
@@ -332,12 +334,21 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 						break; case -1: swap(k2,l2);
 						break; default: assert(1==2);
 					}
+					// .. so that k2 represents the source cluster, and l2 the target cluster
 				}
 				if(j==i) { // treat self loops specially
 					if(k==l) // y_kk
 						this->y_kl.at(k2).at(l2) += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
-					else // y_kl, where k != l
-						this->y_kl.at(k2).at(l2) += 2*power<Power>(new_val * Qjl) - 2*power<Power>(old_val * Qjl);
+					else { // y_kl, where k != l
+						if(this->net->directed) {
+							// we only deal with *one* of the two self-loop junctions,
+							// therefore we have to double up here:
+							this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+							this->y_kl.at(l2).at(k2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+						} else {
+							this->y_kl.at(k2).at(l2) += 2*power<Power>(new_val * Qjl) - 2*power<Power>(old_val * Qjl);
+						}
+					}
 				} else // not a self loop, proceed as normal
 					this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
 			}
@@ -374,6 +385,7 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 				DYINGWORDS(VERYCLOSE(  this->y_kl.at(k).at(l)
 			                  ,       verify_y_kl.at(k).at(l)
 				)) {
+					PP(this->y_kl.at(k).at(l) -       verify_y_kl.at(k).at(l) );
 					PP5(Power, k,l,  this->y_kl.at(k).at(l) ,       verify_y_kl.at(k).at(l) );
 				}
 			}
