@@ -789,17 +789,17 @@ int my_primary_cluster(const int node_id, const Q & q) {
 	const vector<long double> & my_clusters = q.Q_.at(node_id);
 	return max_element(my_clusters.begin(), my_clusters.end()) - my_clusters.begin();
 }
-vector<int> pick_random_clusters(const int num_clusters, const Q & q) {
-	assert(num_clusters > 0);
+vector<int> pick_random_clusters(const int num_clusters_with_replacement, const Q & q) {
+	assert(num_clusters_with_replacement > 0);
 	// pick a node at random, and use its cluster
 	const int N = q.N;
 	vector<int> nodes;
-	for(int attempt = 0; attempt < num_clusters; ++attempt) {
+	for(int attempt = 0; attempt < num_clusters_with_replacement; ++attempt) {
 		const int random_node = gsl_rng_uniform(global_r) * N;
 		const int my_cluster = my_primary_cluster(random_node, q);
 		assert(my_cluster >= 0 && my_cluster < J);
 		for(int i=0; i<N; ++i) {
-			if(q.get(i,my_cluster) > 0.5L)
+			if(gsl_rng_uniform(global_r) < q.get(i,my_cluster))
 				nodes.push_back(i);
 		}
 	}
