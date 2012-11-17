@@ -276,6 +276,32 @@ struct Q_sum_of_mu_n_k : public Q :: Q_listener {
 	}
 };
 
+struct Q_one_node : public Q :: Q_listener {
+	mutable vector<long double> each_node;
+	Q_one_node(const int N) : each_node(N) {}
+	virtual void notify(int i, int, long double old_val, long double new_val, const Q *) {
+		this->each_node.at(i) -= old_val;
+		SHOULD_BE_POSITIVE(this->each_node.at(i));
+		this->each_node.at(i) += new_val;
+		if(this->each_node.at(i)>1.0L) {
+			assert(VERYCLOSE(1, this->each_node.at(i)));
+			this->each_node.at(i) = 1.0L;
+		}
+	}
+	void verify(const Q &q) const {
+		vector<long double> verify_each_node(q.N);
+		for(int i=0; i<q.N; ++i) {
+			For(cell, q.Q_.at(i)) {
+				verify_each_node.at(i) += *cell;
+			}
+		}
+		for(int i=0; i<q.N; ++i) {
+			assert(VERYCLOSE(this->each_node.at(i) , verify_each_node.at(i)));
+		}
+		this->each_node = verify_each_node;
+	}
+};
+
 namespace std {
 namespace tr1 {
 
@@ -463,6 +489,7 @@ struct Tracker {
 	const Q_squared_n_k   * const ql_squared_n_k;
 	const Q_entropy       * const ql_entropy;
 	const Q_sum_of_mu_n_k * const ql_sum_of_mu_n_k;
+	const Q_one_node      * const ql_one_node     ;
 	const Q_mu_y_kl       * const ql_mu_y_kl;
 	const Q_squared_y_kl  * const ql_squared_y_kl;
 	const Q_mu_psl_kl     * const ql_mu_psl_kl;
@@ -472,6 +499,7 @@ struct Tracker {
 			, const Q_squared_n_k *ql_squared_n_k_
 			, const Q_entropy *ql_entropy_
 			, const Q_sum_of_mu_n_k *ql_sum_of_mu_n_k_
+			, const Q_one_node *ql_one_node_
 			, const Q_mu_y_kl *ql_mu_y_kl_
 			, const Q_squared_y_kl *ql_squared_y_kl_
 			, const Q_mu_psl_kl *ql_mu_psl_kl_
@@ -482,6 +510,7 @@ struct Tracker {
 		  , ql_squared_n_k(ql_squared_n_k_)
 		  , ql_entropy(ql_entropy_)
 		  , ql_sum_of_mu_n_k(ql_sum_of_mu_n_k_)
+		  , ql_one_node(ql_one_node_)
 		  , ql_mu_y_kl(ql_mu_y_kl_)
 		  , ql_squared_y_kl(ql_squared_y_kl_)
 		  , ql_mu_psl_kl(ql_mu_psl_kl_)
@@ -492,6 +521,7 @@ struct Tracker {
 		ql_squared_n_k->verify(*this->q);
 		ql_entropy->verify(*this->q);
 		ql_sum_of_mu_n_k->verify(*this->q);
+		ql_one_node->verify(*this->q);
 		ql_mu_y_kl->verify(*this->q);
 		ql_squared_y_kl->verify(*this->q);
 		ql_mu_psl_kl->verify(*this->q);
@@ -820,12 +850,15 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
+		assert(VERYCLOSE(0, global_tracker->ql_one_node->each_node.at(node_id)));
 		q->set(node_id, k) = 1;
+		assert(VERYCLOSE(1, global_tracker->ql_one_node->each_node.at(node_id)));
 		scores.at(k) = calculate_first_four_terms_slowly(q, net);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
 	}
+	assert(0 == global_tracker->ql_one_node->each_node.at(node_id));
 	const long double max_score = *max_element(scores.begin(), scores.end());
 	for(int k=0; k< (int)scores.size(); ++k) {
 		long double & score = scores.at(k);
@@ -840,6 +873,7 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 	For(score, scores) {
 		*score  = expl(*score) / total;
 	}
+	assert(0 == global_tracker->ql_one_node->each_node.at(node_id));
 	return scores;
 }
 static void vacate_a_node(Q *q, const int node_id) {
@@ -910,6 +944,7 @@ void vcsbm(Network * net) {
 	Q_squared_n_k ql_squared_n_k;
 	Q_entropy ql_entropy;
 	Q_sum_of_mu_n_k ql_sum_of_mu_n_k;
+	Q_one_node ql_one_node(N);
 	Q_mu_y_kl ql_mu_y_kl(net);
 	Q_squared_y_kl ql_squared_y_kl(net);
 	Q_mu_psl_kl ql_mu_psl_kl;
@@ -919,13 +954,14 @@ void vcsbm(Network * net) {
 	q.add_listener(&ql_squared_n_k);
 	q.add_listener(&ql_entropy);
 	q.add_listener(&ql_sum_of_mu_n_k);
+	q.add_listener(&ql_one_node);
 	q.add_listener(&ql_mu_y_kl);
 	q.add_listener(&ql_squared_y_kl);
 	q.add_listener(&ql_mu_psl_kl);
 	q.add_listener(&ql_sq_psl_kl);
 
 	assert(global_tracker == NULL);
-	global_tracker = new Tracker(&q, net, &ql_mu_n_k, &ql_squared_n_k, &ql_entropy, &ql_sum_of_mu_n_k
+	global_tracker = new Tracker(&q, net, &ql_mu_n_k, &ql_squared_n_k, &ql_entropy, &ql_sum_of_mu_n_k, &ql_one_node
 			, &ql_mu_y_kl, &ql_squared_y_kl
 			, &ql_mu_psl_kl, &ql_sq_psl_kl
 			);
