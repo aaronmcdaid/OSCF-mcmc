@@ -308,6 +308,35 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 	virtual void notify(int i, int k, long double old_val, long double new_val, const Q *q) {
 		// Must consider all the Junctions at node i
 		// .. but beware of self loops.
+		vector<long double> sum__of__Q_l__for__the__nonselfloop__out__neighbours__of__i(J);
+		vector<long double> sum__of__Q_l__for__the__nonselfloop__in___neighbours__of__i(J);
+		For(junc_id, net->i.at(i).my_junctions) {
+			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
+			assert(junc.this_node_id == i);
+			const int j = junc.far_node_id;
+			if(j==i)
+				continue; // we'll ignore self loops in this optimization for now
+			for(int l = 0; l < J; ++l) {
+				const long double Qjl = q->get(j,l);
+				if(junc.junction_type == -1)
+					sum__of__Q_l__for__the__nonselfloop__in___neighbours__of__i.at(l) += power<Power>(Qjl); // in
+				else
+					sum__of__Q_l__for__the__nonselfloop__out__neighbours__of__i.at(l) += power<Power>(Qjl); // out and undir
+			}
+		}
+		for(int l = 0; l < J; ++l) {
+			const long double total_out = sum__of__Q_l__for__the__nonselfloop__out__neighbours__of__i.at(l);
+			const long double total_in  = sum__of__Q_l__for__the__nonselfloop__in___neighbours__of__i.at(l);
+			if(net->directed) {
+				this->y_kl.at(k).at(l) += (power<Power>(new_val) - power<Power>(old_val)) * total_out;
+				this->y_kl.at(l).at(k) += (power<Power>(new_val) - power<Power>(old_val)) * total_in;
+			} else { // undirected
+				int k2 = k, l2 = l;
+				if(k2>l2)
+					swap(k2,l2);
+				this->y_kl.at(k2).at(l2) += (power<Power>(new_val) - power<Power>(old_val)) * total_out;
+			}
+		}
 		For(junc_id, net->i.at(i).my_junctions) {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
 			assert(junc.this_node_id == i);
@@ -318,8 +347,8 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 			}
 			// each of these junctions corresponds to an edge
 			// we should consider all possible clusters for the other endpoint
+			const int j = junc.far_node_id;
 			for(int l = 0; l < J; ++l) {
-				const int j = junc.far_node_id;
 				const long double Qjl = q->get(j,l);
 				int k2 = k;
 				int l2 = l;
@@ -349,8 +378,9 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 							this->y_kl.at(k2).at(l2) += 2*power<Power>(new_val * Qjl) - 2*power<Power>(old_val * Qjl);
 						}
 					}
-				} else // not a self loop, proceed as normal
-					this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+				} else {// not a self loop, proceed as normal
+					// this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
+				}
 			}
 		}
 	}
