@@ -532,7 +532,12 @@ long double mapat (const T &container, int k, int l) {
 		return location->second;
 }
 
-static void dump_block_summary() {
+static void dump_block_summary(bool known_full = false) {
+	const int N = global_tracker->q->N;
+	if(VERYCLOSE(N, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k))
+		known_full = true;
+	if(known_full)
+		assert(VERYCLOSE(N, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
 	const VVL &mu_y_kl = global_tracker->ql_mu_y_kl->y_kl;
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	enum X { Ratio=0, Percentage=1, Done=2 };
@@ -565,7 +570,11 @@ for(int x = Ratio; x<Done; ++x) {
 			SHOULD_BE_POSITIVE(nonEdge_mu);
 			switch(x) {
 				break; case Ratio: cout << '|' << setw(5) << mu_y_kl_ << '/' << setw(5) << mu_p_kl;
-				break; case Percentage: cout << '|' << setw(5) << mu_y_kl_/mu_p_kl*100.0L;
+				break; case Percentage:
+					if(VERYCLOSE(mu_p_kl,0.0L))
+						cout << '|' << setw(5) << ' ';
+					else
+						cout << '|' << setw(5) << mu_y_kl_/mu_p_kl*100.0L;
 			}
 
 			if(global_tracker->net->directed == false) {
@@ -580,14 +589,16 @@ for(int x = Ratio; x<Done; ++x) {
 		}
 		cout << endl;
 	}
-	const int N = global_tracker->q->N;
-	const int E = global_tracker->net->E();
-	const int expected_pairs = global_tracker->net->directed ? N*N : N*(N+1)/2;
-	assert(VERYCLOSE(count_all_edges, E));
-	if(global_tracker->net->directed)
-		assert(VERYCLOSE(count_all_pairs, N*N));
-	else
-		assert(VERYCLOSE(count_all_pairs, N*(N+1)/2));
+	if(known_full) {
+		const int N = global_tracker->q->N;
+		const int E = global_tracker->net->E();
+		const int expected_pairs = global_tracker->net->directed ? N*N : N*(N+1)/2;
+		assert(VERYCLOSE(count_all_edges, E));
+		if(global_tracker->net->directed)
+			assert(VERYCLOSE(count_all_pairs, N*N));
+		else
+			assert(VERYCLOSE(count_all_pairs, N*(N+1)/2));
+	}
 }
 	cout << stack.pop;
 }
