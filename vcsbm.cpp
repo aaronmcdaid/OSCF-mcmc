@@ -340,6 +340,9 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 		For(junc_id, net->i.at(i).my_junctions) {
 			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
 			assert(junc.this_node_id == i);
+			const int j = junc.far_node_id;
+			if(j!=i)
+				continue;
 			if(junc.i_am_the_second_self_loop_junction) {
 				// it might make sense, in the directed case, to change this so that self-loops
 				// are dealt with twice.  But for now, just double-up below
@@ -347,7 +350,6 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 			}
 			// each of these junctions corresponds to an edge
 			// we should consider all possible clusters for the other endpoint
-			const int j = junc.far_node_id;
 			for(int l = 0; l < J; ++l) {
 				const long double Qjl = q->get(j,l);
 				int k2 = k;
@@ -365,7 +367,8 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 					}
 					// .. so that k2 represents the source cluster, and l2 the target cluster
 				}
-				if(j==i) { // treat self loops specially
+				assert(j==i);
+				{
 					if(k==l) // y_kk
 						this->y_kl.at(k2).at(l2) += power<Power>(new_val * new_val) - power<Power>(old_val * old_val);
 					else { // y_kl, where k != l
@@ -378,8 +381,6 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 							this->y_kl.at(k2).at(l2) += 2*power<Power>(new_val * Qjl) - 2*power<Power>(old_val * Qjl);
 						}
 					}
-				} else {// not a self loop, proceed as normal
-					// this->y_kl.at(k2).at(l2) += power<Power>(new_val * Qjl) - power<Power>(old_val * Qjl);
 				}
 			}
 		}
