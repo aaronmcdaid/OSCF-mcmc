@@ -246,16 +246,20 @@ const network :: Network * network :: build_network(const std :: string file_nam
 		cout << left_str << ' ' << right_str << endl;
 	}
 #endif
-	Network__unConst * net = new Network__unConst(directed_flag, weighted_flag);
+	Network__unConst * net = new Network__unConst(N, directed_flag, weighted_flag);
 	// I should be these next few lines into the Network constructor
 	net->node_set = node_set;
 	net->edge_set = edge_set;
 	net->junctions = junctions;
-	assert(net->i.empty());
-	net->i.resize(net->N());
+	assert(net->i.size() == net->N());
 	for(int junc = 0; junc < (int)net->junctions->all_junctions_sorted.size(); ++junc) {
 		const Junction & jun = net->junctions->all_junctions_sorted.at(junc);
 		net->i.at(jun.this_node_id).my_junctions.push_back(junc);
+	}
+	For(e, edge_set->edges) {
+		if(e->left == e->right) {
+			net->has_self_loop.at(e->left) = true;
+		}
 	}
 	return net;
 }

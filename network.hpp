@@ -65,10 +65,11 @@ struct Network__unConst { // bring all the above together
 	const network :: EdgeSet * edge_set;
 	const network :: Junctions * junctions;
 	std :: vector<OneNode> i;
+	std :: vector<bool> has_self_loop;
 	const bool directed;
 	const bool weighted;
-	Network__unConst(const bool directed_, const bool weighted_)
-		: directed(directed_), weighted(weighted_) { }
+	Network__unConst(const int N_, const bool directed_, const bool weighted_)
+		: directed(directed_), weighted(weighted_), i(N_), has_self_loop(N_) { }
 	inline int N() const { return this->node_set->N(); }
 	inline int E() const { return this->edge_set->E(); }
 };
