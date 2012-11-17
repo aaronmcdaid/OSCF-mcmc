@@ -977,7 +977,7 @@ void vcsbm(Network * net) {
 	ql_mu_n_k.verify(q);
 	ql_squared_n_k.verify(q);
 
-	if(0)
+	if(1)
 	for(int i=0; i<N; i++) {
 		// if(i%2==0) q.set(i,0) = 1; else q.set(i,1) = 1;
 		// if(i<6) q.set(i,0) = 1; else q.set(i,1) = 1;
@@ -986,9 +986,11 @@ void vcsbm(Network * net) {
 		// q.set(i,gsl_rng_uniform(global_r)*3)=1;
 		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
 		// one_node_all_k(&q, net, i);
-		ql_mu_n_k.dump_me();
+		q.set(i,0) = 1; // everything in the first cluster.
 	}
 	dump(&q, net);
+	dump_block_summary();
+	cout << "That was the initial state" << endl;
 	// everything assigned somewhere
 	// calculate_first_four_terms_slowly(&q, net, true);
 for(int restart = 0; restart<3; ++restart) {
