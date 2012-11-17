@@ -1004,44 +1004,5 @@ void vcsbm(Network * net) {
 		}
 
 	}
-	return;
-
-	// everything assigned somewhere
-	// calculate_first_four_terms_slowly(&q, net, true);
-for(int restart = 0; restart<3; ++restart) {
-	PP(restart);
-	global_tracker->verify_all();
-	if(0) {
-		cout << endl << "random (re)initialization" << endl;
-		for(int i=0; i<N; i++) {
-			double rand_unif1 = gsl_rng_uniform(global_r);
-			double rand_unif2 = gsl_rng_uniform(global_r);
-			if(rand_unif1 > rand_unif2)
-				swap(rand_unif1, rand_unif2);
-			q.set(i,0) = 0.0; q.set(i,1) = 0.0; q.set(i,2) = 0.0;
-			q.set(i,0) = rand_unif1; q.set(i,1) = rand_unif2-rand_unif1; q.set(i,2) = 1-rand_unif2;
-		}
-		dump(&q, net);
-	}
-	cout << endl << endl << "into the repeats now" << endl;
-	for(int repeat = 0; repeat < 5000; ++repeat) {
-		PP2(restart,repeat);
-		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
-		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
-		PP(lower_bound);
-		if(1) {
-			if(best_lower_bound_found < lower_bound) {
-				cout << "New best lower bound found" << endl;
-				best_lower_bound_found = lower_bound;
-				q_copy.Q_ = q.Q_;
-				// ql_mu_n_k.dump_me();
-				// dump(&q, net);
-				// ql_mu_n_k.dump_me();
-				dump_block_summary(true);
-				PP3(best_lower_bound_found, restart, repeat);
-			}
-		}
-	}
-}
 	global_tracker->verify_all();
 }
