@@ -542,7 +542,7 @@ static void dump_block_summary(bool known_full = false) {
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
 	enum X { Ratio=0, Percentage=1, Done=2 };
 	cout << stack.push << fixed << setprecision(1);
-for(int x = Ratio; x<Done; ++x) {
+for(int x = Percentage; x<Done; ++x) {
 	cout << (x==Ratio?"            ":"            ");
 	for(int l=0; l<J; ++l) {
 		cout << setw(x==Ratio?12:6) << mu_n_k.at(l);
