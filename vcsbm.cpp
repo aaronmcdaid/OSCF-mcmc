@@ -908,7 +908,7 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	dump_block_summary();
 	global_tracker->ql_mu_n_k->dump_me();
 }
-static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> random_nodes, const bool skipTheVar) {
+static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> random_nodes, int howManyVar) {
 	const int N = q->N;
 	For(i, random_nodes) {
 		vacate_a_node(q, *i);
@@ -920,8 +920,7 @@ static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, c
 	}
 	cout << "should be full again now" << endl;
 	dump_block_summary(true);
-	if(!skipTheVar)
-	for(int multiVar=0; multiVar < 20; ++multiVar) {
+	for(int multiVar=0; multiVar < howManyVar; ++multiVar) {
 		For(i, random_nodes) {
 			one_node_all_k(q, net, *i);
 		}
