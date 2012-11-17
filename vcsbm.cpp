@@ -991,6 +991,21 @@ void vcsbm(Network * net) {
 	dump(&q, net);
 	dump_block_summary();
 	cout << "That was the initial state" << endl;
+	{
+		// do some changes, but revert if things don't improve
+		Q q_backup(N,J);
+		q_backup.Q_ = q.Q_;
+		const long double backup_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+		vector<int> some_random_clusters = pick_random_clusters(1, q);
+		vacate_somenodes_then_M3_then_a_few_Var_moves(&q, net, some_random_clusters, 5);
+		const long double new_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+		if(new_score < backup_score) {
+			q.Q_ = q_backup.Q_;
+		}
+
+	}
+	return;
+
 	// everything assigned somewhere
 	// calculate_first_four_terms_slowly(&q, net, true);
 for(int restart = 0; restart<3; ++restart) {
