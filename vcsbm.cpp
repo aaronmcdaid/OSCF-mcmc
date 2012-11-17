@@ -850,6 +850,12 @@ static void vacate_a_node(Q *q, const int node_id) {
 	}
 }
 
+static void Var_on_all_nodes(Q *q, Network *net) {
+	for(int i=0; i<q->N; i++) {
+		one_node_all_k(q, net, i);
+	}
+}
+
 static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) {
 	const int N = q->N;
 	for(int i=0; i<N; i++) {
@@ -859,14 +865,36 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	for(int i=0; i<N; i++) {
 		one_node_all_k_M3(q, net, i);
 	}
-for(int multiVar=0; multiVar < 20; ++multiVar) {
-	for(int i=0; i<N; i++) {
-		one_node_all_k(q, net, i);
+	for(int multiVar=0; multiVar < 20; ++multiVar) {
+		for(int i=0; i<N; i++) {
+			one_node_all_k(q, net, i);
+		}
 	}
-}
-	dump(q,net);
+	// dump(q,net);
 	dump_block_summary();
 	global_tracker->ql_mu_n_k->dump_me();
+}
+static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> random_nodes, const bool skipTheVar) {
+	const int N = q->N;
+	For(i, random_nodes) {
+		vacate_a_node(q, *i);
+	}
+	cout << "should be some missing now" << endl;
+	dump_block_summary();
+	For(i, random_nodes) {
+		one_node_all_k_M3(q, net, *i);
+	}
+	cout << "should be full again now" << endl;
+	dump_block_summary(true);
+	if(!skipTheVar)
+	for(int multiVar=0; multiVar < 20; ++multiVar) {
+		For(i, random_nodes) {
+			one_node_all_k(q, net, *i);
+		}
+	}
+	// dump(q,net);
+	// dump_block_summary();
+	// global_tracker->ql_mu_n_k->dump_me();
 }
 
 void vcsbm(Network * net) {
