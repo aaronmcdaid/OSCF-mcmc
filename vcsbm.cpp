@@ -850,9 +850,9 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 	assert(J==num_clusters);
 	for (int k = 0; k < num_clusters; ++k) {
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
-		assert(VERYCLOSE(0, global_tracker->ql_one_node->each_node.at(node_id)));
+		// assert(VERYCLOSE(0, global_tracker->ql_one_node->each_node.at(node_id)));
 		q->set(node_id, k) = 1;
-		assert(VERYCLOSE(1, global_tracker->ql_one_node->each_node.at(node_id)));
+		// assert(VERYCLOSE(1, global_tracker->ql_one_node->each_node.at(node_id)));
 		scores.at(k) = calculate_first_four_terms_slowly(q, net);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
@@ -873,7 +873,7 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 	For(score, scores) {
 		*score  = expl(*score) / total;
 	}
-	assert(0 == global_tracker->ql_one_node->each_node.at(node_id));
+	// assert(0 == global_tracker->ql_one_node->each_node.at(node_id));
 	return scores;
 }
 static void vacate_a_node(Q *q, const int node_id) {
@@ -913,13 +913,11 @@ static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, c
 	For(i, random_nodes) {
 		vacate_a_node(q, *i);
 	}
-	cout << "should be some missing now" << endl;
-	dump_block_summary();
+	// cout << "should be some missing now" << endl; dump_block_summary();
 	For(i, random_nodes) {
 		one_node_all_k_M3(q, net, *i);
 	}
-	cout << "should be full again now" << endl;
-	dump_block_summary(true);
+	// cout << "should be full again now" << endl; dump_block_summary(true);
 	for(int multiVar=0; multiVar < howManyVar; ++multiVar) {
 		For(i, random_nodes) {
 			one_node_all_k(q, net, *i);
@@ -991,17 +989,36 @@ void vcsbm(Network * net) {
 	dump(&q, net);
 	dump_block_summary();
 	cout << "That was the initial state" << endl;
-	{
+	for(int repeat=0; repeat < 100; ++repeat) {
+		cout << endl;
+		PP(repeat);
 		// do some changes, but revert if things don't improve
-		Q q_backup(N,J);
-		q_backup.Q_ = q.Q_;
+		VVL q_backupQ_ = q.Q_;
+
 		const long double backup_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
-		vector<int> some_random_clusters = pick_random_clusters(1, q);
-		vacate_somenodes_then_M3_then_a_few_Var_moves(&q, net, some_random_clusters, 5);
+		vector<int> some_random_clusters = pick_random_clusters(gsl_rng_uniform(global_r) < 0.5 ? 1 : 2, q);
+
+		// merge/split one or two clusters
+		vacate_somenodes_then_M3_then_a_few_Var_moves(&q, net, some_random_clusters, 3);
+		// a sweep on all the nodes
+		Var_on_all_nodes(&q, net);
+
+//#if 0
 		const long double new_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 		if(new_score < backup_score) {
-			q.Q_ = q_backup.Q_;
+			// cout << "Undo. From " << new_score << " back to " << backup_score << endl;
+			for(int i=0; i<N; ++i) {
+				vacate_a_node(&q, i);
+				for(int k=0; k<J; ++k) {
+					q.set(i,k) = q_backupQ_.at(i).at(k);
+				}
+			}
+			assert(VERYCLOSE(backup_score , ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net)));
+		} else {
+			cout << "Improved lower bound " << new_score << endl;
 		}
+//#endif
+		dump_block_summary(true);
 
 	}
 	global_tracker->verify_all();
