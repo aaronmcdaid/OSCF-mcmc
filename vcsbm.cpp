@@ -337,17 +337,9 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 				this->y_kl.at(k2).at(l2) += (power<Power>(new_val) - power<Power>(old_val)) * total_out;
 			}
 		}
-		For(junc_id, net->i.at(i).my_junctions) {
-			const Junction & junc = net->junctions->all_junctions_sorted.at(*junc_id);
-			assert(junc.this_node_id == i);
-			const int j = junc.far_node_id;
-			if(j!=i)
-				continue;
-			if(junc.i_am_the_second_self_loop_junction) {
-				// it might make sense, in the directed case, to change this so that self-loops
-				// are dealt with twice.  But for now, just double-up below
-				continue;
-			}
+		if(net->has_self_loop.at(i))
+		{
+			const int j = i;
 			// each of these junctions corresponds to an edge
 			// we should consider all possible clusters for the other endpoint
 			for(int l = 0; l < J; ++l) {
@@ -357,15 +349,6 @@ struct Q_templated_y_kl : public Q :: Q_listener {
 				if(this->net->directed==false) { // if undirected, we should have k2 <= j2
 					if(k2>l2)
 						swap(k2,l2);
-					assert(junc.junction_type == 0);
-				} else {
-					// swap based on the Junction type
-					switch(junc.junction_type) {
-						break; case 1: /* do nothing */
-						break; case -1: swap(k2,l2);
-						break; default: assert(1==2);
-					}
-					// .. so that k2 represents the source cluster, and l2 the target cluster
 				}
 				assert(j==i);
 				{
