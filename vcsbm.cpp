@@ -977,15 +977,15 @@ for(int restart = 0; restart<3; ++restart) {
 		vacate_everything_then_M3_then_a_few_Var_moves(&q, net);
 		const long double lower_bound = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 		PP(lower_bound);
-		{
+		if(1) {
 			if(best_lower_bound_found < lower_bound) {
 				cout << "New best lower bound found" << endl;
 				best_lower_bound_found = lower_bound;
 				q_copy.Q_ = q.Q_;
-				ql_mu_n_k.dump_me();
-				dump(&q, net);
-				ql_mu_n_k.dump_me();
-				dump_block_summary();
+				// ql_mu_n_k.dump_me();
+				// dump(&q, net);
+				// ql_mu_n_k.dump_me();
+				dump_block_summary(true);
 				PP3(best_lower_bound_found, restart, repeat);
 			}
 		}
