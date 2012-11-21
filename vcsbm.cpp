@@ -1007,7 +1007,8 @@ void vcsbm(Network * net) {
 	}
 	// dump(&q, net);
 	dump_block_summary();
-	cout << "That was the initial state" << endl;
+	const long double initial_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+	cout << "That was the initial state "; PP(initial_score);
 	for(int repeat=0; repeat < 100; ++repeat) {
 		cout << endl;
 		PP(repeat);
