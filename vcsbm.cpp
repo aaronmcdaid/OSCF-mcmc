@@ -1003,7 +1003,8 @@ void vcsbm(Network * net) {
 		// q.set(i,gsl_rng_uniform(global_r)*3)=1;
 		// q.set(i,0) = 0.5; q.set(i,1) = 0.5;
 		// one_node_all_k(&q, net, i);
-		q.set(i,0) = 1; // everything in the first cluster.
+		// q.set(i,0) = 1; // everything in the first cluster.
+		q.set(i,i/10) = 1; // everything in the correct cluster at first // alpha=1, K10O10 => -2109.42
 	}
 	// dump(&q, net);
 	dump_block_summary();
