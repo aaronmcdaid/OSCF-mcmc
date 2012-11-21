@@ -997,7 +997,7 @@ void vcsbm(Network * net) {
 		// one_node_all_k(&q, net, i);
 		q.set(i,0) = 1; // everything in the first cluster.
 	}
-	dump(&q, net);
+	// dump(&q, net);
 	dump_block_summary();
 	cout << "That was the initial state" << endl;
 	for(int repeat=0; repeat < 100; ++repeat) {
@@ -1012,7 +1012,12 @@ void vcsbm(Network * net) {
 		// merge/split one or two clusters
 		vacate_somenodes_then_M3_then_a_few_Var_moves(&q, net, some_random_clusters, 3);
 		// a sweep on all the nodes
+		dump_block_summary(true);
+		cout << "one or two clusters M3+Var" << endl;
+
 		Var_on_all_nodes(&q, net);
+		dump_block_summary(true);
+		cout << "all nodes Var" << endl;
 
 //#if 0
 		const long double new_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
@@ -1029,7 +1034,6 @@ void vcsbm(Network * net) {
 			cout << "Improved lower bound " << new_score << endl;
 		}
 //#endif
-		dump_block_summary(true);
 
 	}
 	global_tracker->verify_all();
