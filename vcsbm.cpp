@@ -531,7 +531,7 @@ struct Tracker {
 const Tracker * global_tracker = NULL;
 
 // Hyperparameters
-const long double alpha_for_stick_breaking = 1.0L;
+const long double alpha_for_stick_breaking = 10.0L;
 const long double beta_1 = 1.0L;
 const long double beta_2 = 1.0L;
 
