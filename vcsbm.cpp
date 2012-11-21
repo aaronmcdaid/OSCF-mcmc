@@ -919,21 +919,23 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	dump_block_summary();
 	global_tracker->ql_mu_n_k->dump_me();
 }
-static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> random_nodes, int howManyVar) {
+static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> &random_nodes, int howManyVar) {
 	const int N = q->N;
 	For(i, random_nodes) {
 		vacate_a_node(q, *i);
 	}
 	// cout << "should be some missing now" << endl; dump_block_summary();
+	dump_block_summary(false); cout << "  vacated" << endl;
 	For(i, random_nodes) {
 		one_node_all_k_M3(q, net, *i);
 	}
-	// cout << "should be full again now" << endl; dump_block_summary(true);
+	dump_block_summary(true); cout << "  M3" << endl;
 	for(int multiVar=0; multiVar < howManyVar; ++multiVar) {
 		For(i, random_nodes) {
 			one_node_all_k(q, net, *i);
 		}
 	}
+	// dump_block_summary(true); cout << "  Var" << endl;
 	// dump(q,net);
 	// dump_block_summary();
 	// global_tracker->ql_mu_n_k->dump_me();
@@ -1031,7 +1033,7 @@ void vcsbm(Network * net) {
 			}
 			assert(VERYCLOSE(backup_score , ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net)));
 		} else {
-			cout << "Improved lower bound " << new_score << endl;
+			cout << "Improved lower bound (repeat=" << repeat << "). Lower bound is: " << new_score << endl;
 		}
 //#endif
 
