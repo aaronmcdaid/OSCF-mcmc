@@ -884,9 +884,18 @@ static void vacate_a_node(Q *q, const int node_id) {
 	}
 }
 
+static vector<int> random_list_of_all_nodes(const int N) {
+	vector<int> all_nodes_randomly;
+	for(int i=0; i<N; i++)
+		all_nodes_randomly.push_back(i);
+	random_shuffle(all_nodes_randomly.begin(), all_nodes_randomly.end());
+	return all_nodes_randomly;
+}
+
 static void Var_on_all_nodes(Q *q, Network *net) {
-	for(int i=0; i<q->N; i++) {
-		one_node_all_k(q, net, i);
+	vector<int> all_nodes_randomly = random_list_of_all_nodes(q->N);
+	For(i, all_nodes_randomly) {
+		one_node_all_k(q, net, *i);
 	}
 }
 
@@ -896,12 +905,14 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 		vacate_a_node(q, i);
 	}
 	assert(VERYCLOSE(0, global_tracker->ql_sum_of_mu_n_k->sum_of_mu_n_k));
-	for(int i=0; i<N; i++) {
-		one_node_all_k_M3(q, net, i);
+	vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
+	For(i, all_nodes_randomly) {
+		one_node_all_k_M3(q, net, *i);
 	}
 	for(int multiVar=0; multiVar < 20; ++multiVar) {
-		for(int i=0; i<N; i++) {
-			one_node_all_k(q, net, i);
+		vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
+		For(i, all_nodes_randomly) {
+			one_node_all_k(q, net, *i);
 		}
 	}
 	// dump(q,net);
