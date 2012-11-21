@@ -829,7 +829,10 @@ vector<int> pick_random_clusters(const int num_clusters_with_replacement, const 
 		const int my_cluster = my_primary_cluster(random_node, q);
 		assert(my_cluster >= 0 && my_cluster < J);
 		for(int i=0; i<N; ++i) {
-			if(gsl_rng_uniform(global_r) < q.get(i,my_cluster))
+			const long double q_ik = q.get(i,my_cluster);
+			if(
+					q_ik > 0.3 ||
+					gsl_rng_uniform(global_r) < q_ik)
 				nodes.push_back(i);
 		}
 	}
@@ -920,6 +923,7 @@ static void vacate_everything_then_M3_then_a_few_Var_moves(Q *q, Network * net) 
 	global_tracker->ql_mu_n_k->dump_me();
 }
 static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, const vector<int> &random_nodes, int howManyVar) {
+	cout << "vacating... with " << random_nodes.size() << " nodes." << endl;
 	const int N = q->N;
 	For(i, random_nodes) {
 		vacate_a_node(q, *i);
