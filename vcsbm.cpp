@@ -895,10 +895,12 @@ static vector<int> random_list_of_all_nodes(const int N) {
 	return all_nodes_randomly;
 }
 
-static void Var_on_all_nodes(Q *q, Network *net) {
+static void Var_on_all_nodes(Q *q, Network *net, const int repetitions = 1) {
 	vector<int> all_nodes_randomly = random_list_of_all_nodes(q->N);
-	For(i, all_nodes_randomly) {
-		one_node_all_k(q, net, *i);
+	for(int rep = 0; rep < repetitions; ++rep) {
+		For(i, all_nodes_randomly) {
+			one_node_all_k(q, net, *i);
+		}
 	}
 }
 
