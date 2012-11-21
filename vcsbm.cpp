@@ -1010,13 +1010,14 @@ void vcsbm(Network * net) {
 	dump_block_summary();
 	const long double initial_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 	cout << "That was the initial state "; PP(initial_score);
-	for(int repeat=0; repeat < 100; ++repeat) {
+	for(int repeat=0; repeat < 1000; ++repeat) {
 		cout << endl;
 		PP(repeat);
 		// do some changes, but revert if things don't improve
 		VVL q_backupQ_ = q.Q_;
 
 		const long double backup_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+#if 0
 		vector<int> some_random_clusters = pick_random_clusters(gsl_rng_uniform(global_r) < 0.5 ? 1 : 2, q);
 
 		// merge/split one or two clusters
@@ -1028,6 +1029,30 @@ void vcsbm(Network * net) {
 		Var_on_all_nodes(&q, net);
 		dump_block_summary(true);
 		cout << "all nodes Var" << endl;
+#endif
+
+		// Pick one clusters randomly, and set q_*k = 0
+		dump_block_summary(true);
+		const int random_node = gsl_rng_uniform(global_r) * N;
+		const int k = my_primary_cluster(random_node, q);
+		long double amount_removed = 0.0L;
+		for(int i=0; i<N; ++i) {
+			amount_removed += q.get(i,k);
+			q.set(i,k) = 0;
+		}
+		dump_block_summary(false);
+		cout << "emptied one cluster (ALL nodes) " << amount_removed << endl;
+		vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
+		For(i, all_nodes_randomly) {
+			one_node_all_k_M3(&q, net, *i);
+		}
+		dump_block_summary(true);
+		cout << "M3 (ALL nodes)" << endl;
+
+		Var_on_all_nodes(&q, net, 5);
+		dump_block_summary(true);
+		cout << "all nodes Var(x5)" << endl;
+
 
 //#if 0
 		const long double new_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
