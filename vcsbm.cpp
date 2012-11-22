@@ -972,6 +972,67 @@ void empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(Q &q, Network *net) 
 		cout << "all nodes Var(x5)" << endl;
 }
 
+int make_random_choice_from_scores(const vector<long double> &scores) {
+	long double unif = gsl_rng_uniform(global_r);
+	int random_cluster = 0;
+	while(random_cluster+1 < (int)scores.size() && unif > scores.at(random_cluster)) {
+		unif -= scores.at(random_cluster);
+		++ random_cluster;
+	}
+	return random_cluster;
+}
+
+void discretize_all_nodes(Q &q, Network * net) {
+	const int N = q.N;
+	for(int i=0; i<N; ++i) {
+		const vector<long double> &scores = q.Q_.at(i);
+		const int random_cluster = make_random_choice_from_scores(scores);
+		for(int k=0; k<J; ++k) {
+			q.set(i,k) = 0;
+		}
+		q.set(i,random_cluster) = 1;
+	}
+}
+
+void discretize_then_M3(Q &q, Network * net) {
+	discretize_all_nodes(q, net);
+	dump_block_summary(true);
+	cout << "discretized all nodes" << endl;
+
+	const int N = q.N;
+	const int rand_node = N * gsl_rng_uniform(global_r);
+	const int rand_cluster = my_primary_cluster(rand_node, q);
+
+	// next, empty that cluster
+	for(int i=0; i<N; ++i) {
+		q.set(i,rand_cluster) = 0;
+	}
+	dump_block_summary(false);
+	cout << "emptied one cluster" << endl;
+
+	int another_empty_cluster = 0;
+	while(true) {
+		const long double n_k = global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster);
+		if(n_k < 0.5) {
+			assert(VERYCLOSE(n_k, 0.0L));
+			if(another_empty_cluster != rand_cluster)
+				break;
+		}
+		++another_empty_cluster;
+	}
+	assert(another_empty_cluster != rand_cluster);
+	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster)));
+	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(rand_cluster)));
+	PP2(rand_cluster, another_empty_cluster);
+
+	vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
+	For(i, all_nodes_randomly) {
+		one_node_all_k_M3(&q, net, *i);
+	}
+	dump_block_summary(true);
+	cout << "all nodes M3" << endl;
+}
+
 void vcsbm(Network * net) {
 	const int N = net->N();
 
