@@ -947,6 +947,31 @@ static void vacate_somenodes_then_M3_then_a_few_Var_moves(Q *q, Network * net, c
 	// global_tracker->ql_mu_n_k->dump_me();
 }
 
+void empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(Q &q, Network *net) {
+	const int N = q.N;
+		// Pick one clusters randomly, and set q_*k = 0
+		dump_block_summary(true);
+		const int random_node = gsl_rng_uniform(global_r) * N;
+		const int k = my_primary_cluster(random_node, q);
+		long double amount_removed = 0.0L;
+		for(int i=0; i<N; ++i) {
+			amount_removed += q.get(i,k);
+			q.set(i,k) = 0;
+		}
+		dump_block_summary(false);
+		cout << "emptied one cluster (ALL nodes) " << amount_removed << endl;
+		vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
+		For(i, all_nodes_randomly) {
+			one_node_all_k_M3(&q, net, *i);
+		}
+		dump_block_summary(true);
+		cout << "M3 (ALL nodes)" << endl;
+
+		Var_on_all_nodes(&q, net, 5);
+		dump_block_summary(true);
+		cout << "all nodes Var(x5)" << endl;
+}
+
 void vcsbm(Network * net) {
 	const int N = net->N();
 
@@ -1033,27 +1058,7 @@ void vcsbm(Network * net) {
 		cout << "all nodes Var" << endl;
 #endif
 
-		// Pick one clusters randomly, and set q_*k = 0
-		dump_block_summary(true);
-		const int random_node = gsl_rng_uniform(global_r) * N;
-		const int k = my_primary_cluster(random_node, q);
-		long double amount_removed = 0.0L;
-		for(int i=0; i<N; ++i) {
-			amount_removed += q.get(i,k);
-			q.set(i,k) = 0;
-		}
-		dump_block_summary(false);
-		cout << "emptied one cluster (ALL nodes) " << amount_removed << endl;
-		vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
-		For(i, all_nodes_randomly) {
-			one_node_all_k_M3(&q, net, *i);
-		}
-		dump_block_summary(true);
-		cout << "M3 (ALL nodes)" << endl;
-
-		Var_on_all_nodes(&q, net, 5);
-		dump_block_summary(true);
-		cout << "all nodes Var(x5)" << endl;
+		empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
 
 
 //#if 0
