@@ -765,6 +765,10 @@ if(net->directed == false)
 
 	return first_4_terms;
 }
+long double lower_bound(const Q &q, Network *net) {
+	return global_tracker->ql_entropy->entropy
+		+ calculate_first_four_terms_slowly(&q, net);
+}
 // The code above calculates stuff, below we have the actual algorithm.
 
 void one_node_all_k(Q *q, Network * net, const int node_id);
@@ -1030,7 +1034,7 @@ void discretize_then_M3(Q &q, Network * net) {
 		one_node_all_k_M3(&q, net, *i);
 	}
 	dump_block_summary(true);
-	cout << "all nodes M3" << endl;
+	cout << "all nodes M3. "; PP(lower_bound(q,net));
 }
 
 void vcsbm(Network * net) {
@@ -1119,7 +1123,11 @@ void vcsbm(Network * net) {
 		cout << "all nodes Var" << endl;
 #endif
 
-		empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
+		// empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
+		discretize_then_M3(q,net);
+		Var_on_all_nodes(&q, net, 3);
+		dump_block_summary(true);
+		cout << "finished with a Var(x3) on all nodes. "; PP(lower_bound(q,net));
 
 
 //#if 0
