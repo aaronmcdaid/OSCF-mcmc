@@ -1006,6 +1006,7 @@ void discretize_then_M3(Q &q, Network * net) {
 	const int N = q.N;
 	const int rand_node = N * gsl_rng_uniform(global_r);
 	const int rand_cluster = my_primary_cluster(rand_node, q);
+	cout << "             " << setw(rand_cluster*6) << "" << "<<0>>" << endl;
 
 	// next, empty that cluster
 	for(int i=0; i<N; ++i) {
