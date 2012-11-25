@@ -1009,11 +1009,23 @@ void discretize_then_M3(Q &q, Network * net) {
 	cout << "             " << setw(rand_cluster*6) << "" << "<<0>>" << endl;
 
 	// next, empty that cluster
-	for(int i=0; i<N; ++i) {
-		q.set(i,rand_cluster) = 0;
+	const int n_rand = global_tracker->ql_mu_n_k->n_k.at(rand_cluster) + 0.1; // add 0.1 so that the it rounds correctly
+	vector<int> nodes_in_the_random_cluster;
+	{
+		int verify_n_rand = 0;
+		for(int i=0; i<N; ++i) {
+			const long double Qir = q.get(i,rand_cluster);
+			assert(VERYCLOSE(Qir,0) || VERYCLOSE(Qir,1));
+			if(VERYCLOSE(Qir,1)) {
+				++ verify_n_rand;
+				nodes_in_the_random_cluster.push_back(i);
+			}
+			q.set(i,rand_cluster) = 0;
+		}
+		dump_block_summary(false);
+		cout << "emptied one cluster" << endl;
+		assert(n_rand == verify_n_rand);
 	}
-	dump_block_summary(false);
-	cout << "emptied one cluster" << endl;
 
 	int another_empty_cluster = 0;
 	while(true) {
