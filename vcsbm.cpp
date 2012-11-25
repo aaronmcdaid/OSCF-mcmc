@@ -638,7 +638,9 @@ long double calculate_first_four_terms_slowly(const Q *
 #ifdef SLOW_P_KL
 		q
 #endif
-		, Network *net) {
+		, Network *net
+		, const bool verbose = false
+		) {
 	assert(global_tracker);
 	// global_tracker->verify_all();
 	const vector<long double> & mu_n_k = global_tracker->ql_mu_n_k->n_k;
@@ -695,6 +697,8 @@ if(net->directed == false)
 		SHOULD_BE_POSITIVE(var);
 		first_4_terms += exp_log_Gamma_Normal( mu + gamma_k(k), var );
 	}
+	if(verbose)
+		PP(first_4_terms);
 	// Second third and fourth terms, E log Gamma (y_kl + Beta_1)
 //*
 	// cout << endl;
@@ -782,7 +786,7 @@ void one_random_node_all_k(Q *q, Network * net) {
 }
 
 static void vacate_a_node(Q *q, const int node_id);
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id);
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const bool verbose = false);
 static bool check_total_score_is_1(const vector<long double> &scores);
 
 void one_node_all_k(Q *q, Network * net, const int node_id) {
@@ -796,7 +800,7 @@ void one_node_all_k(Q *q, Network * net, const int node_id) {
 }
 void one_node_all_k_M3(Q *q, Network * net, const int node_id) {
 	// assign a node totally to one cluster selected at random
-	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id);
+	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, true);
 	assert((int)scores.size() == J);
 	assert(check_total_score_is_1(scores));
 
@@ -849,7 +853,7 @@ vector<int> pick_random_clusters(const int num_clusters_with_replacement, const 
 	return unique_nodes;
 }
 
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id) {
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const bool verbose /* = false*/) {
 	vacate_a_node(q, node_id);
 	// store the baseline ?
 	vector<long double> scores(J);
@@ -860,7 +864,7 @@ static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Ne
 		// assert(VERYCLOSE(0, global_tracker->ql_one_node->each_node.at(node_id)));
 		q->set(node_id, k) = 1;
 		// assert(VERYCLOSE(1, global_tracker->ql_one_node->each_node.at(node_id)));
-		scores.at(k) = calculate_first_four_terms_slowly(q, net);
+		scores.at(x) = calculate_first_four_terms_slowly(q, net, verbose);
 		//PP(scores.at(k));
 		q->set(node_id, k) = 0;
 		// exit(1);
