@@ -786,7 +786,7 @@ void one_random_node_all_k(Q *q, Network * net) {
 }
 
 static void vacate_a_node(Q *q, const int node_id);
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const bool verbose = false);
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const vector<int> * some_clusters = NULL, const bool verbose = false);
 static bool check_total_score_is_1(const vector<long double> &scores);
 
 void one_node_all_k(Q *q, Network * net, const int node_id) {
@@ -798,20 +798,32 @@ void one_node_all_k(Q *q, Network * net, const int node_id) {
 		q->set(node_id, k) = scores.at(k);
 	}
 }
-void one_node_all_k_M3(Q *q, Network * net, const int node_id) {
+void one_node_all_k_M3(Q *q, Network * net, const int node_id, const vector<int> * some_clusters = NULL) {
+	const int num_clusters_to_consider = (some_clusters == NULL) ? J : some_clusters->size();
 	// assign a node totally to one cluster selected at random
-	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, true);
-	assert((int)scores.size() == J);
+	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, some_clusters, true);
+	For(score, scores) {
+		PP2(node_id, *score);
+	}
+	assert((int)scores.size() == num_clusters_to_consider);
 	assert(check_total_score_is_1(scores));
 
 	long double unif = gsl_rng_uniform(global_r);
-	int random_cluster = 0;
-	while(random_cluster+1 < (int)scores.size() && unif > scores.at(random_cluster)) {
-		unif -= scores.at(random_cluster);
-		++ random_cluster;
+	int random_offset = 0;
+	while(random_offset+1 < (int)scores.size() && unif > scores.at(random_offset)) {
+		unif -= scores.at(random_offset);
+		++ random_offset;
 	}
+	assert(random_offset>=0 && random_offset < num_clusters_to_consider);
 
-	q->set(node_id, random_cluster) = 1;
+	int new_cluster = -1;
+	if(some_clusters == NULL) {
+		new_cluster = random_offset;
+	} else {
+		new_cluster = some_clusters->at(random_offset);
+	}
+	PP(new_cluster);
+	q->set(node_id, new_cluster) = 1;
 }
 
 static bool check_total_score_is_1(const vector<long double> &scores) {
@@ -853,20 +865,20 @@ vector<int> pick_random_clusters(const int num_clusters_with_replacement, const 
 	return unique_nodes;
 }
 
-static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const bool verbose /* = false*/) {
+static const vector<long double> vacate_a_node_and_calculate_its_scores(Q *q, Network *net, const int node_id, const vector<int> * some_clusters /*= NULL*/, const bool verbose /* = false*/) {
 	vacate_a_node(q, node_id);
 	// store the baseline ?
-	vector<long double> scores(J);
-	const int num_clusters = q->Q_.at(node_id).size();
-	assert(J==num_clusters);
-	for (int k = 0; k < num_clusters; ++k) {
+	const int num_clusters_to_consider = (some_clusters == NULL) ? J : some_clusters->size();
+	vector<long double> scores(num_clusters_to_consider);
+	for (int x = 0; x < num_clusters_to_consider; ++x) {
+		const int target_cluster = (some_clusters == NULL) ? x : some_clusters->at(x);
 		// cout << "trying node " << node_id << " in cluster " << k << endl;
 		// assert(VERYCLOSE(0, global_tracker->ql_one_node->each_node.at(node_id)));
-		q->set(node_id, k) = 1;
+		q->set(node_id, target_cluster) = 1;
 		// assert(VERYCLOSE(1, global_tracker->ql_one_node->each_node.at(node_id)));
 		scores.at(x) = calculate_first_four_terms_slowly(q, net, verbose);
 		//PP(scores.at(k));
-		q->set(node_id, k) = 0;
+		q->set(node_id, target_cluster) = 0;
 		// exit(1);
 	}
 	assert(0 == global_tracker->ql_one_node->each_node.at(node_id));
@@ -1009,7 +1021,7 @@ void discretize_then_M3(Q &q, Network * net) {
 
 	const int N = q.N;
 	const int rand_node = N * gsl_rng_uniform(global_r);
-	const int rand_cluster = my_primary_cluster(rand_node, q);
+	int rand_cluster = my_primary_cluster(rand_node, q);
 	cout << "             " << setw(rand_cluster*6) << "" << "<<0>>" << endl;
 
 	// next, empty that cluster
@@ -1041,14 +1053,24 @@ void discretize_then_M3(Q &q, Network * net) {
 		}
 		++another_empty_cluster;
 	}
-	assert(another_empty_cluster != rand_cluster);
+
+	if(another_empty_cluster < rand_cluster)
+		swap(another_empty_cluster, rand_cluster);
+	assert(another_empty_cluster > rand_cluster);
 	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster)));
 	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(rand_cluster)));
 	PP2(rand_cluster, another_empty_cluster);
+	vector<int> two_empty_clusters;
+	two_empty_clusters.push_back(rand_cluster);
+	two_empty_clusters.push_back(another_empty_cluster);
+	assert(2==two_empty_clusters.size());
 
 	vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
-	For(i, all_nodes_randomly) {
-		one_node_all_k_M3(&q, net, *i);
+	random_shuffle(nodes_in_the_random_cluster.begin(), nodes_in_the_random_cluster.end());
+	// For(i, all_nodes_randomly)
+	For(i, nodes_in_the_random_cluster)
+	{
+		one_node_all_k_M3(&q, net, *i, &two_empty_clusters);
 	}
 	dump_block_summary(true);
 	cout << "all nodes M3. "; PP(lower_bound(q,net));
