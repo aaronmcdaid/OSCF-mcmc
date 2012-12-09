@@ -1,7 +1,4 @@
-const char gitstatus[] = 
-#include "comment.txt"
-#include "gitstatus.txt"
-;
+#include "gitstatus.hpp"
 #include "cmdline.h"
 gengetopt_args_info args_info; // a global variable! Sorry.
 #include "macros.hpp"
