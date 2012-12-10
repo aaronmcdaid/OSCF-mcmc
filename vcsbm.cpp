@@ -705,7 +705,10 @@ if(net->directed == false)
 	}
 #endif
 
-	long double first_4_terms = 0.0L;
+	long double four_terms_1cluster_sizes = 0.0L;
+	long double four_terms_2edges = 0.0L;
+	long double four_terms_3non_edges = 0.0L;
+	long double four_terms_4pairs = 0.0L;
 
 	// First term, E log Gamma( n_k + gamma_k )
 	for(int k=0; k<J; k++) {
@@ -713,10 +716,10 @@ if(net->directed == false)
 		long double var = mu - sq_n_k.at(k);
 		SHOULD_BE_POSITIVE(mu);
 		SHOULD_BE_POSITIVE(var);
-		first_4_terms += exp_log_Gamma_Normal( mu + gamma_k(k), var );
+		four_terms_1cluster_sizes += exp_log_Gamma_Normal( mu + gamma_k(k), var );
 	}
 	if(verbose)
-		PP(first_4_terms);
+		PP(four_terms_1cluster_sizes);
 	// Second third and fourth terms, E log Gamma (y_kl + Beta_1)
 //*
 	// cout << endl;
@@ -776,16 +779,21 @@ if(net->directed == false)
 			assert(VERYCLOSE(var_slowp_KL , var_p_kl));
 #endif
 
-			first_4_terms += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
-			first_4_terms += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
-			first_4_terms -= exp_log_Gamma_Normal( mu_p_kl + beta_1 + beta_2, var_p_kl );
+			four_terms_2edges += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
+			four_terms_3non_edges += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
+			four_terms_4pairs -= exp_log_Gamma_Normal( mu_p_kl + beta_1 + beta_2, var_p_kl );
 		}
 	}
 // */
 
 	// NOTE, we DO NOT include the entropy term in the return.
 
-	return first_4_terms;
+	const long double sum_four_terms = four_terms_1cluster_sizes + four_terms_2edges + four_terms_3non_edges + four_terms_4pairs;
+	if(verbose) {
+		PP3(sum_four_terms , four_terms_1cluster_sizes ,four_terms_2edges+four_terms_3non_edges+four_terms_4pairs);
+		PP3(four_terms_2edges , four_terms_3non_edges , four_terms_4pairs);
+	}
+	return sum_four_terms;
 }
 long double lower_bound(const Q &q, Network *net) {
 	return global_tracker->ql_entropy->entropy
@@ -817,13 +825,24 @@ void one_node_all_k(Q *q, Network * net, const int node_id) {
 	}
 }
 void one_node_all_k_M3(Q *q, Network * net, const int node_id, const vector<int> * some_clusters = NULL) {
+	const bool verbose = false;
+if(verbose) {
 	if(global_groundTruth_ptr)
 		PP(global_groundTruth.at(node_id));
+	if(some_clusters) {
+		For(cl, *some_clusters) {
+			PP(*cl);
+		}
+	}
+}
 	const int num_clusters_to_consider = (some_clusters == NULL) ? J : some_clusters->size();
 	// assign a node totally to one cluster selected at random
-	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, some_clusters, true);
-	For(score, scores) {
-		PP2(node_id, *score);
+	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, some_clusters, verbose);
+	for(size_t l = 0; l < scores.size(); ++l) {
+		const long double score = scores.at(l);
+		const int cluster = some_clusters ? some_clusters->at(l) : l;
+if(verbose)
+		PP3(cluster, node_id, score);
 	}
 	assert((int)scores.size() == num_clusters_to_consider);
 	assert(check_total_score_is_1(scores));
@@ -842,7 +861,11 @@ void one_node_all_k_M3(Q *q, Network * net, const int node_id, const vector<int>
 	} else {
 		new_cluster = some_clusters->at(random_offset);
 	}
+if(verbose)
 	PP(new_cluster);
+else {
+	cout << ", " << new_cluster;
+}
 	q->set(node_id, new_cluster) = 1;
 }
 
@@ -1087,13 +1110,16 @@ void discretize_then_M3(Q &q, Network * net) {
 
 	vector<int> all_nodes_randomly = random_list_of_all_nodes(N);
 	random_shuffle(nodes_in_the_random_cluster.begin(), nodes_in_the_random_cluster.end());
+	PP(nodes_in_the_random_cluster.size());
 	// For(i, all_nodes_randomly)
+	cout << "m3 on those two clusters: ";
 	For(i, nodes_in_the_random_cluster)
 	{
 		one_node_all_k_M3(&q, net, *i, &two_empty_clusters);
 	}
+	cout << endl;
 	dump_block_summary(true);
-	cout << "all nodes M3. "; PP(lower_bound(q,net));
+	cout << "all nodes M3ed. "; PP(lower_bound(q,net));
 }
 
 void vcsbm(Network * net) {
@@ -1192,7 +1218,7 @@ void vcsbm(Network * net) {
 //#if 0
 		const long double new_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 		if(new_score < backup_score) {
-			// cout << "Undo. From " << new_score << " back to " << backup_score << endl;
+			cout << "Undo. From " << new_score << " back to " << backup_score << endl;
 			for(int i=0; i<N; ++i) {
 				vacate_a_node(&q, i);
 				for(int k=0; k<J; ++k) {
