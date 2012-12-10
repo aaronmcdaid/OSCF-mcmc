@@ -14,9 +14,11 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<gsl/gsl_sf_gamma.h>
 #include<algorithm>
 #include<iomanip>
-#include"format_flag_stack/format_flag_stack.hpp"
 #include<limits>
 #include<algorithm>
+#include<fstream>
+
+#include"format_flag_stack/format_flag_stack.hpp"
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -28,6 +30,20 @@ using namespace network;
 void vcsbm(Network * net);
 
 format_flag_stack :: FormatFlagStack stack;
+
+vector<int> global_groundTruth;
+vector<int> *global_groundTruth_ptr = NULL;
+void loadGroundTruth(const char *filename) {
+	assert(filename);
+	ifstream file(filename);
+	int line_count = 0;
+	int z_i;
+	while(file >> z_i) {
+		++line_count;
+		global_groundTruth.push_back(z_i);
+	}
+	global_groundTruth_ptr = &global_groundTruth;
+}
 
 int main(int argc, char **argv) {
 	// Parse the args - there should be exactly one arg, the edge list
@@ -47,6 +63,11 @@ int main(int argc, char **argv) {
 	const char * edgeListFileName   = args_info.inputs[0];
 
 	const network :: Network * net = network :: build_network(edgeListFileName, args_info.stringIDs_flag, args_info.directed_flag, args_info.weighted_flag);
+
+	if(args_info.GT_vector_arg) {
+		loadGroundTruth(args_info.GT_vector_arg);
+		assert(global_groundTruth.size() == net->N());
+	}
 
 	vcsbm(net);
 }
@@ -796,6 +817,8 @@ void one_node_all_k(Q *q, Network * net, const int node_id) {
 	}
 }
 void one_node_all_k_M3(Q *q, Network * net, const int node_id, const vector<int> * some_clusters = NULL) {
+	if(global_groundTruth_ptr)
+		PP(global_groundTruth.at(node_id));
 	const int num_clusters_to_consider = (some_clusters == NULL) ? J : some_clusters->size();
 	// assign a node totally to one cluster selected at random
 	const vector<long double> scores = vacate_a_node_and_calculate_its_scores(q, net, node_id, some_clusters, true);
