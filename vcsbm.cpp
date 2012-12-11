@@ -554,7 +554,32 @@ const long double beta_1 = 1.0L;
 const long double beta_2 = 1.0L;
 
 
-static long double exp_log_Gamma_Normal(const long double mean, const long double variance) {
+static long double exp_log_Gamma_Normal(const long double nonRandom, const long double mean_, /* MUTABLE */ long double variance) {
+	// we're trying to calculcate E [ log ( Gamma ( nonRandom + N(mean,variance) ) ) ]
+	if(variance > mean_) {
+		assert(VERYCLOSE(variance, mean_));
+		variance = mean_;
+	}
+	assert(variance >= 0.0L);
+	assert(variance <= mean_);
+	assert(mean_ >= 0.0L);
+	if(mean_ == 0.0L) {
+		assert(variance == 0.0L);
+	}
+	else {
+		// we should ensure that the std dev is not too large compared to the mean.
+		// In particular, I'm referring to the mean of the random bit
+		const long double stddev = sqrtl(variance);
+		const long double x = stddev / mean_;
+		const long double new_x = x / (x+1.0);
+		assert(new_x >= 0.0L && new_x <= 1.0L && new_x <= x);
+		const long double newstddev = new_x * mean_;
+		assert(newstddev <= stddev);
+		const long double newvariance = newstddev * newstddev;
+		assert(isfinite(newvariance));
+		variance = newvariance;
+	}
+	const long double mean = nonRandom + mean_;
 	static long double half_logl2pi = 0.5L * logl(2 * M_PI);
 	// assert(variance >= 0.0L);
 	// assert(mean >= 0.0L);
@@ -716,7 +741,7 @@ if(net->directed == false)
 		long double var = mu - sq_n_k.at(k);
 		SHOULD_BE_POSITIVE(mu);
 		SHOULD_BE_POSITIVE(var);
-		four_terms_1cluster_sizes += exp_log_Gamma_Normal( mu + gamma_k(k), var );
+		four_terms_1cluster_sizes += exp_log_Gamma_Normal( gamma_k(k), mu, var );
 	}
 	if(verbose)
 		PP(four_terms_1cluster_sizes);
@@ -779,9 +804,9 @@ if(net->directed == false)
 			assert(VERYCLOSE(var_slowp_KL , var_p_kl));
 #endif
 
-			four_terms_2edges += exp_log_Gamma_Normal( mu + beta_1, var_y_kl );
-			four_terms_3non_edges += exp_log_Gamma_Normal( nonEdge_mu + beta_2, nonEdge_var );
-			four_terms_4pairs -= exp_log_Gamma_Normal( mu_p_kl + beta_1 + beta_2, var_p_kl );
+			four_terms_2edges += exp_log_Gamma_Normal( beta_1, mu, var_y_kl );
+			four_terms_3non_edges += exp_log_Gamma_Normal( beta_2, nonEdge_mu, nonEdge_var );
+			four_terms_4pairs -= exp_log_Gamma_Normal( beta_1 + beta_2, mu_p_kl, var_p_kl );
 		}
 	}
 // */
