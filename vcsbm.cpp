@@ -1252,7 +1252,7 @@ void vcsbm(Network * net) {
 			}
 			assert(VERYCLOSE(backup_score , ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net)));
 		} else {
-			cout << "Improved lower bound (repeat=" << repeat << "). Lower bound is: " << new_score << endl;
+			cout << "Improved lower bound (repeat=" << repeat << "). Lower bound is: " << new_score << " was: " << backup_score << endl;
 		}
 //#endif
 
