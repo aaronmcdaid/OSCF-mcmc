@@ -1,2 +1,4 @@
-"Comment: Start vcSBM"
+"Forced stddev/mean down to 1 at most"
+"\n"
+"Start vcSBM"
 "\n"
