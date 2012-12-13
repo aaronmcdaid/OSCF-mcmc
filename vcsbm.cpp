@@ -1146,6 +1146,28 @@ void discretize_then_M3(Q &q, Network * net) {
 	dump_block_summary(true);
 	cout << "all nodes M3ed. "; PP(lower_bound(q,net));
 }
+bool swap_big_clusters_to_the_left(Q&q, Network *net) {
+			for(int k=0; k+1 < J; ++k) {
+				if (global_tracker->ql_mu_n_k->n_k.at(k) < global_tracker->ql_mu_n_k->n_k.at(k+1)) {
+					// PP2(global_tracker->ql_mu_n_k->n_k.at(k), global_tracker->ql_mu_n_k->n_k.at(k+1));
+					const long double backup_score = global_tracker->ql_entropy->entropy + calculate_first_four_terms_slowly(&q, net);
+					cout << "Swap " << k << " and " << k+1 << "...  ";
+					for(int i=0; i<q.N; ++i) {
+						const long double Q_k_i = q.get(i,k);
+						const long double Q_k2i = q.get(i,k+1);
+						q.set(i,k) = 0;
+						q.set(i,k+1) = 0;
+						q.set(i,k) = Q_k2i;
+						q.set(i,k+1) = Q_k_i;
+					}
+					const long double swapped_score = global_tracker->ql_entropy->entropy + calculate_first_four_terms_slowly(&q, net);
+					// PP3(backup_score, swapped_score, backup_score-swapped_score);
+					assert( backup_score <= swapped_score + 0.001 );
+					return true; // lambda return;
+				}
+			}
+			return false;
+}
 
 void vcsbm(Network * net) {
 	const int N = net->N();
@@ -1232,29 +1254,7 @@ void vcsbm(Network * net) {
 		dump_block_summary(true);
 		cout << "all nodes Var" << endl;
 #endif
-		auto swap = [&]() {
-			for(int k=0; k+1 < J; ++k) {
-				if (ql_mu_n_k.n_k.at(k) < ql_mu_n_k.n_k.at(k+1)) {
-					// PP2(ql_mu_n_k.n_k.at(k), ql_mu_n_k.n_k.at(k+1));
-					// assert( backup_score == ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net) );
-					cout << "Swap " << k << " and " << k+1 << "...  ";
-					for(int i=0; i<N; ++i) {
-						const long double Q_k_i = q.get(i,k);
-						const long double Q_k2i = q.get(i,k+1);
-						q.set(i,k) = 0;
-						q.set(i,k+1) = 0;
-						q.set(i,k) = Q_k2i;
-						q.set(i,k+1) = Q_k_i;
-					}
-					const long double swapped_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
-					// PP3(backup_score, swapped_score, backup_score-swapped_score);
-					assert( backup_score <= swapped_score + 0.001 );
-					return true; // lambda return;
-				}
-			}
-			return false;
-		};
-		while(swap()) {
+		while(swap_big_clusters_to_the_left(q, net)) {
 		}
 		cout << endl;
 
