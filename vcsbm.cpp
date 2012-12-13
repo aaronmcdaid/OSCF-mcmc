@@ -1212,8 +1212,8 @@ void vcsbm(Network * net) {
 	dump_block_summary();
 	const long double initial_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 	cout << "That was the initial state "; PP(initial_score);
+	cout << endl;
 	for(int repeat=0; repeat < 1000; ++repeat) {
-		cout << endl;
 		PP(repeat);
 		// do some changes, but revert if things don't improve
 		VVL q_backupQ_ = q.Q_;
@@ -1232,6 +1232,32 @@ void vcsbm(Network * net) {
 		dump_block_summary(true);
 		cout << "all nodes Var" << endl;
 #endif
+		auto swap = [&]() {
+			for(int k=0; k+1 < J; ++k) {
+				if (ql_mu_n_k.n_k.at(k) < ql_mu_n_k.n_k.at(k+1)) {
+					// PP2(ql_mu_n_k.n_k.at(k), ql_mu_n_k.n_k.at(k+1));
+					// assert( backup_score == ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net) );
+					cout << "Swap " << k << " and " << k+1 << "...  ";
+					for(int i=0; i<N; ++i) {
+						const long double Q_k_i = q.get(i,k);
+						const long double Q_k2i = q.get(i,k+1);
+						q.set(i,k) = 0;
+						q.set(i,k+1) = 0;
+						q.set(i,k) = Q_k2i;
+						q.set(i,k+1) = Q_k_i;
+					}
+					const long double swapped_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
+					// PP3(backup_score, swapped_score, backup_score-swapped_score);
+					assert( backup_score <= swapped_score + 0.001 );
+					return true; // lambda return;
+				}
+			}
+			return false;
+		};
+		while(swap()) {
+		}
+		cout << endl;
+
 
 		// empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
 		// discretize_then_M3(q,net);
@@ -1256,6 +1282,7 @@ void vcsbm(Network * net) {
 		}
 //#endif
 
+		cout << endl;
 	}
 	global_tracker->verify_all();
 }
