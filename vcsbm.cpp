@@ -1148,7 +1148,7 @@ void discretize_then_M3(Q &q, Network * net) {
 }
 bool swap_big_clusters_to_the_left(Q&q, Network *net) {
 			for(int k=0; k+1 < J; ++k) {
-				if (global_tracker->ql_mu_n_k->n_k.at(k) < global_tracker->ql_mu_n_k->n_k.at(k+1)) {
+				if (global_tracker->ql_mu_n_k->n_k.at(k)+0.01 < global_tracker->ql_mu_n_k->n_k.at(k+1)) {
 					// PP2(global_tracker->ql_mu_n_k->n_k.at(k), global_tracker->ql_mu_n_k->n_k.at(k+1));
 					const long double backup_score = global_tracker->ql_entropy->entropy + calculate_first_four_terms_slowly(&q, net);
 					cout << "Swap " << k << " and " << k+1 << "...  ";
