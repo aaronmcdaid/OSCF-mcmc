@@ -1,3 +1,5 @@
+"Big (temporary?) change: Just greedily update, without M3."
+"\n"
 "Just two clusters?  Yes for now - it did a little better with K10-O10."
 "\n"
 "Forced stddev/mean down to 1 at most"

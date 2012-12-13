@@ -1234,7 +1234,7 @@ void vcsbm(Network * net) {
 #endif
 
 		// empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
-		discretize_then_M3(q,net);
+		// discretize_then_M3(q,net);
 		Var_on_all_nodes(&q, net, 3);
 		dump_block_summary(true);
 		cout << "finished with a Var(x3) on all nodes. "; PP(lower_bound(q,net));
