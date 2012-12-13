@@ -1235,7 +1235,7 @@ void vcsbm(Network * net) {
 	const long double initial_score = ql_entropy.entropy + calculate_first_four_terms_slowly(&q, net);
 	cout << "That was the initial state "; PP(initial_score);
 	cout << endl;
-	for(int repeat=0; repeat < 1000; ++repeat) {
+	for(int repeat=0; repeat < 100; ++repeat) {
 		PP(repeat);
 		// do some changes, but revert if things don't improve
 		VVL q_backupQ_ = q.Q_;
@@ -1260,12 +1260,13 @@ void vcsbm(Network * net) {
 
 
 		// empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
-		if(drand48() < 0.5)
-			discretize_then_M3(q,net);
-		else
+		if(drand48() < 0.5) {
+			// discretize_then_M3(q,net);
+		} else {
 			Var_on_all_nodes(&q, net, 3);
+			cout << "a Var(x3) on all nodes. "; PP(lower_bound(q,net));
+		}
 		dump_block_summary(true);
-		cout << "finished with a Var(x3) on all nodes. "; PP(lower_bound(q,net));
 
 
 //#if 0
