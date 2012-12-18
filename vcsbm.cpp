@@ -1090,9 +1090,31 @@ void discretize_then_M3(Q &q, Network * net) {
 	const int N = q.N;
 	const int rand_node = N * gsl_rng_uniform(global_r);
 	int rand_cluster = my_primary_cluster(rand_node, q);
-	cout << "             " << setw(rand_cluster*6) << "" << "<<0>>" << endl;
+
+	// first, find if there are any other empty clusters.  If not, we must abandon.
+	int another_empty_cluster = 0;
+	while(true) {
+		const long double n_k = global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster);
+		if(n_k < 0.5) {
+			assert(VERYCLOSE(n_k, 0.0L));
+			if(another_empty_cluster != rand_cluster)
+				break;
+		}
+		++another_empty_cluster;
+	}
+
+	if(another_empty_cluster < rand_cluster)
+		swap(another_empty_cluster, rand_cluster);
+
+	if(another_empty_cluster >= J) {
+		cout << "abandoning after discretization, due to lack of empty clusters "; PP(lower_bound(q,net));
+		return;
+	}
+	assert(another_empty_cluster < J);
+	assert(another_empty_cluster > rand_cluster);
 
 	// next, empty that cluster
+	cout << "             " << setw(rand_cluster*6) << "" << "<<0>>" << endl;
 	const int n_rand = global_tracker->ql_mu_n_k->n_k.at(rand_cluster) + 0.1; // add 0.1 so that the it rounds correctly
 	vector<int> nodes_in_the_random_cluster;
 	{
@@ -1111,20 +1133,6 @@ void discretize_then_M3(Q &q, Network * net) {
 		assert(n_rand == verify_n_rand);
 	}
 
-	int another_empty_cluster = 0;
-	while(true) {
-		const long double n_k = global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster);
-		if(n_k < 0.5) {
-			assert(VERYCLOSE(n_k, 0.0L));
-			if(another_empty_cluster != rand_cluster)
-				break;
-		}
-		++another_empty_cluster;
-	}
-
-	if(another_empty_cluster < rand_cluster)
-		swap(another_empty_cluster, rand_cluster);
-	assert(another_empty_cluster > rand_cluster);
 	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(another_empty_cluster)));
 	assert(VERYCLOSE(0.0L,global_tracker->ql_mu_n_k->n_k.at(rand_cluster)));
 	PP2(rand_cluster, another_empty_cluster);
