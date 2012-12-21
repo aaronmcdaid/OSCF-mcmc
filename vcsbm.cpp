@@ -1268,8 +1268,8 @@ void vcsbm(Network * net) {
 
 
 		// empty_one_cluster_then_M3_all_nodes_then_Var_all_nodes(q,net);
-		if(drand48() < 0.5) {
-			// discretize_then_M3(q,net);
+		if(drand48() < 0.0) {
+			discretize_then_M3(q,net);
 		} else {
 			Var_on_all_nodes(&q, net, 3);
 			cout << "a Var(x3) on all nodes. "; PP(lower_bound(q,net));
