@@ -87,7 +87,7 @@ static void should_be_positive_(long double &x, const int line_no) {
 }
 #define SHOULD_BE_POSITIVE(x) should_be_positive_(x, __LINE__);
 
-#define FIXED_K 15
+#define FIXED_K 7
 const int J = FIXED_K; // fix the upper bound on K at 10.
 
 
@@ -593,7 +593,7 @@ static long double gamma_k(const int k) {
 	// k = J-k -1;
 	assert(k>=0);
 	assert(k<J);
-	// if(k<FIXED_K) return 1; else return 0.001;
+	if(k<FIXED_K) return 1; else return 0.001;
 	return powl(alpha_for_stick_breaking / (1.0L+alpha_for_stick_breaking), k);
 }
 
