@@ -12,11 +12,14 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<gsl/gsl_rng.h>
 #include<gsl/gsl_randist.h>
 #include<gsl/gsl_sf_gamma.h>
+#include<gsl/gsl_cdf.h>
+#include<gsl/gsl_statistics_double.h>
 #include<algorithm>
 #include<iomanip>
 #include<limits>
 #include<algorithm>
 #include<fstream>
+#include<array>
 
 #include"format_flag_stack/format_flag_stack.hpp"
 
@@ -555,7 +558,57 @@ const long double beta_1 = 1.0L;
 const long double beta_2 = 1.0L;
 
 
-static long double exp_log_Gamma_Normal(const long double nonRandom, const long double mean_, /* MUTABLE */ long double variance) {
+static long double exp_log_Taylor_Normal(const long double nonRandom, const long double mean_, /* MUTABLE */ long double variance);
+static long double exp_log_Gamma_logNormal(const long double nonRandom, const long double mean, const long double variance);
+#define exp_log_Gamma_Normal exp_log_Gamma_logNormal
+// #define exp_log_Gamma_Normal exp_log_Taylor_Normal
+
+struct SetOfNormalPercentiles {
+	static const int num_percs = 100;
+	array<long double, num_percs> perc;
+	SetOfNormalPercentiles() {
+		for(int i=0; i<num_percs; ++i) {
+			const long double P = (1.0L+i*2.0L)/(num_percs*2.0L);
+			perc.at(i) = gsl_cdf_gaussian_Pinv(P, 1);
+			// PP3(i,P,perc.at(i));
+		}
+	}
+};
+static long double exp_log_Gamma_logNormal(const long double nonRandom, const long double mean, const long double variance) {
+	if(variance == 0) {
+		return gsl_sf_lngamma(mean + nonRandom);
+	}
+	assert(variance>0);
+	static SetOfNormalPercentiles set_of_normal_percentiles;
+	// First, identify the logNormal parameters, m and v
+	const long double s2 = logl(variance / mean /mean + 1);
+	const long double m = logl(mean) - s2/2.0L;
+	const long double s = sqrtl(s2);
+	assert(isfinite(s2));
+	assert(isfinite(m));
+	assert(isfinite(s));
+	long double answer = 0.0L;
+	// array<double, SetOfNormalPercentiles :: num_percs> log_normally_distributed;
+	for(int i=0; i<set_of_normal_percentiles.num_percs; ++i) {
+		const long double x = set_of_normal_percentiles.perc[i] * s + m;
+		const long double expx = expl(x);
+		// PP6(i,mean, sqrtl(variance), set_of_normal_percentiles.perc.at(i), x, expx);
+		// log_normally_distributed.at(i) = expx;
+		answer += gsl_sf_lngamma(nonRandom + expx);
+	}
+	// const double observed_mean = gsl_stats_mean(log_normally_distributed.data(), 1, SetOfNormalPercentiles :: num_percs);
+	// const double observed_sd   = gsl_stats_sd  (log_normally_distributed.data(), 1, SetOfNormalPercentiles :: num_percs);
+	// PP4(mean, observed_mean, sqrtl(variance), observed_sd);
+	//For(lnd , log_normally_distributed) {
+	//}
+	answer /= set_of_normal_percentiles.num_percs;
+	assert(isfinite(answer));
+	// const long double old = exp_log_Taylor_Normal(nonRandom, mean, variance);
+	// PP2(old, answer);
+	// return old;
+	return answer;
+}
+static long double exp_log_Taylor_Normal(const long double nonRandom, const long double mean_, /* MUTABLE */ long double variance) {
 	// we're trying to calculcate E [ log ( Gamma ( nonRandom + N(mean,variance) ) ) ]
 	if(variance > mean_) {
 		assert(VERYCLOSE(variance, mean_));
@@ -581,7 +634,7 @@ static long double exp_log_Gamma_Normal(const long double nonRandom, const long 
 		variance = newvariance;
 	}
 	const long double mean = nonRandom + mean_;
-	static long double half_logl2pi = 0.5L * logl(2 * M_PI);
+	static const long double half_logl2pi = 0.5L * logl(2 * M_PI);
 	// assert(variance >= 0.0L);
 	// assert(mean >= 0.0L);
 	return (mean - 0.5L) * logl(mean)
