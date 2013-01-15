@@ -1,3 +1,4 @@
+"10 percs, not 100.\n"
 "LogNormal with percentiles.\n"
 "Just 7 clusters, with uniform Dirichlet, for now.\n"
 "Big change: Just greedily update, without M3."

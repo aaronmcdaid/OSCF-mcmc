@@ -564,7 +564,7 @@ static long double exp_log_Gamma_logNormal(const long double nonRandom, const lo
 // #define exp_log_Gamma_Normal exp_log_Taylor_Normal
 
 struct SetOfNormalPercentiles {
-	static const int num_percs = 100;
+	static const int num_percs = 10;
 	array<long double, num_percs> perc;
 	SetOfNormalPercentiles() {
 		for(int i=0; i<num_percs; ++i) {
