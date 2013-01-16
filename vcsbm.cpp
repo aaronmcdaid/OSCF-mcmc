@@ -575,6 +575,7 @@ struct SetOfNormalPercentiles {
 	}
 };
 static long double exp_log_Gamma_logNormal(const long double nonRandom, const long double mean, const long double variance) {
+	assert(variance <= mean);
 	if(variance == 0) {
 		return gsl_sf_lngamma(mean + nonRandom);
 	}
@@ -582,6 +583,10 @@ static long double exp_log_Gamma_logNormal(const long double nonRandom, const lo
 	static SetOfNormalPercentiles set_of_normal_percentiles;
 	// First, identify the logNormal parameters, m and v
 	const long double s2 = logl(variance / mean /mean + 1);
+	if(!isfinite(s2)) {
+		cout << endl;
+		PP3(variance, mean, s2);
+	}
 	const long double m = logl(mean) - s2/2.0L;
 	const long double s = sqrtl(s2);
 	assert(isfinite(s2));
@@ -795,6 +800,11 @@ if(net->directed == false)
 		long double var = mu - sq_n_k.at(k);
 		SHOULD_BE_POSITIVE(mu);
 		SHOULD_BE_POSITIVE(var);
+		if(var > mu) {
+			assert(VERYCLOSE(var, mu));
+			var = mu;
+		}
+		assert(var<=mu);
 		four_terms_1cluster_sizes += exp_log_Gamma_Normal( gamma_k(k), mu, var );
 	}
 	if(verbose)
@@ -858,6 +868,21 @@ if(net->directed == false)
 			assert(VERYCLOSE(var_slowp_KL , var_p_kl));
 #endif
 
+			if(var_y_kl > mu) {
+				assert(VERYCLOSE(var_y_kl, mu));
+				var_y_kl = mu;
+			}
+			if(nonEdge_var > nonEdge_mu) {
+				assert(VERYCLOSE(nonEdge_var, nonEdge_mu));
+				nonEdge_var = nonEdge_mu;
+			}
+			if(var_p_kl > mu_p_kl) {
+				assert(VERYCLOSE(var_p_kl, mu_p_kl));
+				var_p_kl = mu_p_kl;
+			}
+			assert(var_y_kl <= mu);
+			assert(nonEdge_var <= nonEdge_mu);
+			assert(var_p_kl <= mu_p_kl);
 			four_terms_2edges += exp_log_Gamma_Normal( beta_1, mu, var_y_kl );
 			four_terms_3non_edges += exp_log_Gamma_Normal( beta_2, nonEdge_mu, nonEdge_var );
 			four_terms_4pairs -= exp_log_Gamma_Normal( beta_1 + beta_2, mu_p_kl, var_p_kl );
