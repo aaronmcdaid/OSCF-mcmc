@@ -1,3 +1,7 @@
+#ifndef NETWORK_HPP__
+#define NETWORK_HPP__
+
+#include<string>
 #include<vector>
 namespace network {
 
@@ -78,4 +82,9 @@ typedef const Network__unConst Network; // The exposed Network should always be 
 
 const Network * build_network(std :: string file_name, const bool stringIDs_flag, const bool directed_flag, const bool weighted_flag);
 
+
 } // namespace network
+
+typedef network :: Network * const Net;
+
+#endif

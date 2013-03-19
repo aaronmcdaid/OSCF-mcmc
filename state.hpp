@@ -20,3 +20,10 @@
  * - a map: edge_id -> set(community_id)  (A non-empty set)
  *
  */
+#include "network.hpp"
+
+typedef const network :: Network * const Net;
+struct State {
+	Net net;
+	explicit State(Net net_);
+};

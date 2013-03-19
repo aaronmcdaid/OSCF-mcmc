@@ -21,7 +21,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<fstream>
 #include<array>
 
-#include"format_flag_stack/format_flag_stack.hpp"
+//#include"format_flag_stack/format_flag_stack.hpp"
 
 #include"state.hpp"
 #include"moves.hpp"
@@ -34,9 +34,8 @@ using namespace std :: tr1;
 using namespace network;
 
 
-format_flag_stack :: FormatFlagStack stack;
+// format_flag_stack :: FormatFlagStack stack;
 
-typedef const network :: Network * const Net;
 
 void oscf(Net net);
 
@@ -69,6 +68,7 @@ int main(int argc, char **argv) {
 }
 
 void oscf(Net net) {
+	State s(net); // initialize with every edge in its own community
 }
 
 
