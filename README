@@ -1,5 +1,5 @@
 
-   == variational collapsed Stochastic Block Modelling ==
+   == Overlapping Stochastic Community Finding MCMC ==
 
 Copyright: Aaron McDaid. aaronmcdaid@gmail.com
 
@@ -11,15 +11,15 @@ GNU General Public License 3.0 (see gpl.txt included in this package.)
 
 To get the latest code from github and compile:
 
-     git clone --recursive -o github git://github.com/aaronmcdaid/vcSBM.git
-     cd vcSBM
+     git clone --recursive -o github git://github.com/aaronmcdaid/OSCFmcmc.git
+     cd OSCFmcmc
      make
 
    == Running ==
 
 You can simply run it with
 
-     ./vcsbm edge_list.txt
+     ./oscf edge_list.txt
 
 where edge_list.txt is your edge list file, made up of one line per edge.
 Each line gives the two nodes that are connected, separated by whitespace.
@@ -27,12 +27,11 @@ Each line gives the two nodes that are connected, separated by whitespace.
 By default, the network is treated as unweighted and undirected.
 To use other options, run
 
-     ./vcsbm --help
+     ./oscf --help
 
 I would appreciate any feedback, and would be willing to make changes if
 you have any requests.
 
    == References ==
 
-[1] http://arxiv.org/abs/1203.3083
-[2] aaronmcdaid@gmail.com
+...
