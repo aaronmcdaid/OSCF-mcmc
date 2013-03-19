@@ -32,41 +32,24 @@ const char *gengetopt_args_info_usage = "Usage: Stochastic Block Models [OPTIONS
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
-  "      --git-version           detailed version description  (default=off)",
-  "  -v, --verbose               detailed debugging  (default=off)",
-  "  -K, --K=INT                 Number of clusters, K  (default=`-1')",
-  "  -d, --directed              directed  (default=off)",
-  "  -w, --weighted              weighted  (default=off)",
-  "  -s, --selfloop              selfloops allowed  (default=off)",
-  "      --seed=INT              seed to drand48() and gsl_rng_set  (default=`0')",
-  "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
-  "      --algo.metroK=INT       Use the simple Metropolis move on K  \n                                (default=`1')",
-  "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`0')",
-  "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
-  "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
-  "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
-  "  -i, --iterations=INT        How many iterations  (default=`120000')",
-  "      --initGT                Initialize to the ground truth  (default=off)",
-  "      --model.scf             Stochastic community finding  (default=off)",
-  "      --scf                   Collapsed SCF  (default=off)",
-  "      --algo.sbm.cem          Classification EM (CEM) for the SBM  \n                                (default=off)",
-  "      --stringIDs             string IDs in the input  (default=off)",
-  "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
-  "      --printEveryNIters=INT  How often to print an update  (default=`1000')",
-  "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
-  "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
-  "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
-  "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
-  "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
-  "  -l, --latentspace           Latent space model inside clusters         \n                                (default=off)",
-  "      --lsalpha=FLOAT         Latestspace alpha ('density')  (default=`0')",
-  "      --algo.lspos=INT        Algo: LSSBM positions  (default=`0')",
-  "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
-  "  -u, --uniformK              Use a Uniform prior for K  (default=off)",
-  "      --save.lsz=STRING       save positions and colors  (default=`')",
-  "      --labels=INT            Do label-unswitching, and a nice summary  \n                                (default=`1')",
+  "  -h, --help                Print help and exit",
+  "  -V, --version             Print version and exit",
+  "      --git-version         detailed version description  (default=off)",
+  "  -d, --directed            directed  (default=off)",
+  "  -w, --weighted            weighted  (default=off)",
+  "  -s, --selfloop            selfloops allowed  (default=off)",
+  "      --assume_N_nodes=INT  Pre-create N nodes (0 to N-1), which may be left \n                              with zero degree  (default=`0')",
+  "      --stringIDs           string IDs in the input  (default=off)",
+  "      --seed=INT            seed to drand48() and gsl_rng_set  (default=`0')",
+  "      --GT.vector=STRING    The ground truth. a file with N lines. Starts from \n                              ZERO.",
+  "      --initGT              Initialize to the ground truth  (default=off)",
+  "  -K, --K=INT               Number of clusters, K  (default=`-1')",
+  "      --alpha=FLOAT         alpha. How uniform the cluster sizes  (default=`1')",
+  "  -u, --uniformK            Use a Uniform prior for K  (default=off)",
+  "  -i, --iterations=INT      How many iterations  (default=`120000')",
+  "      --algo.metroK=INT     Use the simple Metropolis move on K  (default=`1')",
+  "      --algo.gibbs=INT      Use the simple Gibbs in the algorithm  \n                              (default=`1')",
+  "      --labels=INT          Do label-unswitching, and a nice summary  \n                              (default=`1')",
     0
 };
 
@@ -96,37 +79,20 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
   args_info->git_version_given = 0 ;
-  args_info->verbose_given = 0 ;
-  args_info->K_given = 0 ;
   args_info->directed_given = 0 ;
   args_info->weighted_given = 0 ;
   args_info->selfloop_given = 0 ;
+  args_info->assume_N_nodes_given = 0 ;
+  args_info->stringIDs_given = 0 ;
   args_info->seed_given = 0 ;
   args_info->GT_vector_given = 0 ;
-  args_info->algo_metroK_given = 0 ;
-  args_info->algo_1node_given = 0 ;
-  args_info->algo_gibbs_given = 0 ;
-  args_info->algo_m3_given = 0 ;
-  args_info->algo_ejectabsorb_given = 0 ;
-  args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
-  args_info->model_scf_given = 0 ;
-  args_info->scf_given = 0 ;
-  args_info->algo_sbm_cem_given = 0 ;
-  args_info->stringIDs_given = 0 ;
-  args_info->mega_given = 0 ;
-  args_info->printEveryNIters_given = 0 ;
-  args_info->assume_N_nodes_given = 0 ;
+  args_info->K_given = 0 ;
   args_info->alpha_given = 0 ;
-  args_info->save_z_given = 0 ;
-  args_info->gamma_s_given = 0 ;
-  args_info->gamma_phi_given = 0 ;
-  args_info->latentspace_given = 0 ;
-  args_info->lsalpha_given = 0 ;
-  args_info->algo_lspos_given = 0 ;
-  args_info->algo_lsm3_given = 0 ;
   args_info->uniformK_given = 0 ;
-  args_info->save_lsz_given = 0 ;
+  args_info->iterations_given = 0 ;
+  args_info->algo_metroK_given = 0 ;
+  args_info->algo_gibbs_given = 0 ;
   args_info->labels_given = 0 ;
 }
 
@@ -135,56 +101,28 @@ void clear_args (struct gengetopt_args_info *args_info)
 {
   FIX_UNUSED (args_info);
   args_info->git_version_flag = 0;
-  args_info->verbose_flag = 0;
-  args_info->K_arg = -1;
-  args_info->K_orig = NULL;
   args_info->directed_flag = 0;
   args_info->weighted_flag = 0;
   args_info->selfloop_flag = 0;
+  args_info->assume_N_nodes_arg = 0;
+  args_info->assume_N_nodes_orig = NULL;
+  args_info->stringIDs_flag = 0;
   args_info->seed_arg = 0;
   args_info->seed_orig = NULL;
   args_info->GT_vector_arg = NULL;
   args_info->GT_vector_orig = NULL;
-  args_info->algo_metroK_arg = 1;
-  args_info->algo_metroK_orig = NULL;
-  args_info->algo_1node_arg = 0;
-  args_info->algo_1node_orig = NULL;
-  args_info->algo_gibbs_arg = 1;
-  args_info->algo_gibbs_orig = NULL;
-  args_info->algo_m3_arg = 1;
-  args_info->algo_m3_orig = NULL;
-  args_info->algo_ejectabsorb_arg = 1;
-  args_info->algo_ejectabsorb_orig = NULL;
-  args_info->iterations_arg = 120000;
-  args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
-  args_info->model_scf_flag = 0;
-  args_info->scf_flag = 0;
-  args_info->algo_sbm_cem_flag = 0;
-  args_info->stringIDs_flag = 0;
-  args_info->mega_flag = 0;
-  args_info->printEveryNIters_arg = 1000;
-  args_info->printEveryNIters_orig = NULL;
-  args_info->assume_N_nodes_arg = 0;
-  args_info->assume_N_nodes_orig = NULL;
+  args_info->K_arg = -1;
+  args_info->K_orig = NULL;
   args_info->alpha_arg = 1;
   args_info->alpha_orig = NULL;
-  args_info->save_z_arg = gengetopt_strdup ("");
-  args_info->save_z_orig = NULL;
-  args_info->gamma_s_arg = 1;
-  args_info->gamma_s_orig = NULL;
-  args_info->gamma_phi_arg = 1;
-  args_info->gamma_phi_orig = NULL;
-  args_info->latentspace_flag = 0;
-  args_info->lsalpha_arg = 0;
-  args_info->lsalpha_orig = NULL;
-  args_info->algo_lspos_arg = 0;
-  args_info->algo_lspos_orig = NULL;
-  args_info->algo_lsm3_arg = 0;
-  args_info->algo_lsm3_orig = NULL;
   args_info->uniformK_flag = 0;
-  args_info->save_lsz_arg = gengetopt_strdup ("");
-  args_info->save_lsz_orig = NULL;
+  args_info->iterations_arg = 120000;
+  args_info->iterations_orig = NULL;
+  args_info->algo_metroK_arg = 1;
+  args_info->algo_metroK_orig = NULL;
+  args_info->algo_gibbs_arg = 1;
+  args_info->algo_gibbs_orig = NULL;
   args_info->labels_arg = 1;
   args_info->labels_orig = NULL;
   
@@ -198,38 +136,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->git_version_help = gengetopt_args_info_help[2] ;
-  args_info->verbose_help = gengetopt_args_info_help[3] ;
-  args_info->K_help = gengetopt_args_info_help[4] ;
-  args_info->directed_help = gengetopt_args_info_help[5] ;
-  args_info->weighted_help = gengetopt_args_info_help[6] ;
-  args_info->selfloop_help = gengetopt_args_info_help[7] ;
+  args_info->directed_help = gengetopt_args_info_help[3] ;
+  args_info->weighted_help = gengetopt_args_info_help[4] ;
+  args_info->selfloop_help = gengetopt_args_info_help[5] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[6] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[7] ;
   args_info->seed_help = gengetopt_args_info_help[8] ;
   args_info->GT_vector_help = gengetopt_args_info_help[9] ;
-  args_info->algo_metroK_help = gengetopt_args_info_help[10] ;
-  args_info->algo_1node_help = gengetopt_args_info_help[11] ;
-  args_info->algo_gibbs_help = gengetopt_args_info_help[12] ;
-  args_info->algo_m3_help = gengetopt_args_info_help[13] ;
-  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[14] ;
-  args_info->iterations_help = gengetopt_args_info_help[15] ;
-  args_info->initGT_help = gengetopt_args_info_help[16] ;
-  args_info->model_scf_help = gengetopt_args_info_help[17] ;
-  args_info->scf_help = gengetopt_args_info_help[18] ;
-  args_info->algo_sbm_cem_help = gengetopt_args_info_help[19] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[20] ;
-  args_info->mega_help = gengetopt_args_info_help[21] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[22] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[23] ;
-  args_info->alpha_help = gengetopt_args_info_help[24] ;
-  args_info->save_z_help = gengetopt_args_info_help[25] ;
-  args_info->gamma_s_help = gengetopt_args_info_help[26] ;
-  args_info->gamma_phi_help = gengetopt_args_info_help[27] ;
-  args_info->latentspace_help = gengetopt_args_info_help[28] ;
-  args_info->lsalpha_help = gengetopt_args_info_help[29] ;
-  args_info->algo_lspos_help = gengetopt_args_info_help[30] ;
-  args_info->algo_lsm3_help = gengetopt_args_info_help[31] ;
-  args_info->uniformK_help = gengetopt_args_info_help[32] ;
-  args_info->save_lsz_help = gengetopt_args_info_help[33] ;
-  args_info->labels_help = gengetopt_args_info_help[34] ;
+  args_info->initGT_help = gengetopt_args_info_help[10] ;
+  args_info->K_help = gengetopt_args_info_help[11] ;
+  args_info->alpha_help = gengetopt_args_info_help[12] ;
+  args_info->uniformK_help = gengetopt_args_info_help[13] ;
+  args_info->iterations_help = gengetopt_args_info_help[14] ;
+  args_info->algo_metroK_help = gengetopt_args_info_help[15] ;
+  args_info->algo_gibbs_help = gengetopt_args_info_help[16] ;
+  args_info->labels_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -313,28 +234,15 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
-  free_string_field (&(args_info->K_orig));
+  free_string_field (&(args_info->assume_N_nodes_orig));
   free_string_field (&(args_info->seed_orig));
   free_string_field (&(args_info->GT_vector_arg));
   free_string_field (&(args_info->GT_vector_orig));
-  free_string_field (&(args_info->algo_metroK_orig));
-  free_string_field (&(args_info->algo_1node_orig));
-  free_string_field (&(args_info->algo_gibbs_orig));
-  free_string_field (&(args_info->algo_m3_orig));
-  free_string_field (&(args_info->algo_ejectabsorb_orig));
-  free_string_field (&(args_info->iterations_orig));
-  free_string_field (&(args_info->printEveryNIters_orig));
-  free_string_field (&(args_info->assume_N_nodes_orig));
+  free_string_field (&(args_info->K_orig));
   free_string_field (&(args_info->alpha_orig));
-  free_string_field (&(args_info->save_z_arg));
-  free_string_field (&(args_info->save_z_orig));
-  free_string_field (&(args_info->gamma_s_orig));
-  free_string_field (&(args_info->gamma_phi_orig));
-  free_string_field (&(args_info->lsalpha_orig));
-  free_string_field (&(args_info->algo_lspos_orig));
-  free_string_field (&(args_info->algo_lsm3_orig));
-  free_string_field (&(args_info->save_lsz_arg));
-  free_string_field (&(args_info->save_lsz_orig));
+  free_string_field (&(args_info->iterations_orig));
+  free_string_field (&(args_info->algo_metroK_orig));
+  free_string_field (&(args_info->algo_gibbs_orig));
   free_string_field (&(args_info->labels_orig));
   
   
@@ -377,68 +285,34 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "version", 0, 0 );
   if (args_info->git_version_given)
     write_into_file(outfile, "git-version", 0, 0 );
-  if (args_info->verbose_given)
-    write_into_file(outfile, "verbose", 0, 0 );
-  if (args_info->K_given)
-    write_into_file(outfile, "K", args_info->K_orig, 0);
   if (args_info->directed_given)
     write_into_file(outfile, "directed", 0, 0 );
   if (args_info->weighted_given)
     write_into_file(outfile, "weighted", 0, 0 );
   if (args_info->selfloop_given)
     write_into_file(outfile, "selfloop", 0, 0 );
+  if (args_info->assume_N_nodes_given)
+    write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
+  if (args_info->stringIDs_given)
+    write_into_file(outfile, "stringIDs", 0, 0 );
   if (args_info->seed_given)
     write_into_file(outfile, "seed", args_info->seed_orig, 0);
   if (args_info->GT_vector_given)
     write_into_file(outfile, "GT.vector", args_info->GT_vector_orig, 0);
-  if (args_info->algo_metroK_given)
-    write_into_file(outfile, "algo.metroK", args_info->algo_metroK_orig, 0);
-  if (args_info->algo_1node_given)
-    write_into_file(outfile, "algo.1node", args_info->algo_1node_orig, 0);
-  if (args_info->algo_gibbs_given)
-    write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
-  if (args_info->algo_m3_given)
-    write_into_file(outfile, "algo.m3", args_info->algo_m3_orig, 0);
-  if (args_info->algo_ejectabsorb_given)
-    write_into_file(outfile, "algo.ejectabsorb", args_info->algo_ejectabsorb_orig, 0);
-  if (args_info->iterations_given)
-    write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
   if (args_info->initGT_given)
     write_into_file(outfile, "initGT", 0, 0 );
-  if (args_info->model_scf_given)
-    write_into_file(outfile, "model.scf", 0, 0 );
-  if (args_info->scf_given)
-    write_into_file(outfile, "scf", 0, 0 );
-  if (args_info->algo_sbm_cem_given)
-    write_into_file(outfile, "algo.sbm.cem", 0, 0 );
-  if (args_info->stringIDs_given)
-    write_into_file(outfile, "stringIDs", 0, 0 );
-  if (args_info->mega_given)
-    write_into_file(outfile, "mega", 0, 0 );
-  if (args_info->printEveryNIters_given)
-    write_into_file(outfile, "printEveryNIters", args_info->printEveryNIters_orig, 0);
-  if (args_info->assume_N_nodes_given)
-    write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
+  if (args_info->K_given)
+    write_into_file(outfile, "K", args_info->K_orig, 0);
   if (args_info->alpha_given)
     write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
-  if (args_info->save_z_given)
-    write_into_file(outfile, "save.z", args_info->save_z_orig, 0);
-  if (args_info->gamma_s_given)
-    write_into_file(outfile, "gamma.s", args_info->gamma_s_orig, 0);
-  if (args_info->gamma_phi_given)
-    write_into_file(outfile, "gamma.phi", args_info->gamma_phi_orig, 0);
-  if (args_info->latentspace_given)
-    write_into_file(outfile, "latentspace", 0, 0 );
-  if (args_info->lsalpha_given)
-    write_into_file(outfile, "lsalpha", args_info->lsalpha_orig, 0);
-  if (args_info->algo_lspos_given)
-    write_into_file(outfile, "algo.lspos", args_info->algo_lspos_orig, 0);
-  if (args_info->algo_lsm3_given)
-    write_into_file(outfile, "algo.lsm3", args_info->algo_lsm3_orig, 0);
   if (args_info->uniformK_given)
     write_into_file(outfile, "uniformK", 0, 0 );
-  if (args_info->save_lsz_given)
-    write_into_file(outfile, "save.lsz", args_info->save_lsz_orig, 0);
+  if (args_info->iterations_given)
+    write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
+  if (args_info->algo_metroK_given)
+    write_into_file(outfile, "algo.metroK", args_info->algo_metroK_orig, 0);
+  if (args_info->algo_gibbs_given)
+    write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
   if (args_info->labels_given)
     write_into_file(outfile, "labels", args_info->labels_orig, 0);
   
@@ -702,42 +576,25 @@ cmdline_parser_internal (
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "git-version",	0, NULL, 0 },
-        { "verbose",	0, NULL, 'v' },
-        { "K",	1, NULL, 'K' },
         { "directed",	0, NULL, 'd' },
         { "weighted",	0, NULL, 'w' },
         { "selfloop",	0, NULL, 's' },
+        { "assume_N_nodes",	1, NULL, 0 },
+        { "stringIDs",	0, NULL, 0 },
         { "seed",	1, NULL, 0 },
         { "GT.vector",	1, NULL, 0 },
-        { "algo.metroK",	1, NULL, 0 },
-        { "algo.1node",	1, NULL, 0 },
-        { "algo.gibbs",	1, NULL, 0 },
-        { "algo.m3",	1, NULL, 0 },
-        { "algo.ejectabsorb",	1, NULL, 0 },
-        { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
-        { "model.scf",	0, NULL, 0 },
-        { "scf",	0, NULL, 0 },
-        { "algo.sbm.cem",	0, NULL, 0 },
-        { "stringIDs",	0, NULL, 0 },
-        { "mega",	0, NULL, 0 },
-        { "printEveryNIters",	1, NULL, 0 },
-        { "assume_N_nodes",	1, NULL, 0 },
+        { "K",	1, NULL, 'K' },
         { "alpha",	1, NULL, 0 },
-        { "save.z",	1, NULL, 'z' },
-        { "gamma.s",	1, NULL, 0 },
-        { "gamma.phi",	1, NULL, 0 },
-        { "latentspace",	0, NULL, 'l' },
-        { "lsalpha",	1, NULL, 0 },
-        { "algo.lspos",	1, NULL, 0 },
-        { "algo.lsm3",	1, NULL, 0 },
         { "uniformK",	0, NULL, 'u' },
-        { "save.lsz",	1, NULL, 0 },
+        { "iterations",	1, NULL, 'i' },
+        { "algo.metroK",	1, NULL, 0 },
+        { "algo.gibbs",	1, NULL, 0 },
         { "labels",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:z:lu", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVdwsK:ui:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -753,28 +610,6 @@ cmdline_parser_internal (
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'v':	/* detailed debugging.  */
-        
-        
-          if (update_arg((void *)&(args_info->verbose_flag), 0, &(args_info->verbose_given),
-              &(local_args_info.verbose_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "verbose", 'v',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'K':	/* Number of clusters, K.  */
-        
-        
-          if (update_arg( (void *)&(args_info->K_arg), 
-               &(args_info->K_orig), &(args_info->K_given),
-              &(local_args_info.K_given), optarg, 0, "-1", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "K", 'K',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'd':	/* directed.  */
         
         
@@ -805,36 +640,14 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'i':	/* How many iterations.  */
+        case 'K':	/* Number of clusters, K.  */
         
         
-          if (update_arg( (void *)&(args_info->iterations_arg), 
-               &(args_info->iterations_orig), &(args_info->iterations_given),
-              &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
+          if (update_arg( (void *)&(args_info->K_arg), 
+               &(args_info->K_orig), &(args_info->K_given),
+              &(local_args_info.K_given), optarg, 0, "-1", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "iterations", 'i',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'z':	/* save burnt-in z to this file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->save_z_arg), 
-               &(args_info->save_z_orig), &(args_info->save_z_given),
-              &(local_args_info.save_z_given), optarg, 0, "", ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "save.z", 'z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'l':	/* Latent space model inside clusters       .  */
-        
-        
-          if (update_arg((void *)&(args_info->latentspace_flag), 0, &(args_info->latentspace_given),
-              &(local_args_info.latentspace_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "latentspace", 'l',
+              "K", 'K',
               additional_error))
             goto failure;
         
@@ -849,6 +662,18 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'i':	/* How many iterations.  */
+        
+        
+          if (update_arg( (void *)&(args_info->iterations_arg), 
+               &(args_info->iterations_orig), &(args_info->iterations_given),
+              &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "iterations", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
 
         case 0:	/* Long option with no short option */
           /* detailed version description.  */
@@ -859,6 +684,32 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->git_version_flag), 0, &(args_info->git_version_given),
                 &(local_args_info.git_version_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "git-version", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Pre-create N nodes (0 to N-1), which may be left with zero degree.  */
+          else if (strcmp (long_options[option_index].name, "assume_N_nodes") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->assume_N_nodes_arg), 
+                 &(args_info->assume_N_nodes_orig), &(args_info->assume_N_nodes_given),
+                &(local_args_info.assume_N_nodes_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "assume_N_nodes", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* string IDs in the input.  */
+          else if (strcmp (long_options[option_index].name, "stringIDs") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->stringIDs_flag), 0, &(args_info->stringIDs_given),
+                &(local_args_info.stringIDs_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "stringIDs", '-',
                 additional_error))
               goto failure;
           
@@ -891,76 +742,6 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* Use the simple Metropolis move on K.  */
-          else if (strcmp (long_options[option_index].name, "algo.metroK") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_metroK_arg), 
-                 &(args_info->algo_metroK_orig), &(args_info->algo_metroK_given),
-                &(local_args_info.algo_metroK_given), optarg, 0, "1", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.metroK", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Use the simple Metropolis on one node.  */
-          else if (strcmp (long_options[option_index].name, "algo.1node") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_1node_arg), 
-                 &(args_info->algo_1node_orig), &(args_info->algo_1node_given),
-                &(local_args_info.algo_1node_given), optarg, 0, "0", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.1node", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Use the simple Gibbs in the algorithm.  */
-          else if (strcmp (long_options[option_index].name, "algo.gibbs") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_gibbs_arg), 
-                 &(args_info->algo_gibbs_orig), &(args_info->algo_gibbs_given),
-                &(local_args_info.algo_gibbs_given), optarg, 0, "1", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.gibbs", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Use M3 in the algorithm.  */
-          else if (strcmp (long_options[option_index].name, "algo.m3") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_m3_arg), 
-                 &(args_info->algo_m3_orig), &(args_info->algo_m3_given),
-                &(local_args_info.algo_m3_given), optarg, 0, "1", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.m3", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Use N+F's eject-absorb move.  */
-          else if (strcmp (long_options[option_index].name, "algo.ejectabsorb") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_ejectabsorb_arg), 
-                 &(args_info->algo_ejectabsorb_orig), &(args_info->algo_ejectabsorb_given),
-                &(local_args_info.algo_ejectabsorb_given), optarg, 0, "1", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.ejectabsorb", '-',
-                additional_error))
-              goto failure;
-          
-          }
           /* Initialize to the ground truth.  */
           else if (strcmp (long_options[option_index].name, "initGT") == 0)
           {
@@ -969,94 +750,6 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->initGT_flag), 0, &(args_info->initGT_given),
                 &(local_args_info.initGT_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "initGT", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Stochastic community finding.  */
-          else if (strcmp (long_options[option_index].name, "model.scf") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->model_scf_flag), 0, &(args_info->model_scf_given),
-                &(local_args_info.model_scf_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "model.scf", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Collapsed SCF.  */
-          else if (strcmp (long_options[option_index].name, "scf") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->scf_flag), 0, &(args_info->scf_given),
-                &(local_args_info.scf_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "scf", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Classification EM (CEM) for the SBM.  */
-          else if (strcmp (long_options[option_index].name, "algo.sbm.cem") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->algo_sbm_cem_flag), 0, &(args_info->algo_sbm_cem_given),
-                &(local_args_info.algo_sbm_cem_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "algo.sbm.cem", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* string IDs in the input.  */
-          else if (strcmp (long_options[option_index].name, "stringIDs") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->stringIDs_flag), 0, &(args_info->stringIDs_given),
-                &(local_args_info.stringIDs_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "stringIDs", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* dumb down the algorithm for *big* networks.  */
-          else if (strcmp (long_options[option_index].name, "mega") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->mega_flag), 0, &(args_info->mega_given),
-                &(local_args_info.mega_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "mega", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* How often to print an update.  */
-          else if (strcmp (long_options[option_index].name, "printEveryNIters") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->printEveryNIters_arg), 
-                 &(args_info->printEveryNIters_orig), &(args_info->printEveryNIters_given),
-                &(local_args_info.printEveryNIters_given), optarg, 0, "1000", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "printEveryNIters", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Pre-create N nodes (0 to N-1), which may be left with zero degree.  */
-          else if (strcmp (long_options[option_index].name, "assume_N_nodes") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->assume_N_nodes_arg), 
-                 &(args_info->assume_N_nodes_orig), &(args_info->assume_N_nodes_given),
-                &(local_args_info.assume_N_nodes_given), optarg, 0, "0", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "assume_N_nodes", '-',
                 additional_error))
               goto failure;
           
@@ -1075,86 +768,30 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* (for weighted only). Shape of Gamma prior.  */
-          else if (strcmp (long_options[option_index].name, "gamma.s") == 0)
+          /* Use the simple Metropolis move on K.  */
+          else if (strcmp (long_options[option_index].name, "algo.metroK") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->gamma_s_arg), 
-                 &(args_info->gamma_s_orig), &(args_info->gamma_s_given),
-                &(local_args_info.gamma_s_given), optarg, 0, "1", ARG_FLOAT,
+            if (update_arg( (void *)&(args_info->algo_metroK_arg), 
+                 &(args_info->algo_metroK_orig), &(args_info->algo_metroK_given),
+                &(local_args_info.algo_metroK_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "gamma.s", '-',
+                "algo.metroK", '-',
                 additional_error))
               goto failure;
           
           }
-          /* (for weighted only). Scale of Gamma prior.  */
-          else if (strcmp (long_options[option_index].name, "gamma.phi") == 0)
+          /* Use the simple Gibbs in the algorithm.  */
+          else if (strcmp (long_options[option_index].name, "algo.gibbs") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->gamma_phi_arg), 
-                 &(args_info->gamma_phi_orig), &(args_info->gamma_phi_given),
-                &(local_args_info.gamma_phi_given), optarg, 0, "1", ARG_FLOAT,
+            if (update_arg( (void *)&(args_info->algo_gibbs_arg), 
+                 &(args_info->algo_gibbs_orig), &(args_info->algo_gibbs_given),
+                &(local_args_info.algo_gibbs_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "gamma.phi", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Latestspace alpha ('density').  */
-          else if (strcmp (long_options[option_index].name, "lsalpha") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->lsalpha_arg), 
-                 &(args_info->lsalpha_orig), &(args_info->lsalpha_given),
-                &(local_args_info.lsalpha_given), optarg, 0, "0", ARG_FLOAT,
-                check_ambiguity, override, 0, 0,
-                "lsalpha", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Algo: LSSBM positions.  */
-          else if (strcmp (long_options[option_index].name, "algo.lspos") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_lspos_arg), 
-                 &(args_info->algo_lspos_orig), &(args_info->algo_lspos_given),
-                &(local_args_info.algo_lspos_given), optarg, 0, "0", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.lspos", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Algo: LSSBM MS-like.  */
-          else if (strcmp (long_options[option_index].name, "algo.lsm3") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->algo_lsm3_arg), 
-                 &(args_info->algo_lsm3_orig), &(args_info->algo_lsm3_given),
-                &(local_args_info.algo_lsm3_given), optarg, 0, "0", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "algo.lsm3", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* save positions and colors.  */
-          else if (strcmp (long_options[option_index].name, "save.lsz") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->save_lsz_arg), 
-                 &(args_info->save_lsz_orig), &(args_info->save_lsz_given),
-                &(local_args_info.save_lsz_given), optarg, 0, "", ARG_STRING,
-                check_ambiguity, override, 0, 0,
-                "save.lsz", '-',
+                "algo.gibbs", '-',
                 additional_error))
               goto failure;
           

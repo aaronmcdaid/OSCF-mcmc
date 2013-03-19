@@ -41,87 +41,42 @@ struct gengetopt_args_info
   const char *version_help; /**< @brief Print version and exit help description.  */
   int git_version_flag;	/**< @brief detailed version description (default=off).  */
   const char *git_version_help; /**< @brief detailed version description help description.  */
-  int verbose_flag;	/**< @brief detailed debugging (default=off).  */
-  const char *verbose_help; /**< @brief detailed debugging help description.  */
-  int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
-  char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
-  const char *K_help; /**< @brief Number of clusters, K help description.  */
   int directed_flag;	/**< @brief directed (default=off).  */
   const char *directed_help; /**< @brief directed help description.  */
   int weighted_flag;	/**< @brief weighted (default=off).  */
   const char *weighted_help; /**< @brief weighted help description.  */
   int selfloop_flag;	/**< @brief selfloops allowed (default=off).  */
   const char *selfloop_help; /**< @brief selfloops allowed help description.  */
+  int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
+  char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
+  const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
+  int stringIDs_flag;	/**< @brief string IDs in the input (default=off).  */
+  const char *stringIDs_help; /**< @brief string IDs in the input help description.  */
   int seed_arg;	/**< @brief seed to drand48() and gsl_rng_set (default='0').  */
   char * seed_orig;	/**< @brief seed to drand48() and gsl_rng_set original value given at command line.  */
   const char *seed_help; /**< @brief seed to drand48() and gsl_rng_set help description.  */
   char * GT_vector_arg;	/**< @brief The ground truth. a file with N lines. Starts from ZERO..  */
   char * GT_vector_orig;	/**< @brief The ground truth. a file with N lines. Starts from ZERO. original value given at command line.  */
   const char *GT_vector_help; /**< @brief The ground truth. a file with N lines. Starts from ZERO. help description.  */
-  int algo_metroK_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
-  char * algo_metroK_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
-  const char *algo_metroK_help; /**< @brief Use the simple Metropolis move on K help description.  */
-  int algo_1node_arg;	/**< @brief Use the simple Metropolis on one node (default='0').  */
-  char * algo_1node_orig;	/**< @brief Use the simple Metropolis on one node original value given at command line.  */
-  const char *algo_1node_help; /**< @brief Use the simple Metropolis on one node help description.  */
-  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
-  char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
-  const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
-  int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
-  char * algo_m3_orig;	/**< @brief Use M3 in the algorithm original value given at command line.  */
-  const char *algo_m3_help; /**< @brief Use M3 in the algorithm help description.  */
-  int algo_ejectabsorb_arg;	/**< @brief Use N+F's eject-absorb move (default='1').  */
-  char * algo_ejectabsorb_orig;	/**< @brief Use N+F's eject-absorb move original value given at command line.  */
-  const char *algo_ejectabsorb_help; /**< @brief Use N+F's eject-absorb move help description.  */
-  int iterations_arg;	/**< @brief How many iterations (default='120000').  */
-  char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
-  const char *iterations_help; /**< @brief How many iterations help description.  */
   int initGT_flag;	/**< @brief Initialize to the ground truth (default=off).  */
   const char *initGT_help; /**< @brief Initialize to the ground truth help description.  */
-  int model_scf_flag;	/**< @brief Stochastic community finding (default=off).  */
-  const char *model_scf_help; /**< @brief Stochastic community finding help description.  */
-  int scf_flag;	/**< @brief Collapsed SCF (default=off).  */
-  const char *scf_help; /**< @brief Collapsed SCF help description.  */
-  int algo_sbm_cem_flag;	/**< @brief Classification EM (CEM) for the SBM (default=off).  */
-  const char *algo_sbm_cem_help; /**< @brief Classification EM (CEM) for the SBM help description.  */
-  int stringIDs_flag;	/**< @brief string IDs in the input (default=off).  */
-  const char *stringIDs_help; /**< @brief string IDs in the input help description.  */
-  int mega_flag;	/**< @brief dumb down the algorithm for *big* networks (default=off).  */
-  const char *mega_help; /**< @brief dumb down the algorithm for *big* networks help description.  */
-  int printEveryNIters_arg;	/**< @brief How often to print an update (default='1000').  */
-  char * printEveryNIters_orig;	/**< @brief How often to print an update original value given at command line.  */
-  const char *printEveryNIters_help; /**< @brief How often to print an update help description.  */
-  int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
-  char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
-  const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
+  int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
+  char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
+  const char *K_help; /**< @brief Number of clusters, K help description.  */
   float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='1').  */
   char * alpha_orig;	/**< @brief alpha. How uniform the cluster sizes original value given at command line.  */
   const char *alpha_help; /**< @brief alpha. How uniform the cluster sizes help description.  */
-  char * save_z_arg;	/**< @brief save burnt-in z to this file (default='').  */
-  char * save_z_orig;	/**< @brief save burnt-in z to this file original value given at command line.  */
-  const char *save_z_help; /**< @brief save burnt-in z to this file help description.  */
-  float gamma_s_arg;	/**< @brief (for weighted only). Shape of Gamma prior (default='1').  */
-  char * gamma_s_orig;	/**< @brief (for weighted only). Shape of Gamma prior original value given at command line.  */
-  const char *gamma_s_help; /**< @brief (for weighted only). Shape of Gamma prior help description.  */
-  float gamma_phi_arg;	/**< @brief (for weighted only). Scale of Gamma prior (default='1').  */
-  char * gamma_phi_orig;	/**< @brief (for weighted only). Scale of Gamma prior original value given at command line.  */
-  const char *gamma_phi_help; /**< @brief (for weighted only). Scale of Gamma prior help description.  */
-  int latentspace_flag;	/**< @brief Latent space model inside clusters        (default=off).  */
-  const char *latentspace_help; /**< @brief Latent space model inside clusters        help description.  */
-  float lsalpha_arg;	/**< @brief Latestspace alpha ('density') (default='0').  */
-  char * lsalpha_orig;	/**< @brief Latestspace alpha ('density') original value given at command line.  */
-  const char *lsalpha_help; /**< @brief Latestspace alpha ('density') help description.  */
-  int algo_lspos_arg;	/**< @brief Algo: LSSBM positions (default='0').  */
-  char * algo_lspos_orig;	/**< @brief Algo: LSSBM positions original value given at command line.  */
-  const char *algo_lspos_help; /**< @brief Algo: LSSBM positions help description.  */
-  int algo_lsm3_arg;	/**< @brief Algo: LSSBM MS-like (default='0').  */
-  char * algo_lsm3_orig;	/**< @brief Algo: LSSBM MS-like original value given at command line.  */
-  const char *algo_lsm3_help; /**< @brief Algo: LSSBM MS-like help description.  */
   int uniformK_flag;	/**< @brief Use a Uniform prior for K (default=off).  */
   const char *uniformK_help; /**< @brief Use a Uniform prior for K help description.  */
-  char * save_lsz_arg;	/**< @brief save positions and colors (default='').  */
-  char * save_lsz_orig;	/**< @brief save positions and colors original value given at command line.  */
-  const char *save_lsz_help; /**< @brief save positions and colors help description.  */
+  int iterations_arg;	/**< @brief How many iterations (default='120000').  */
+  char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
+  const char *iterations_help; /**< @brief How many iterations help description.  */
+  int algo_metroK_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
+  char * algo_metroK_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
+  const char *algo_metroK_help; /**< @brief Use the simple Metropolis move on K help description.  */
+  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
+  char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
+  const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
   int labels_arg;	/**< @brief Do label-unswitching, and a nice summary (default='1').  */
   char * labels_orig;	/**< @brief Do label-unswitching, and a nice summary original value given at command line.  */
   const char *labels_help; /**< @brief Do label-unswitching, and a nice summary help description.  */
@@ -129,37 +84,20 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int git_version_given ;	/**< @brief Whether git-version was given.  */
-  unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
-  unsigned int K_given ;	/**< @brief Whether K was given.  */
   unsigned int directed_given ;	/**< @brief Whether directed was given.  */
   unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
   unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */
+  unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
+  unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
   unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
-  unsigned int algo_metroK_given ;	/**< @brief Whether algo.metroK was given.  */
-  unsigned int algo_1node_given ;	/**< @brief Whether algo.1node was given.  */
-  unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
-  unsigned int algo_m3_given ;	/**< @brief Whether algo.m3 was given.  */
-  unsigned int algo_ejectabsorb_given ;	/**< @brief Whether algo.ejectabsorb was given.  */
-  unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
   unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
-  unsigned int model_scf_given ;	/**< @brief Whether model.scf was given.  */
-  unsigned int scf_given ;	/**< @brief Whether scf was given.  */
-  unsigned int algo_sbm_cem_given ;	/**< @brief Whether algo.sbm.cem was given.  */
-  unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
-  unsigned int mega_given ;	/**< @brief Whether mega was given.  */
-  unsigned int printEveryNIters_given ;	/**< @brief Whether printEveryNIters was given.  */
-  unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
+  unsigned int K_given ;	/**< @brief Whether K was given.  */
   unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
-  unsigned int save_z_given ;	/**< @brief Whether save.z was given.  */
-  unsigned int gamma_s_given ;	/**< @brief Whether gamma.s was given.  */
-  unsigned int gamma_phi_given ;	/**< @brief Whether gamma.phi was given.  */
-  unsigned int latentspace_given ;	/**< @brief Whether latentspace was given.  */
-  unsigned int lsalpha_given ;	/**< @brief Whether lsalpha was given.  */
-  unsigned int algo_lspos_given ;	/**< @brief Whether algo.lspos was given.  */
-  unsigned int algo_lsm3_given ;	/**< @brief Whether algo.lsm3 was given.  */
   unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
-  unsigned int save_lsz_given ;	/**< @brief Whether save.lsz was given.  */
+  unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
+  unsigned int algo_metroK_given ;	/**< @brief Whether algo.metroK was given.  */
+  unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
   unsigned int labels_given ;	/**< @brief Whether labels was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
