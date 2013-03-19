@@ -23,6 +23,9 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 
 #include"format_flag_stack/format_flag_stack.hpp"
 
+#include"state.hpp"
+#include"moves.hpp"
+
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
 
