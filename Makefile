@@ -4,7 +4,7 @@ BITS=
 #BITS=-m32
 #BITS=-m64
 
-MAIN=vcsbm
+MAIN=oscf
 
 all: ${MAIN}
 
