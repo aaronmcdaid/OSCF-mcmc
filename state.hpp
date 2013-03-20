@@ -97,6 +97,11 @@ static inline double LOG2FACT(const int x) {
         assert(x>0);
         return M_LOG2E * gsl_sf_lnfact(x);
 }
+static inline double LOG2BINOM(const int n, const int m) {
+	assert(m<=n);
+	assert(m>=0);
+	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
+}
 
 struct Score { // every modification *should* go through here eventually, so as to track the score.
 	// But for now, this is just a passive object that recalculates all the scores from scratch each time
@@ -117,10 +122,26 @@ struct Score { // every modification *should* go through here eventually, so as 
 	}
 	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
 							long double s_one_comm = 0.0L;
-							for(int sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 5 && sz<state.N; ++sz) {
+							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 5 && sz<state.N; ++sz) {
 								// four factors
 								s_one_comm += - log2l(state.N+1);
-								const int64_t num_pairs = sz * (sz-1) / 2;
+
+								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
+								s_one_comm += - log2l(1+num_pairs);
+
+								{
+									const int64_t s_prime = num_unique_nodes_in_this_community;
+									const int64_t s = sz;
+									s_one_comm   += LOG2BINOM(state.N - s_prime, s - s_prime)
+									              - LOG2BINOM(state.N          , s          );
+								}
+
+								assert(num_edges >  0); // MUSTDO >=
+								assert(num_edges <  num_pairs); // MUSTDO <=
+
+
+
+								s_one_comm += LOG2BINOM(num_pairs, num_edges);
 							}
 							return s_one_comm;
 	}
