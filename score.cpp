@@ -1,6 +1,28 @@
 #include "score.hpp"
 
+#include <cmath>
+
 #include "macros.hpp"
+
+static inline double LOG2GAMMA(const double x) {
+        assert(x>0);
+        return M_LOG2E * gsl_sf_lngamma(x);
+}
+static inline double LOG2GAMMA(const long double x) {
+        return LOG2GAMMA(static_cast<double>(x));
+}
+static inline double LOG2FACT(const int x) {
+        assert(x>=0);
+        return M_LOG2E * gsl_sf_lnfact(x);
+}
+static inline double LOG2BINOM(const int n, const int m) {
+	assert(m<=n);
+	assert(m>=0);
+	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
+}
+
+		Score :: Score(State & state_)	: state(state_) {
+}
 long double	Score :: score()			const {
 							return this->prior_on_K() + this->product_on_fs();
 }

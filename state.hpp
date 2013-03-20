@@ -29,7 +29,6 @@
 #include <vector>
 #include <cassert>
 #include "tr1/unordered_set"
-#include <cmath>
 #include <gsl/gsl_sf.h>
 
 #include "network.hpp"
@@ -104,21 +103,5 @@ struct State {
 
 
 
-static inline double LOG2GAMMA(const double x) {
-        assert(x>0);
-        return M_LOG2E * gsl_sf_lngamma(x);
-}
-static inline double LOG2GAMMA(const long double x) {
-        return LOG2GAMMA(static_cast<double>(x));
-}
-static inline double LOG2FACT(const int x) {
-        assert(x>=0);
-        return M_LOG2E * gsl_sf_lnfact(x);
-}
-static inline double LOG2BINOM(const int n, const int m) {
-	assert(m<=n);
-	assert(m>=0);
-	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
-}
 
 #endif
