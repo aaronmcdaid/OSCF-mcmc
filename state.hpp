@@ -30,14 +30,17 @@
 #include <gsl/gsl_sf.h>
 
 #include "network.hpp"
+struct State; // pre-declare in order that we can make it a friend of Community
 
 struct Community {
+	friend struct State;
 private:
 	std :: tr1 :: unordered_set<int64_t> my_edges;
 	std :: tr1 :: unordered_multiset<int64_t> my_nodes; // each node can appear multiple times
 	int64_t num_unique_nodes_in_this_community;
 public:
 	Community() : num_unique_nodes_in_this_community(0) {}
+private:
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
 		assert(inserted);
@@ -56,6 +59,7 @@ public:
 			++ this->num_unique_nodes_in_this_community;
 		}
 	}
+public:
 	int64_t		get_num_edges()					const { return this->my_edges.size(); }
 	int64_t		get_num_unique_nodes_in_this_community()	const { return this->num_unique_nodes_in_this_community; }
 };
@@ -82,6 +86,16 @@ struct State {
 
 
 	explicit State(Net net_);
+	void		add_edge(int64_t e, int64_t comm_id)		{
+										assert(comm_id < this->K);
+										this->comms.at(comm_id).add_edge(e, this->net);
+	}
+	int64_t		append_empty_cluster()				{
+										const int64_t new_cluster_id = this->K;
+										assert(this->comms.at(new_cluster_id).get_num_edges() == 0);
+										++ this->K;
+										return new_cluster_id;
+	}
 };
 
 
