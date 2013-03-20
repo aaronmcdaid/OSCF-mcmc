@@ -36,7 +36,8 @@ long double	Score :: product_on_fs()		const {
 							return s;
 }
 long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
-							long double s_one_comm = 0.0L;
+							long double s_one_comm_sans_baseline = 0.0L;
+							long double baseline = NAN; // this 'baseline' technique should improve accuracy
 							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 5 && sz<state.N; ++sz) {
 								long double score_one_comm_one_sz = 0.0L;
 								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
@@ -62,9 +63,17 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 
 								PP4(num_edges, num_unique_nodes_in_this_community, sz, score_one_comm_one_sz);
 
-								s_one_comm += exp2l(score_one_comm_one_sz);
+								if(sz == num_unique_nodes_in_this_community) {
+									// this is the first one, and score_one_comm_one_sz should therefore
+									// be smaller than the upcoming ones
+									baseline = score_one_comm_one_sz;
+								}
+								score_one_comm_one_sz -= baseline;
+
+								s_one_comm_sans_baseline += exp2l(score_one_comm_one_sz);
 							}
-							PP(log2l(s_one_comm));
+							PP(log2l(s_one_comm_sans_baseline));
 							std :: cout << std :: endl;
-							return log2l(s_one_comm);
+							PP(baseline);
+							return baseline + log2l(s_one_comm_sans_baseline);
 }
