@@ -26,6 +26,8 @@
 #include <vector>
 #include <cassert>
 #include "tr1/unordered_set"
+#include <cmath>
+#include <gsl/gsl_sf.h>
 
 #include "network.hpp"
 
@@ -80,4 +82,46 @@ struct State {
 
 
 	explicit State(Net net_);
+};
+
+
+
+static inline double LOG2GAMMA(const double x) {
+        assert(x>0);
+        return M_LOG2E * gsl_sf_lngamma(x);
+}
+static inline double LOG2GAMMA(const long double x) {
+        return LOG2GAMMA(static_cast<double>(x));
+}
+static inline double LOG2FACT(const int x) {
+        assert(x>0);
+        return M_LOG2E * gsl_sf_lnfact(x);
+}
+
+struct Score { // every modification *should* go through here eventually, so as to track the score.
+	// But for now, this is just a passive object that recalculates all the scores from scratch each time
+	State &		state;
+	explicit	Score(State & state_)	: state(state_) {
+	}
+	long double	score()			const {
+							return this->prior_on_K();
+	}
+	long double	prior_on_K()		const { return -LOG2FACT(state.K); }
+	long double	product_on_fs()		const {
+							long double s = 0.0L;
+							for(int k=0; k<state.K; ++k) {
+								const Community & comm = state.comms.at(k);
+								s += f(comm.get_num_edges(), comm.get_num_unique_nodes_in_this_community());
+							}
+							return s;
+	}
+	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
+							long double s_one_comm = 0.0L;
+							for(int sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 5 && sz<state.N; ++sz) {
+								// four factors
+								s_one_comm += - log2l(state.N+1);
+								const int64_t num_pairs = sz * (sz-1) / 2;
+							}
+							return s_one_comm;
+	}
 };
