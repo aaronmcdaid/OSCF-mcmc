@@ -68,7 +68,9 @@ int main(int argc, char **argv) {
 }
 
 void oscf(Net net) {
-	State s(net); // initialize with every edge in its own community
+	State st(net); // initialize with every edge in its own community
+	Score sc(st);
+	PP(sc.score());
 }
 
 
