@@ -23,6 +23,9 @@
  * Finally, I will (sort of) allow "missing data" - some edges might be totally unassigned at certain times.
  *
  */
+#ifndef STATE_HPP__
+#define STATE_HPP__
+
 #include <vector>
 #include <cassert>
 #include "tr1/unordered_set"
@@ -118,22 +121,4 @@ static inline double LOG2BINOM(const int n, const int m) {
 	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
 }
 
-struct Score { // every modification *should* go through here eventually, so as to track the score.
-	// But for now, this is just a passive object that recalculates all the scores from scratch each time
-	State &		state;
-	explicit	Score(State & state_)	: state(state_) {
-	}
-	long double	score()			const {
-							return this->prior_on_K() + this->product_on_fs();
-	}
-	long double	prior_on_K()		const { return -LOG2FACT(state.K); }
-	long double	product_on_fs()		const {
-							long double s = 0.0L;
-							for(int k=0; k<state.K; ++k) {
-								const Community & comm = state.comms.at(k);
-								s += f(comm.get_num_edges(), comm.get_num_unique_nodes_in_this_community());
-							}
-							return s;
-	}
-	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const;
-};
+#endif

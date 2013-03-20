@@ -24,6 +24,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 //#include"format_flag_stack/format_flag_stack.hpp"
 
 #include"state.hpp"
+#include"score.hpp"
 #include"moves.hpp"
 
 
