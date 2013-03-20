@@ -33,14 +33,16 @@ struct Community {
 private:
 	std :: tr1 :: unordered_set<int64_t> my_edges;
 	std :: tr1 :: unordered_multiset<int64_t> my_nodes; // each node can appear multiple times
-	int64_t unique_nodes_in_this_community;
+	int64_t num_unique_nodes_in_this_community;
 public:
-	Community() : unique_nodes_in_this_community(0) {}
+	Community() : num_unique_nodes_in_this_community(0) {}
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
 		assert(inserted);
 		const network :: EdgeSet :: Edge & edge = net->edge_set->edges.at(e);
 		this->add_node(edge.left);
+		assert(edge.left!=edge.right);
+		// if there are self loops, don't forget to consider the final *two* factors in the four factors of f(m_k, s'_k)
 		if(edge.left!=edge.right)
 			this->add_node(edge.right);
 	}
@@ -49,15 +51,17 @@ public:
 		const size_t how_many = this->my_nodes.count(n);
 		assert(how_many>0);
 		if(how_many == 1) { // we've just added this new unique node
-			++ this->unique_nodes_in_this_community;
+			++ this->num_unique_nodes_in_this_community;
 		}
 	}
+	int64_t		get_num_edges()					const { return this->my_edges.size(); }
+	int64_t		get_num_unique_nodes_in_this_community()	const { return this->num_unique_nodes_in_this_community; }
 };
 
 struct Communities {
 	// This is just a vector<Community> that will grow, and maybe shrink, every now and then.
 private:
-	std :: vector<Community> comms;
+	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 public:
 	Community & at(const int64_t k) {
 		if(k >= this->comms.size())
