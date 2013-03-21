@@ -85,3 +85,20 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 							assert(isfinite(total));
 							return total;
 }
+
+long double		Score :: append_empty_cluster()	 {
+	const long double f_0_0 = this->f(0,0);
+	const long double pre_prior = this->prior_on_K();
+	this->state.append_empty_cluster();
+	const long double post_prior = this->prior_on_K();
+	assert(post_prior < pre_prior);
+	return post_prior - pre_prior + f_0_0;
+}
+long double		Score :: delete_empty_cluster_from_the_end()	 {
+	const long double f_0_0 = this->f(0,0);
+	const long double pre_prior = this->prior_on_K();
+	this->state.delete_empty_cluster_from_the_end();
+	const long double post_prior = this->prior_on_K();
+	assert(post_prior > pre_prior);
+	return post_prior - pre_prior - f_0_0;
+}

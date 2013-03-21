@@ -103,18 +103,17 @@ public:
 
 struct Communities {
 	// This is just a vector<Community> that will grow, and maybe shrink, every now and then.
-private:
-	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 public:
+	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 	Community & at(const size_t k) {
-		if(k >= this->comms.size())
-			this->comms.resize(k+1);
+		assert(k < this->comms.size());
 		return this->comms.at(k);
 	}
 	const Community & at(const size_t k) const {
 		assert(k < this->comms.size());
 		return this->comms.at(k);
 	}
+	int64_t		K()		const { return this->comms.size(); }
 };
 
 struct State {
@@ -142,10 +141,22 @@ struct State {
 										assert(wasErased == 1);
 	}
 	int64_t		append_empty_cluster()				{
+										assert(this->K == this->comms.K());
 										const int64_t new_cluster_id = this->K;
+										this->comms.comms.push_back( Community() );
 										assert(this->comms.at(new_cluster_id).get_num_edges() == 0);
 										++ this->K;
+										assert(this->K == this->comms.K());
 										return new_cluster_id;
+	}
+	void		delete_empty_cluster_from_the_end()		{
+										assert(this->K == this->comms.K());
+										const int64_t cluster_id_to_delete = int64_t(this->K)-1;
+										assert(cluster_id_to_delete >= 0);  // can't delete when there are no clusters left!
+										assert(this->comms.at(cluster_id_to_delete).empty());
+										-- this->K;
+										this->comms.comms.pop_back();
+										assert(this->K == this->comms.K());
 	}
 };
 
