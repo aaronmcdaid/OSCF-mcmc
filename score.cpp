@@ -1,6 +1,7 @@
 #include "score.hpp"
 
 #include <cmath>
+using namespace std;
 
 #include "macros.hpp"
 
@@ -39,7 +40,9 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 				// I should check for overflows here, and for conversion down to int32_t
 							long double s_one_comm_sans_baseline = 0.0L;
 							long double baseline = NAN; // this 'baseline' technique should improve accuracy
-							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 10 && sz<state.N; ++sz) {
+							assert(!isfinite(baseline));
+							assert(num_unique_nodes_in_this_community <= state.N);
+							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 10 && sz<=state.N; ++sz) {
 								long double score_one_comm_one_sz = 0.0L;
 								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
 
@@ -72,9 +75,13 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 								score_one_comm_one_sz -= baseline;
 
 								s_one_comm_sans_baseline += exp2l(score_one_comm_one_sz);
+								assert(isfinite(s_one_comm_sans_baseline));
 							}
+							assert(isfinite(baseline)); // That loop should succeed at least once
 							// PP2(baseline , log2l(s_one_comm_sans_baseline));
 							// PP(baseline + log2l(s_one_comm_sans_baseline));
 							// std :: cout << std :: endl;
-							return baseline + log2l(s_one_comm_sans_baseline);
+							const long double total = baseline + log2l(s_one_comm_sans_baseline);
+							assert(isfinite(total));
+							return total;
 }
