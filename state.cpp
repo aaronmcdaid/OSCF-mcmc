@@ -15,3 +15,21 @@
 void		Community :: dump_me()			const	{
 						PP3(this->num_unique_nodes_in_this_community, this->my_edges.size(), this->my_nodes.size());
 }
+void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
+					assert(cluster_id < this->K);
+					if(cluster_id + 1 == this->K)
+						return; // nothing to swap.  Just silently return.
+					const int64_t last_cluster_id = this->K - 1;
+					assert(cluster_id != last_cluster_id);
+					std :: tr1 :: unordered_set<int64_t> left_edges = this->comms.at(cluster_id)      .my_edges;
+					std :: tr1 :: unordered_set<int64_t> last_edges = this->comms.at(last_cluster_id) .my_edges;
+
+					For(left_edge, left_edges) {
+						this->remove_edge( *left_edge, cluster_id);
+						this->add_edge    ( *left_edge, last_cluster_id);
+					}
+					For(last_edge, last_edges) {
+						this->remove_edge( *last_edge, last_cluster_id);
+						this->add_edge    ( *last_edge, cluster_id);
+					}
+}

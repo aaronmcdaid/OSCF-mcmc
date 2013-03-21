@@ -158,6 +158,7 @@ struct State {
 										this->comms.comms.pop_back();
 										assert(this->K == this->comms.K());
 	}
+	void		swap_cluster_to_the_end(const int64_t cluster_id);
 };
 
 
