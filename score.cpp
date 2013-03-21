@@ -61,7 +61,7 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 								assert(num_edges >= 0);
 								assert(num_edges <= num_pairs);
 
-								PP4(num_edges, num_unique_nodes_in_this_community, sz, score_one_comm_one_sz);
+								// PP4(num_edges, num_unique_nodes_in_this_community, sz, score_one_comm_one_sz);
 
 								if(sz == num_unique_nodes_in_this_community) {
 									// this is the first one, and score_one_comm_one_sz should therefore
@@ -72,8 +72,8 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 
 								s_one_comm_sans_baseline += exp2l(score_one_comm_one_sz);
 							}
-							PP2(baseline , log2l(s_one_comm_sans_baseline));
-							PP(baseline + log2l(s_one_comm_sans_baseline));
-							std :: cout << std :: endl;
+							// PP2(baseline , log2l(s_one_comm_sans_baseline));
+							// PP(baseline + log2l(s_one_comm_sans_baseline));
+							// std :: cout << std :: endl;
 							return baseline + log2l(s_one_comm_sans_baseline);
 }
