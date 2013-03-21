@@ -111,6 +111,10 @@ public:
 			this->comms.resize(k+1);
 		return this->comms.at(k);
 	}
+	const Community & at(const int64_t k) const {
+		assert(k < this->comms.size());
+		return this->comms.at(k);
+	}
 };
 
 struct State {
