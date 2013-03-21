@@ -65,6 +65,8 @@ int main(int argc, char **argv) {
 	//
 	PP2(net->N(), net->E());
 	
+	seed_the_random_number_generator(args_info.seed_arg);
+
 	oscf(net);
 }
 

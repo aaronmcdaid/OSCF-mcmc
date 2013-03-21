@@ -10,3 +10,10 @@
  * - Deprecated: M-H step on one edge.  Propose for each community independently, accept if and only if the row is non-empty
  * - Surely there is a Gibbs update I can do?
  */
+#ifndef MOVES_HPP__
+#define MOVES_HPP__
+
+
+void			seed_the_random_number_generator(int seed);
+
+#endif
