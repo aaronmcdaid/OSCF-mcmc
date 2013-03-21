@@ -88,3 +88,62 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return NAN;
 }
+
+long double		metroK(Score & sc) {
+					// Either add or remove a cluster at random
+					// This will affect the prior on K obviously, but don't forget the f(0,0) term
+					if(gsl_ran_bernoulli(r, 0.5)) {
+						cout << "Attempt append" << endl;
+						// Attempt to Add an empty cluster
+						/// const long double pre = sc.score();
+						const long double delta_score = sc.append_empty_cluster();
+						/// const long double post = sc.score();
+						assert(delta_score < 0);
+						/// assert(VERYCLOSE(post - pre, delta_score));
+						if( log2l(gsl_rng_uniform(r)) < delta_score ) {
+							// Accept
+							// .. but let's move it to a random location
+							const int64_t target_cluster_id = sc.state.K * gsl_rng_uniform(r);
+							sc.state.swap_cluster_to_the_end(target_cluster_id);
+							return delta_score;
+						} else {
+							// Reject
+							sc.delete_empty_cluster_from_the_end();
+							return 0.0L;
+						}
+					} else {
+						cout << "Attempt removal" << endl;
+						// Attempt to Remove an empty cluster
+
+						// First, select a cluster at random to be our target.
+						// If it's empty, just bail out immediately
+						assert(sc.state.K > 0);
+						const int64_t target_cluster_id = sc.state.K * gsl_rng_uniform(r);
+						if(!sc.state.comms.at(target_cluster_id).empty()) {
+							return 0.0L;
+						}
+
+						// OK, it's empty , we can propose deleting it
+
+						/// const long double pre_ = sc.score();
+						sc.state.swap_cluster_to_the_end(target_cluster_id);
+						/// const long double post_ = sc.score();
+						/// assert(VERYCLOSE(pre_,post_));
+
+						/// const long double pre = sc.score();
+						const long double delta_score = sc.delete_empty_cluster_from_the_end();
+						/// const long double post = sc.score();
+						assert(delta_score > 0);
+						/// assert(VERYCLOSE(post - pre, delta_score));
+						if( log2l(gsl_rng_uniform(r)) < delta_score ) {
+							// Accept
+							return delta_score;
+						} else {
+							// Reject
+							assert(1==2); // It should always Accept this proposal
+							sc.append_empty_cluster();
+							sc.state.swap_cluster_to_the_end(target_cluster_id);
+							return 0.0L;
+						}
+					}
+}

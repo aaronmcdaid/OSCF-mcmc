@@ -17,5 +17,6 @@
 
 void			seed_the_random_number_generator(int seed);
 long double gibbsUpdate(int64_t e, Score & sc);
+long double metroK(Score & sc);
 
 #endif
