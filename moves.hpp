@@ -13,7 +13,9 @@
 #ifndef MOVES_HPP__
 #define MOVES_HPP__
 
+#include"score.hpp"
 
 void			seed_the_random_number_generator(int seed);
+long double gibbsUpdate(int64_t e, Score & sc);
 
 #endif
