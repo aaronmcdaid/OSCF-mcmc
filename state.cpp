@@ -2,7 +2,7 @@
 
 #include "macros.hpp"
 
-		State :: State(Net net_) : net(net_), E(net_->E()), N(net_->N()), edge_to_set_of_comms(net_->E()) {
+		State :: State(Net net_) : net(net_), N(net_->N()), E(net_->E()), edge_to_set_of_comms(net_->E()) {
 	this->K = 0;
 	// initially, there are no communities, and no edges are in any community.
 	// But we'll initialize by placing each each in a community of its own.

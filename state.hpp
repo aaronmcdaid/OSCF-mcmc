@@ -106,12 +106,12 @@ struct Communities {
 private:
 	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 public:
-	Community & at(const int64_t k) {
+	Community & at(const size_t k) {
 		if(k >= this->comms.size())
 			this->comms.resize(k+1);
 		return this->comms.at(k);
 	}
-	const Community & at(const int64_t k) const {
+	const Community & at(const size_t k) const {
 		assert(k < this->comms.size());
 		return this->comms.at(k);
 	}

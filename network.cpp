@@ -81,7 +81,7 @@ const NodeSet * network :: build_node_set_from_edge_list(std :: string edgeListF
 	NodeSet * nodes = (node_name_type == NODE_NAME_INT64) ? static_cast<NodeSet*>(new NodeSet_<int64_t>) : new NodeSet_<string>;
 
 	string line;
-	int64_t line_num = 0;
+	size_t line_num = 0;
 	while (getline(edgelist, line)) {
 		++ line_num;
 		// PP(line);
@@ -126,7 +126,7 @@ static const EdgeSet * build_edge_set_from_edge_list(std :: string edgeListFileN
 	EdgeSet * edges = new EdgeSet(weight_type);
 
 	string line;
-	int64_t line_num = 0;
+	size_t line_num = 0;
 
 	while (getline(edgelist, line)) {
 		++ line_num;
@@ -251,7 +251,7 @@ const network :: Network * network :: build_network(const std :: string file_nam
 	net->node_set = node_set;
 	net->edge_set = edge_set;
 	net->junctions = junctions;
-	assert(net->i.size() == net->N());
+	assert((int64_t)net->i.size() == net->N());
 	for(int junc = 0; junc < (int)net->junctions->all_junctions_sorted.size(); ++junc) {
 		const Junction & jun = net->junctions->all_junctions_sorted.at(junc);
 		net->i.at(jun.this_node_id).my_junctions.push_back(junc);

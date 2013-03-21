@@ -86,4 +86,5 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 			}
 		}
 	}
+	return NAN;
 }
