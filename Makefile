@@ -26,7 +26,7 @@ CXXFLAGS=       \
 CXX=g++
 CC=g++    ${DEBUG_FLAGS}
 #CXXFLAGS= ${BITS}     -g
-CXXFLAGS= ${DEBUG_FLAGS}
+CXXFLAGS+= ${DEBUG_FLAGS}
 LDFLAGS+= -lrt
 LDFLAGS+= `gsl-config --libs`
 CXXFLAGS:= ${BITS} -O2        ${CXXFLAGS} -std=gnu++0x # -DNDEBUG
