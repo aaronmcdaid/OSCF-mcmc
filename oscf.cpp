@@ -70,10 +70,30 @@ int main(int argc, char **argv) {
 	oscf(net);
 }
 
+void dump_all(const State & st) {
+	cout << endl << " ===" << endl;
+	for(int k=0; k<st.K; ++k) {
+		st.comms.at(k).dump_me();
+	}
+	cout << " ==" << endl << endl;
+}
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
 	PP(sc.score());
+	for (int rep = 0; rep < 500; ++rep) {
+		for(int64_t e = 0; e<net->E(); ++e) {
+			gibbsUpdate(e, sc);
+			{
+				const long double pre = sc.score();
+				const long double delta_score = metroK(sc);
+				const long double post = sc.score();
+				assert( VERYCLOSE(delta_score, post - pre) );
+			}
+			PP2(e, sc.score());
+		}
+		dump_all(st);
+	}
 }
 
 
