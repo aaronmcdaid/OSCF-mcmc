@@ -73,7 +73,7 @@ struct Network__unConst { // bring all the above together
 	const bool directed;
 	const bool weighted;
 	Network__unConst(const int N_, const bool directed_, const bool weighted_)
-		: directed(directed_), weighted(weighted_), i(N_), has_self_loop(N_) { }
+		: i(N_), has_self_loop(N_), directed(directed_), weighted(weighted_)  { }
 	inline int N() const { return this->node_set->N(); }
 	inline int E() const { return this->edge_set->E(); }
 };
