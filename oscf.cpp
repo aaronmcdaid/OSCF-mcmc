@@ -77,10 +77,3 @@ void oscf(Net net) {
 }
 
 
-static vector<int> random_list_of_all_nodes(const int N) {
-	vector<int> all_nodes_randomly;
-	for(int i=0; i<N; i++)
-		all_nodes_randomly.push_back(i);
-	random_shuffle(all_nodes_randomly.begin(), all_nodes_randomly.end());
-	return all_nodes_randomly;
-}
