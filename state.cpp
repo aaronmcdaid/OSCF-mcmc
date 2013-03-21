@@ -1,6 +1,8 @@
 #include "state.hpp"
 
-State :: State(Net net_) : net(net_), E(net_->E()), N(net_->N()), edge_to_set_of_comms(net_->E()) {
+#include "macros.hpp"
+
+		State :: State(Net net_) : net(net_), E(net_->E()), N(net_->N()), edge_to_set_of_comms(net_->E()) {
 	this->K = 0;
 	// initially, there are no communities, and no edges are in any community.
 	// But we'll initialize by placing each each in a community of its own.
@@ -9,4 +11,7 @@ State :: State(Net net_) : net(net_), E(net_->E()), N(net_->N()), edge_to_set_of
 		assert(new_cluster_id == e);
 		this->add_edge(e, e);
 	}
+}
+void		Community :: dump_me()			const	{
+						PP3(this->num_unique_nodes_in_this_community, this->my_edges.size(), this->my_nodes.size());
 }

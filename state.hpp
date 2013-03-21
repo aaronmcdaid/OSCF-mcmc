@@ -43,6 +43,7 @@ private:
 	int64_t num_unique_nodes_in_this_community;
 public:
 	Community() : num_unique_nodes_in_this_community(0) {}
+	void	dump_me()			const;
 private:
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
