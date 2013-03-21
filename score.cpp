@@ -72,8 +72,8 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 
 								s_one_comm_sans_baseline += exp2l(score_one_comm_one_sz);
 							}
-							PP(log2l(s_one_comm_sans_baseline));
+							PP2(baseline , log2l(s_one_comm_sans_baseline));
+							PP(baseline + log2l(s_one_comm_sans_baseline));
 							std :: cout << std :: endl;
-							PP(baseline);
 							return baseline + log2l(s_one_comm_sans_baseline);
 }
