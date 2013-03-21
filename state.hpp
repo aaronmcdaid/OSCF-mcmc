@@ -54,6 +54,17 @@ private:
 		if(edge.left!=edge.right)
 			this->add_node(edge.right);
 	}
+	void remove_edge(int64_t e, Net net) {
+		const size_t wasErased = this->my_edges.erase(e);
+		assert(wasErased == 1);
+		const network :: EdgeSet :: Edge & edge = net->edge_set->edges.at(e);
+		this->remove_node(edge.left);
+		assert(edge.left!=edge.right);
+		// if there are self loops, don't forget to consider the final *two* factors in the four factors of f(m_k, s'_k)
+		if(edge.left!=edge.right) {
+			this->remove_node(edge.right);
+		}
+	}
 	void add_node(int64_t n) {
 		this->my_nodes.insert(n);
 		const size_t how_many = this->my_nodes.count(n);
@@ -62,9 +73,31 @@ private:
 			++ this->num_unique_nodes_in_this_community;
 		}
 	}
+	void remove_node(int64_t n) {
+		std :: tr1 :: unordered_multiset <int64_t> :: iterator it = this->my_nodes.find(n);
+		assert(it != this->my_nodes.end());
+		assert(*it == n);
+		this->my_nodes.erase(it);
+		const size_t how_many = this->my_nodes.count(n);
+		if(how_many == 0) { // we've just removed the last copy of this node
+			-- this->num_unique_nodes_in_this_community;
+		}
+	}
 public:
 	int64_t		get_num_edges()					const { return this->my_edges.size(); }
 	int64_t		get_num_unique_nodes_in_this_community()	const { return this->num_unique_nodes_in_this_community; }
+	bool		empty()						const {
+										if(this->num_unique_nodes_in_this_community == 0) {
+											assert(this->my_edges.empty());
+											assert(this->my_nodes.empty());
+											return true;
+										} else {
+											assert(this->num_unique_nodes_in_this_community > 0);
+											assert(!this->my_edges.empty());
+											assert(!this->my_nodes.empty());
+											return false;
+										}
+	}
 };
 
 struct Communities {
@@ -87,11 +120,21 @@ struct State {
 	int64_t K; // number of communities
 	Communities comms;
 
+	std :: vector< std :: tr1 :: unordered_set<int64_t> > edge_to_set_of_comms;
+
 
 	explicit State(Net net_);
 	void		add_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);
 										this->comms.at(comm_id).add_edge(e, this->net);
+										bool wasInserted = this->edge_to_set_of_comms.at(e).insert(comm_id).second;
+										assert(wasInserted);
+	}
+	void		remove_edge(int64_t e, int64_t comm_id)		{
+										assert(comm_id < this->K);
+										this->comms.at(comm_id).remove_edge(e, this->net);
+										size_t wasErased = this->edge_to_set_of_comms.at(e).erase(comm_id);
+										assert(wasErased == 1);
 	}
 	int64_t		append_empty_cluster()				{
 										const int64_t new_cluster_id = this->K;
