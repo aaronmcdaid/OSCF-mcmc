@@ -1,3 +1,6 @@
+#ifndef SCORE_HPP__
+#define SCORE_HPP__
+
 #include "state.hpp"
 struct Score { // every modification *should* go through here eventually, so as to track the score.
 	// But for now, this is just a passive object that recalculates all the scores from scratch each time
@@ -9,3 +12,4 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const;
 };
 
+#endif
