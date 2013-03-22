@@ -1,6 +1,7 @@
 #include "score.hpp"
 
 #include <cmath>
+#include <limits>
 using namespace std;
 
 #include "macros.hpp"
@@ -37,7 +38,19 @@ long double	Score :: product_on_fs()		const {
 							return s;
 }
 long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
-				// I should check for overflows here, and for conversion down to int32_t
+					// I should check for overflows here, and for conversion down to int32_t
+							const Cache_T :: key_type key = make_pair(num_edges, num_unique_nodes_in_this_community);
+							{
+								// First, check the cache
+								Cache_T :: iterator it = this->cache.find(key);
+								if(it != this->cache.end()) {
+									if(it->second.second < std :: numeric_limits< int64_t > :: max() )
+										++ it->second.second; // increment the hit count
+									assert(it->second.second > 0);
+									return it->second.first;
+								}
+							}
+
 							long double s_one_comm_sans_baseline = 0.0L;
 							long double baseline = NAN; // this 'baseline' technique should improve accuracy
 							assert(!isfinite(baseline));
@@ -83,6 +96,8 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 							// std :: cout << std :: endl;
 							const long double total = baseline + log2l(s_one_comm_sans_baseline);
 							assert(isfinite(total));
+
+							this->cache.insert( make_pair(key, make_pair(total,0) ) );
 							return total;
 }
 
