@@ -26,7 +26,9 @@ static inline double LOG2BINOM(const int n, const int m) {
 		Score :: Score(State & state_)	: state(state_) {
 }
 long double	Score :: score()			const {
-							return this->prior_on_K() + this->product_on_fs();
+							const long double total_score = this->prior_on_K() + this->product_on_fs();
+							assert(isfinite(total_score));
+							return total_score;
 }
 long double	Score :: prior_on_K()		const { return -LOG2FACT(state.K); }
 long double	Score :: product_on_fs()		const {
@@ -99,6 +101,9 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 
 							this->cache.insert( make_pair(key, make_pair(total,0) ) );
 							return total;
+}
+long double	Score :: f	(const OneCommunitySummary ocs)	const {
+	return this->f(ocs.num_edges, ocs.num_unique_nodes_in_this_community);
 }
 
 void			Score :: add_edge	(int64_t e, int64_t comm_id)		{

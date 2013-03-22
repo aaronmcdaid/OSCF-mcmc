@@ -35,6 +35,11 @@
 
 struct State; // pre-declare in order that we can make it a friend of Community
 
+struct OneCommunitySummary {
+	int64_t num_edges;
+	int64_t num_unique_nodes_in_this_community;
+};
+
 struct Community {
 	friend struct State;
 private:
@@ -44,6 +49,12 @@ private:
 public:
 	Community() : num_unique_nodes_in_this_community(0) {}
 	void	dump_me()			const;
+	const struct OneCommunitySummary get_one_community_summary() const {
+		OneCommunitySummary ocs;
+		ocs.num_edges = this->get_num_edges();
+		ocs.num_unique_nodes_in_this_community = this->get_num_unique_nodes_in_this_community();
+		return ocs;
+	}
 private:
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
@@ -119,6 +130,9 @@ public:
 	int64_t								  get_K()			const { return this->K; }
 	const std :: vector<Community>					& get_comms()			const { return this->comms; }
 	const std :: vector< std :: tr1 :: unordered_set<int64_t> >	& get_edge_to_set_of_comms()	const { return this->edge_to_set_of_comms; }
+	const OneCommunitySummary					  get_one_community_summary(const int k)	const {
+		return this->comms.at(k).get_one_community_summary();
+	}
 private:
 	void		add_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);

@@ -31,6 +31,7 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	prior_on_K()		const;
 	long double	product_on_fs()		const;
 	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const;
+	long double	f(const OneCommunitySummary ocs)						const;
 
 	// send the modifications through here
 	void		add_edge	(int64_t e, int64_t comm_id)		;
