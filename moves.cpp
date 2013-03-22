@@ -19,19 +19,31 @@ void			seed_the_random_number_generator(int seed) {
 
 static vector<bool>	bernoullis_not_all_failed(const vector<long double> p_k) {
 					const int64_t K = p_k.size();
-					int num_of_successes = 0;
-					int64_t attempts = 0;
-					vector<bool> bools(K);
-					while(num_of_successes == 0) {
-						++attempts;
-						for(int k = 0; k<K; ++k) {
-							const bool b = gsl_ran_bernoulli(r, p_k.at(k));
-							if(b)
-								++ num_of_successes;
-							bools.at(k) = b;
-						}
+
+					long double p_rest_all_zeros = 0.0L;
+					for(int k=0; k<K; ++k) {
+						p_rest_all_zeros += log2l(1.0L - p_k.at(k));
 					}
-					// PP2(attempts, num_of_successes);
+
+					int num_of_successes = 0;
+					vector<bool> bools(K);
+
+					for(int k = 0; k<K; ++k) {
+						long double p = p_k.at(k);
+						p_rest_all_zeros -= log2l(1.0L - p);
+						{ // IF num_of_successes == 0, then we need to do something special
+						  // in order to condition on there finally being at least one success
+							if(num_of_successes==0) {
+								p /= 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-p));
+							}
+						}
+						const bool b = gsl_ran_bernoulli(r, p);
+						if(b)
+							++ num_of_successes;
+						bools.at(k) = b;
+					}
+					assertVERYCLOSE(p_rest_all_zeros , 0.0L);
+					assert(num_of_successes > 0);
 					return bools;
 }
 
