@@ -55,7 +55,7 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 							long double baseline = NAN; // this 'baseline' technique should improve accuracy
 							assert(!isfinite(baseline));
 							assert(num_unique_nodes_in_this_community <= state.N);
-							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 10 && sz<=state.N; ++sz) {
+							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 100 && sz<=state.N; ++sz) {
 								long double score_one_comm_one_sz = 0.0L;
 								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
 
