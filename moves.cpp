@@ -44,10 +44,14 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	// 3. draw from the Bernoullis, but conditioning that it must be assigned to at least one community.
 
 	// First, Remove the edge from *all* its communities
+	long double delta_in_gibbs = 0.0L;
 	{
 		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
 			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
+			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
 			sc.remove_edge(e, comm_id_to_remove);
+			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
+			delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
 		}
 	}
 
@@ -83,11 +87,14 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		const vector<bool> new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 		for(int k = 0; k<K; ++k) {
 			if(new_values_for_this_edge.at(k)) {
+				const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
 				sc.add_edge(e, k);
+				const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
+				delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
 			}
 		}
 	}
-	return NAN;
+	return delta_in_gibbs;
 }
 
 long double		metroK(Score & sc) {

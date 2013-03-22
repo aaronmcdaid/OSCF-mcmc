@@ -79,25 +79,33 @@ void dump_all(const State & st) {
 	cout << endl;
 	cout << " ==" << endl << endl;
 }
+#define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
-	PP(sc.score());
+	long double cmf_track = sc.score();
+	PP(cmf_track);
+	CHECK_PMF_TRACKER(cmf_track, sc.score());
 	for (int rep = 0; rep < 25000; ++rep) {
 		if(rep % 10000 == 0)
 			cerr << rep << endl;
+		if(rep % 1000 == 0)
+			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		for(int64_t e = 0; e<net->E(); ++e) {
-			gibbsUpdate(e, sc);
+			cmf_track += gibbsUpdate(e, sc);
 			{
-				const long double pre = sc.score();
+				// const long double pre = sc.score();
 				const long double delta_score = metroK(sc);
-				const long double post = sc.score();
-				assert( VERYCLOSE(delta_score, post - pre) );
+				cmf_track += delta_score;
+				// const long double post = sc.score();
+				// assert( VERYCLOSE(delta_score, post - pre) );
 			}
 			// PP2(e, sc.score());
 		}
 		dump_all(st);
 	}
+	PP(cmf_track);
+	CHECK_PMF_TRACKER(cmf_track, sc.score());
 }
 
 
