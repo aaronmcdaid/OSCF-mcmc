@@ -94,7 +94,7 @@ void oscf(Net net) {
 				const long double post = sc.score();
 				assert( VERYCLOSE(delta_score, post - pre) );
 			}
-			PP2(e, sc.score());
+			// PP2(e, sc.score());
 		}
 		dump_all(st);
 	}

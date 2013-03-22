@@ -31,7 +31,7 @@ static vector<bool>	bernoullis_not_all_failed(const vector<long double> p_k) {
 							bools.at(k) = b;
 						}
 					}
-					PP2(attempts, num_of_successes);
+					// PP2(attempts, num_of_successes);
 					return bools;
 }
 
@@ -70,10 +70,10 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 			const long double extra_if_in = delta_score_one_edge;
 			const long double a = exp2l(extra_if_in);
 			const long double p = a / (1+a);
-			PP3(extra_if_in, a, p);
+			// PP3(extra_if_in, a, p);
 			assert(p > 0 && p < 1);
 			p_k.at(k) = p;
-			PP2(k, p);
+			// PP2(k, p);
 		}
 
 	}
@@ -94,7 +94,7 @@ long double		metroK(Score & sc) {
 					// Either add or remove a cluster at random
 					// This will affect the prior on K obviously, but don't forget the f(0,0) term
 					if(gsl_ran_bernoulli(r, 0.5)) {
-						cout << "Attempt append" << endl;
+						// cout << "Attempt append" << endl;
 						// Attempt to Add an empty cluster
 						/// const long double pre = sc.score();
 						const long double delta_score = sc.append_empty_cluster();
@@ -113,7 +113,7 @@ long double		metroK(Score & sc) {
 							return 0.0L;
 						}
 					} else {
-						cout << "Attempt removal" << endl;
+						// cout << "Attempt removal" << endl;
 						// Attempt to Remove an empty cluster
 
 						// First, select a cluster at random to be our target.
