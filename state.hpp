@@ -102,17 +102,24 @@ public:
 };
 
 struct State {
+	friend class Score; // Score is allowed to edit this
 	Net net;
 	const int64_t N;
 	const int64_t E;
 
+private:
 	int64_t K; // number of communities
 	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 
 	std :: vector< std :: tr1 :: unordered_set<int64_t> > edge_to_set_of_comms;
 
 
+public:
 	explicit State(Net net_);
+	int64_t								  get_K()			const { return this->K; }
+	const std :: vector<Community>					& get_comms()			const { return this->comms; }
+	const std :: vector< std :: tr1 :: unordered_set<int64_t> >	& get_edge_to_set_of_comms()	const { return this->edge_to_set_of_comms; }
+private:
 	void		add_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);
 										this->comms.at(comm_id).add_edge(e, this->net);
@@ -143,6 +150,7 @@ struct State {
 										this->comms.pop_back();
 										assert(this->K == (int64_t)this->comms.size());
 	}
+public: // swap is public because it doesn't affect the score
 	void		swap_cluster_to_the_end(const int64_t cluster_id);
 };
 

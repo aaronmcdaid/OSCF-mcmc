@@ -36,7 +36,7 @@ static vector<bool>	bernoullis_not_all_failed(const vector<long double> p_k) {
 }
 
 long double 		gibbsUpdate(int64_t e, Score & sc) {
-	const int64_t K = sc.state.K;
+	const int64_t K = sc.state.get_K();
 	// Does NOT change K
 	//
 	// 1. remove the edge from *all* communities
@@ -45,10 +45,9 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 
 	// First, Remove the edge from *all* its communities
 	{
-		State & st = sc.state;
-		while( ! st.edge_to_set_of_comms.at(e).empty() ) {
-			int64_t comm_id_to_remove = * st.edge_to_set_of_comms.at(e).begin();
-			st.remove_edge(e, comm_id_to_remove);
+		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
+			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
+			sc.remove_edge(e, comm_id_to_remove);
 		}
 	}
 
@@ -58,10 +57,10 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		for(int k = 0; k<K; ++k) {
 			const long double not_in = sc.score();
 			assert(isfinite(not_in));
-			sc.state.add_edge(e, k);
+			sc.add_edge(e, k);
 			const long double is_in = sc.score();
 			assert(isfinite(is_in));
-			sc.state.remove_edge(e, k);
+			sc.remove_edge(e, k);
 			assert(not_in == sc.score());
 
 			// Note: it *is* possible for is_in to be greater than not_in
@@ -82,7 +81,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		const vector<bool> new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 		for(int k = 0; k<K; ++k) {
 			if(new_values_for_this_edge.at(k)) {
-				sc.state.add_edge(e, k);
+				sc.add_edge(e, k);
 			}
 		}
 	}
@@ -103,7 +102,7 @@ long double		metroK(Score & sc) {
 						if( log2l(gsl_rng_uniform(r)) < delta_score ) {
 							// Accept
 							// .. but let's move it to a random location
-							const int64_t target_cluster_id = sc.state.K * gsl_rng_uniform(r);
+							const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
 							sc.state.swap_cluster_to_the_end(target_cluster_id);
 							return delta_score;
 						} else {
@@ -117,9 +116,9 @@ long double		metroK(Score & sc) {
 
 						// First, select a cluster at random to be our target.
 						// If it's empty, just bail out immediately
-						assert(sc.state.K > 0);
-						const int64_t target_cluster_id = sc.state.K * gsl_rng_uniform(r);
-						if(!sc.state.comms.at(target_cluster_id).empty()) {
+						assert(sc.state.get_K() > 0);
+						const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
+						if(!sc.state.get_comms().at(target_cluster_id).empty()) {
 							return 0.0L;
 						}
 

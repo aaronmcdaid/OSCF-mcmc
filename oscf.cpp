@@ -72,9 +72,9 @@ int main(int argc, char **argv) {
 
 void dump_all(const State & st) {
 	cout << endl << " ===" << endl;
-	for(int k=0; k<st.K; ++k) {
+	for(int k=0; k<st.get_K(); ++k) {
 		cout << '\t';
-		st.comms.at(k).dump_me();
+		st.get_comms().at(k).dump_me();
 	}
 	cout << endl;
 	cout << " ==" << endl << endl;
