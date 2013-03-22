@@ -1,5 +1,8 @@
 #include "state.hpp"
 
+#include<iostream>
+using namespace std;
+
 #include "macros.hpp"
 
 		State :: State(Net net_) : net(net_), N(net_->N()), E(net_->E()), edge_to_set_of_comms(net_->E()) {
@@ -13,7 +16,10 @@
 	}
 }
 void		Community :: dump_me()			const	{
-						PP3(this->num_unique_nodes_in_this_community, this->my_edges.size(), this->my_nodes.size());
+						cout
+							<< this->num_unique_nodes_in_this_community
+							<< ',' << this->my_edges.size()
+							<< ',' << this->my_nodes.size();
 }
 void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
 					assert(cluster_id < this->K);

@@ -73,15 +73,19 @@ int main(int argc, char **argv) {
 void dump_all(const State & st) {
 	cout << endl << " ===" << endl;
 	for(int k=0; k<st.K; ++k) {
+		cout << '\t';
 		st.comms.at(k).dump_me();
 	}
+	cout << endl;
 	cout << " ==" << endl << endl;
 }
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
 	PP(sc.score());
-	for (int rep = 0; rep < 500; ++rep) {
+	for (int rep = 0; rep < 25000; ++rep) {
+		if(rep % 10000 == 0)
+			cerr << rep << endl;
 		for(int64_t e = 0; e<net->E(); ++e) {
 			gibbsUpdate(e, sc);
 			{
