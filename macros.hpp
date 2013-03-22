@@ -8,5 +8,7 @@
 #define unless(x) if(!(x))
 #define DYINGWORDS(x) for (int klsdjfslkfj = (x) ? 0 : 1; klsdjfslkfj!=0; klsdjfslkfj--, ({ assert (x); }) )
 #define VERYCLOSE(a,b) (1e-07 > fabs((a)-(b)))
+#define assertVERYCLOSE(a,b)	assert(VERYCLOSE(a,b))
+#define assertEQ(a,b)		assert((a) == (b))
 #define For(it, container) for( typeof((container).begin()) it = (container).begin(); it != (container).end(); ++it)
 #define ELAPSED() (double(clock()) / CLOCKS_PER_SEC)

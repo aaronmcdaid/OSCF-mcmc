@@ -55,17 +55,19 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	vector<long double> p_k(K);
 	{
 		for(int k = 0; k<K; ++k) {
-			const long double not_in = sc.score();
-			assert(isfinite(not_in));
+			// const long double not_in = sc.score();
+			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
 			sc.add_edge(e, k);
-			const long double is_in = sc.score();
-			assert(isfinite(is_in));
+			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
+			const long double delta_score_one_edge = sc.f(new_one_comm) - sc.f(old_one_comm);
+			// const long double is_in = sc.score();
 			sc.remove_edge(e, k);
-			assert(not_in == sc.score());
+			// assert(not_in == sc.score());
+			// assertVERYCLOSE(delta_score_one_edge, is_in - not_in);
 
 			// Note: it *is* possible for is_in to be greater than not_in
 
-			const long double extra_if_in = is_in - not_in;
+			const long double extra_if_in = delta_score_one_edge;
 			const long double a = exp2l(extra_if_in);
 			const long double p = a / (1+a);
 			PP3(extra_if_in, a, p);
