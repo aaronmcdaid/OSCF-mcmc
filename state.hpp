@@ -101,28 +101,13 @@ public:
 	}
 };
 
-struct Communities {
-	// This is just a vector<Community> that will grow, and maybe shrink, every now and then.
-public:
-	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
-	Community & at(const size_t k) {
-		assert(k < this->comms.size());
-		return this->comms.at(k);
-	}
-	const Community & at(const size_t k) const {
-		assert(k < this->comms.size());
-		return this->comms.at(k);
-	}
-	int64_t		K()		const { return this->comms.size(); }
-};
-
 struct State {
 	Net net;
 	const int64_t N;
 	const int64_t E;
 
 	int64_t K; // number of communities
-	Communities comms;
+	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 
 	std :: vector< std :: tr1 :: unordered_set<int64_t> > edge_to_set_of_comms;
 
@@ -141,22 +126,22 @@ struct State {
 										assert(wasErased == 1);
 	}
 	int64_t		append_empty_cluster()				{
-										assert(this->K == this->comms.K());
+										assert(this->K == (int64_t) this->comms.size());
 										const int64_t new_cluster_id = this->K;
-										this->comms.comms.push_back( Community() );
+										this->comms.push_back( Community() );
 										assert(this->comms.at(new_cluster_id).get_num_edges() == 0);
 										++ this->K;
-										assert(this->K == this->comms.K());
+										assert(this->K == (int64_t)this->comms.size());
 										return new_cluster_id;
 	}
 	void		delete_empty_cluster_from_the_end()		{
-										assert(this->K == this->comms.K());
+										assert(this->K == (int64_t)this->comms.size());
 										const int64_t cluster_id_to_delete = int64_t(this->K)-1;
 										assert(cluster_id_to_delete >= 0);  // can't delete when there are no clusters left!
 										assert(this->comms.at(cluster_id_to_delete).empty());
 										-- this->K;
-										this->comms.comms.pop_back();
-										assert(this->K == this->comms.K());
+										this->comms.pop_back();
+										assert(this->K == (int64_t)this->comms.size());
 	}
 	void		swap_cluster_to_the_end(const int64_t cluster_id);
 };
