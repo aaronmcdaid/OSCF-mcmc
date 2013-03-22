@@ -17,8 +17,9 @@ void			seed_the_random_number_generator(int seed) {
 }
 
 
-static vector<bool>	bernoullis_not_all_failed(const vector<long double> p_k) {
+static pair< vector<bool>, long double>	bernoullis_not_all_failed(const vector<long double> p_k) {
 					const int64_t K = p_k.size();
+					long double log2_product_of_accepted_probabilities = 0.0L;
 
 					long double p_rest_all_zeros = 0.0L;
 					for(int k=0; k<K; ++k) {
@@ -41,10 +42,12 @@ static vector<bool>	bernoullis_not_all_failed(const vector<long double> p_k) {
 						if(b)
 							++ num_of_successes;
 						bools.at(k) = b;
+						log2_product_of_accepted_probabilities += b ? log2l(p) : log2l(1.0L-p);
 					}
 					assertVERYCLOSE(p_rest_all_zeros , 0.0L);
 					assert(num_of_successes > 0);
-					return bools;
+					assert(isfinite(log2_product_of_accepted_probabilities));
+					return make_pair(bools, log2_product_of_accepted_probabilities);
 }
 
 long double 		gibbsUpdate(int64_t e, Score & sc) {
@@ -96,9 +99,9 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 
 	// Assign the new values
 	{
-		const vector<bool> new_values_for_this_edge = bernoullis_not_all_failed(p_k);
+		const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 		for(int k = 0; k<K; ++k) {
-			if(new_values_for_this_edge.at(k)) {
+			if(new_values_for_this_edge.first.at(k)) {
 				const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
 				sc.add_edge(e, k);
 				const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
