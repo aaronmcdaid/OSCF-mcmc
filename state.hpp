@@ -110,6 +110,7 @@ public:
 											return false;
 										}
 	}
+	const std :: tr1 :: unordered_set<int64_t>		& get_my_edges()	const { return this->my_edges; }
 };
 
 struct State {

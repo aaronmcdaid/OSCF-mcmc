@@ -93,14 +93,7 @@ void oscf(Net net) {
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		for(int64_t e = 0; e<net->E(); ++e) {
 			cmf_track += gibbsUpdate(e, sc);
-			{
-				// const long double pre = sc.score();
-				const long double delta_score = metroK(sc);
-				cmf_track += delta_score;
-				// const long double post = sc.score();
-				// assert( VERYCLOSE(delta_score, post - pre) );
-			}
-			// PP2(e, sc.score());
+			cmf_track += metroK(sc);
 		}
 		dump_all(st);
 	}
