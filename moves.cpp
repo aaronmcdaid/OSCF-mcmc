@@ -69,6 +69,15 @@ long double		remove_edge_from_one_community_if_present(int64_t e, Score &sc, con
 			return 0.0L;
 }
 
+long double		calculate_p_based_on_the_log_ratio(const long double delta_score_one_edge) {
+			const long double a = exp2l(delta_score_one_edge);
+			const long double p = a / (1+a);
+			// PP3(extra_if_in, a, p);
+			assert(isfinite(p));
+			assert(p > 0 && p < 1);
+			return p;
+}
+
 long double 		gibbsUpdate(int64_t e, Score & sc) {
 	const int64_t K = sc.state.get_K();
 	// Does NOT change K
@@ -94,12 +103,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 
 			// Note: it *is* possible for is_in to be greater than not_in
 
-			const long double extra_if_in = delta_score_one_edge;
-			const long double a = exp2l(extra_if_in);
-			const long double p = a / (1+a);
-			// PP3(extra_if_in, a, p);
-			assert(p > 0 && p < 1);
-			p_k.at(k) = p;
+			p_k.at(k) = calculate_p_based_on_the_log_ratio(delta_score_one_edge);
 			// PP2(k, p);
 		}
 
@@ -139,10 +143,7 @@ long double 		gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_
 			const int k = justIterateOverTwo == 0 ? main_cluster : secondary_cluster;
 			const long double delta_score_one_edge = sc.add_edge(e, k);
 			sc.state.remove_edge(e, k); // Put things back the way they were
-			const long double a = exp2l(delta_score_one_edge);
-			const long double p = a / (1+a);
-			assert(p > 0 && p < 1);
-			p_k.at(justIterateOverTwo) = p;
+			p_k.at(justIterateOverTwo) = calculate_p_based_on_the_log_ratio(delta_score_one_edge);
 		}
 
 	}
