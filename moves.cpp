@@ -108,6 +108,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		}
 
 	}
+	assert(sc.state.get_edge_to_set_of_comms().at(e).empty());
 
 	// Assign the new values
 	{
