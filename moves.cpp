@@ -231,6 +231,7 @@ long double		merge(Score &sc) {
 	// - Select two clusters at random
 	// - Remember their current state
 	// - Randomize the order of the edges
+	// - Before emptying them, let's calculate the score of the merged version
 	// - Empty both of them, and Set up launch state
 	// - Do the "proposal", but with "forcing" of course
 	// - Calculate acceptance probability, and proceed as usual
@@ -256,15 +257,31 @@ long double		merge(Score &sc) {
 	assert(original_state_of_these_edges.size() == edges_in_a_random_order.size());
 	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
 
-	// Empty both of them:
-	delta_score += empty_one_cluster(main_cluster,      & TriState :: test_in_MAIN, original_state_of_these_edges, sc);
-	delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
-	assert(sc.state.get_comms().at(main_cluster     ).empty());
-	assert(sc.state.get_comms().at(secondary_cluster).empty());
+	// Before emptying them, let's calculate the score of the merged version
+	{
+		delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
 
-	{ // I should take this opportunity to calculate the score that *would* exist
-	  // if the two clusters were merged
+		// Put every edge into the main_cluster, if it wasn't already
+		For(edge_with_state, original_state_of_these_edges) {
+			if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
+		}
+
+		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
+		assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
+
 	}
+	// const long double this_is_the_merged_score_BUT_WITH_AN_EXTRA_EMPTY_CLUSTER = delta_score;
+
+	// Now, empty both of them:
+	{
+		For(edge_with_state, original_state_of_these_edges) {
+			delta_score += sc.remove_edge(edge_with_state->first, main_cluster);
+		}
+
+		assert(sc.state.get_comms().at(secondary_cluster).empty());
+		assert(sc.state.get_comms().at(main_cluster     ).empty());
+	}
+
 
 	// Set up the launch state
 	delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
