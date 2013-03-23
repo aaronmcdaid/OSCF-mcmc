@@ -96,6 +96,9 @@ void oscf(Net net) {
 			cmf_track += metroK(sc);
 		}
 		dump_all(st);
+		for(int64_t e = 0; e<net->E(); ++e) {
+			assert(!st.get_edge_to_set_of_comms().at(e).empty());
+		}
 	}
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());

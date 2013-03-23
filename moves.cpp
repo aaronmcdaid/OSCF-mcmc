@@ -54,13 +54,19 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(const vector<l
 					return make_pair(bools, log2_product_of_accepted_probabilities);
 }
 
-long double		remove_edge_from_all_communities(int64_t e, Score &sc) {
+long double		remove_edge_from_all_its_communities(int64_t e, Score &sc) {
 		long double delta_in_here = 0.0L;
 		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
 			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
 			delta_in_here += sc.remove_edge(e, comm_id_to_remove);
 		}
 		return delta_in_here;
+}
+long double		remove_edge_from_one_community_if_present(int64_t e, Score &sc, const int64_t comm_id_to_remove) {
+		if( sc.state.get_edge_to_set_of_comms().at(e).count(comm_id_to_remove) == 1 )
+			return sc.remove_edge(e, comm_id_to_remove);
+		else
+			return 0.0L;
 }
 
 long double 		gibbsUpdate(int64_t e, Score & sc) {
@@ -73,7 +79,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 
 	// First, Remove the edge from *all* its communities
 	long double delta_in_gibbs = 0.0L;
-	delta_in_gibbs += remove_edge_from_all_communities(e, sc);
+	delta_in_gibbs += remove_edge_from_all_its_communities(e, sc);
 
 	// For each of the K commmunities, how does the corresponding f change with the (re)addition of this edge?
 	vector<long double> p_k(K);
@@ -107,6 +113,47 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 				delta_in_gibbs += sc.add_edge(e, k);
 			}
 		}
+	}
+	return delta_in_gibbs;
+}
+long double 		gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) {
+	// const int64_t K = sc.state.get_K();
+	assert(main_cluster != secondary_cluster);
+	// This is used with the split() and merge() moves.
+	// It's based on gibbsUpdate,
+	// *BUT* it works only on two communities
+	//
+	// 1. remove the edge from *both* communities (if not already removed)
+	// 2. reassign to each in turn, calculating the delta-score in each case, giving the probability for that Bernoulli
+	// 3. draw from the Bernoullis, but conditioning that it must be assigned to at least one community.
+
+	// First, Remove the edge from *both* of these communities (only if it is in them, of course)
+	long double delta_in_gibbs = 0.0L;
+	delta_in_gibbs += remove_edge_from_one_community_if_present(e, sc, main_cluster);
+	delta_in_gibbs += remove_edge_from_one_community_if_present(e, sc, secondary_cluster);
+
+	// For each of the 2 commmunities, how does the corresponding f change with the (re)addition of this edge?
+	vector<long double> p_k(2);
+	{
+		for(int justIterateOverTwo = 0; justIterateOverTwo < 2; ++ justIterateOverTwo) {
+			const int k = justIterateOverTwo == 0 ? main_cluster : secondary_cluster;
+			const long double delta_score_one_edge = sc.add_edge(e, k);
+			sc.state.remove_edge(e, k); // Put things back the way they were
+			const long double a = exp2l(delta_score_one_edge);
+			const long double p = a / (1+a);
+			assert(p > 0 && p < 1);
+			p_k.at(justIterateOverTwo) = p;
+		}
+
+	}
+
+	// Assign the new values
+	{
+		const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
+		if(new_values_for_this_edge.first.at(0))
+				delta_in_gibbs += sc.add_edge(e, main_cluster);
+		if(new_values_for_this_edge.first.at(1))
+				delta_in_gibbs += sc.add_edge(e, secondary_cluster);
 	}
 	return delta_in_gibbs;
 }
