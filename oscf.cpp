@@ -84,6 +84,7 @@ void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
 	long double cmf_track = sc.score();
+	assert(st.every_edge_non_empty());
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
 	for (int rep = 0; rep < 250000; ++rep) {
@@ -96,10 +97,8 @@ void oscf(Net net) {
 			cmf_track += metroK(sc);
 		}
 		dump_all(st);
-		for(int64_t e = 0; e<net->E(); ++e) {
-			assert(!st.get_edge_to_set_of_comms().at(e).empty());
-		}
 	}
+	assert(st.every_edge_non_empty());
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
 }

@@ -171,6 +171,13 @@ private:
 	}
 public: // swap is public because it doesn't affect the score
 	void		swap_cluster_to_the_end(const int64_t cluster_id);
+	bool		every_edge_non_empty()		const {
+				for(int64_t e = 0; e<net->E(); ++e) {
+					if(this->edge_to_set_of_comms.at(e).empty())
+						return false;
+				}
+				return true;
+	}
 };
 
 
