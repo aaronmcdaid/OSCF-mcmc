@@ -106,6 +106,18 @@ long double	Score :: f	(const OneCommunitySummary ocs)	const {
 	return this->f(ocs.num_edges, ocs.num_unique_nodes_in_this_community);
 }
 
+long double	Score :: add_edge(int64_t e, int64_t comm_id_to_add) {
+			const OneCommunitySummary old_one_comm = this->state.get_one_community_summary(comm_id_to_add);
+			this->state.add_edge(e, comm_id_to_add);
+			const OneCommunitySummary new_one_comm = this->state.get_one_community_summary(comm_id_to_add);
+			return this->f(new_one_comm) - this->f(old_one_comm);
+}
+long double	Score :: remove_edge(int64_t e, int64_t comm_id_to_remove) {
+			const OneCommunitySummary old_one_comm = this->state.get_one_community_summary(comm_id_to_remove);
+			this->state.remove_edge(e, comm_id_to_remove);
+			const OneCommunitySummary new_one_comm = this->state.get_one_community_summary(comm_id_to_remove);
+			return this->f(new_one_comm) - this->f(old_one_comm);
+}
 
 long double		Score :: append_empty_cluster()	 {
 	const long double f_0_0 = this->f(0,0);

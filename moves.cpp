@@ -54,6 +54,15 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(const vector<l
 					return make_pair(bools, log2_product_of_accepted_probabilities);
 }
 
+long double		remove_edge_from_all_communities(int64_t e, Score &sc) {
+		long double delta_in_here = 0.0L;
+		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
+			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
+			delta_in_here += sc.remove_edge(e, comm_id_to_remove);
+		}
+		return delta_in_here;
+}
+
 long double 		gibbsUpdate(int64_t e, Score & sc) {
 	const int64_t K = sc.state.get_K();
 	// Does NOT change K
@@ -64,25 +73,14 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 
 	// First, Remove the edge from *all* its communities
 	long double delta_in_gibbs = 0.0L;
-	{
-		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
-			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
-			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
-			sc.state.remove_edge(e, comm_id_to_remove);
-			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
-			delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
-		}
-	}
+	delta_in_gibbs += remove_edge_from_all_communities(e, sc);
 
 	// For each of the K commmunities, how does the corresponding f change with the (re)addition of this edge?
 	vector<long double> p_k(K);
 	{
 		for(int k = 0; k<K; ++k) {
 			// const long double not_in = sc.score();
-			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
-			sc.state.add_edge(e, k);
-			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
-			const long double delta_score_one_edge = sc.f(new_one_comm) - sc.f(old_one_comm);
+			const long double delta_score_one_edge = sc.add_edge(e, k);
 			// const long double is_in = sc.score();
 			sc.state.remove_edge(e, k);
 			// assert(not_in == sc.score());
@@ -106,10 +104,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 		for(int k = 0; k<K; ++k) {
 			if(new_values_for_this_edge.first.at(k)) {
-				const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
-				sc.state.add_edge(e, k);
-				const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
-				delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
+				delta_in_gibbs += sc.add_edge(e, k);
 			}
 		}
 	}
