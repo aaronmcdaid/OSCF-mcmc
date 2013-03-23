@@ -170,18 +170,20 @@ struct TriState {
 	bool			test_in_SECN() const	{ return x & IN_SECN; }
 };
 
-void			empty_both_clusters(
+long double		empty_both_clusters(
 					const int main_cluster,
 					const int secondary_cluster,
 					const std :: tr1 :: unordered_map< int64_t , TriState > & original_state_of_these_edges,
-					State & state
+					Score & sc
 				) {
+	long double delta_score = 0.0L;
 	For(edge_with_state, original_state_of_these_edges) {
-		if(edge_with_state->second.test_in_MAIN()) { state.remove_edge(edge_with_state->first, main_cluster); }
-		if(edge_with_state->second.test_in_SECN()) { state.remove_edge(edge_with_state->first, secondary_cluster); }
+		if(edge_with_state->second.test_in_MAIN()) { delta_score += sc.remove_edge(edge_with_state->first, main_cluster); }
+		if(edge_with_state->second.test_in_SECN()) { delta_score += sc.remove_edge(edge_with_state->first, secondary_cluster); }
 	}
-	assert(state.get_comms().at(main_cluster     ).empty());
-	assert(state.get_comms().at(secondary_cluster).empty());
+	assert(sc.state.get_comms().at(main_cluster     ).empty());
+	assert(sc.state.get_comms().at(secondary_cluster).empty());
+	return delta_score;
 }
 
 long double		metroK(Score & sc) {
