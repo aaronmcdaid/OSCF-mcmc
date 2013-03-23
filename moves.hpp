@@ -26,5 +26,7 @@ std :: pair<long double,long double> 	gibbsUpdateJustTwoComms(
 							, const int64_t secondary_cluster
 							, std :: pair<int,int> possibly_force = std :: make_pair(-1,-1)
 							);
+long double		merge(Score & sc);
+long double		split(Score & sc);
 
 #endif

@@ -95,6 +95,8 @@ void oscf(Net net) {
 		for(int64_t e = 0; e<net->E(); ++e) {
 			cmf_track += gibbsUpdate(e, sc);
 			cmf_track += metroK(sc);
+
+			cmf_track += merge(sc);
 		}
 		dump_all(st);
 	}

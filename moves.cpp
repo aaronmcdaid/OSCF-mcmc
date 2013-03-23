@@ -226,6 +226,66 @@ long double		set_up_launch_state(
 	return delta_score;
 }
 
+long double		merge(Score &sc) {
+	if(sc.state.get_K() < 2)
+		return 0.0L;
+	// - Select two clusters at random
+	// - Remember their current state
+	// - Randomize the order of the edges
+	// - Empty both of them, and Set up launch state
+	// - Do the "proposal", but with "forcing" of course
+	// - Calculate acceptance probability, and proceed as usual
+
+	const int main_cluster = sc.state.get_K() * gsl_rng_uniform(r);
+	int secondary_cluster;
+	do { secondary_cluster = sc.state.get_K() * gsl_rng_uniform(r); }
+	while (secondary_cluster == main_cluster);
+	assert(secondary_cluster != main_cluster);
+
+	long double delta_score = 0.0L;
+
+	// Remember their current state:
+	std :: tr1 :: unordered_map< int64_t , TriState > original_state_of_these_edges;
+	For(main_edge, sc.state.get_comms().at(main_cluster     ).get_my_edges()) { original_state_of_these_edges[ *main_edge ] . put_in_MAIN(); }
+	For(secn_edge, sc.state.get_comms().at(secondary_cluster).get_my_edges()) { original_state_of_these_edges[ *secn_edge ] . put_in_SECN(); }
+
+	// Randomize the order of the edges:
+	vector<int64_t> edges_in_a_random_order; // each edge to appear just once
+	For(edge_with_state, original_state_of_these_edges) {
+		edges_in_a_random_order.push_back(edge_with_state->first);
+	}
+	assert(original_state_of_these_edges.size() == edges_in_a_random_order.size());
+	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
+
+	// Empty both of them:
+	delta_score += empty_both_clusters(main_cluster, secondary_cluster, original_state_of_these_edges, sc);
+
+	// Set up the launch state
+	delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
+
+	// Now finally ready for the "random" proposal
+	long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
+	For(edge, edges_in_a_random_order) {
+		pair<int,int> possibly_force(0,0);
+		if(original_state_of_these_edges [*edge].test_in_MAIN())
+			possibly_force.first = 1;
+		if(original_state_of_these_edges [*edge].test_in_SECN())
+			possibly_force.second = 1;
+		pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster, possibly_force);
+		log2_product_of_accepted_probabilities_FOR_ALL_EDGES += ab.second;
+		delta_score += ab.first;
+	}
+
+	// We're back at the start again. Unmerged!
+	assertVERYCLOSE(delta_score, 0.0L);
+
+	// Now, calculate the acceptance probability
+
+	return delta_score;
+}
+long double		split(Score &) {
+	return 0.0L;
+}
 
 long double		metroK(Score & sc) {
 					// Either add or remove a cluster at random
