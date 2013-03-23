@@ -22,7 +22,7 @@ CXXFLAGS=       \
           -Wnon-virtual-dtor            \
           -Wall -Wformat -Werror -Wextra #-Wconversion # scf.cpp doesn't like -Wconversion
 
-DEBUG_FLAGS=-ggdb -pg
+#DEBUG_FLAGS=-ggdb -pg
 CXX=g++
 CC=g++    ${DEBUG_FLAGS}
 #CXXFLAGS= ${BITS}     -g
