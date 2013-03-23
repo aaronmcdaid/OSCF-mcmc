@@ -5,6 +5,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <cassert>
+#include <cstdlib>
+#include <algorithm>
 using namespace std;
 
 #include "macros.hpp"
@@ -112,6 +114,30 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		}
 	}
 	return delta_in_gibbs;
+}
+
+struct TriState {
+	short			x;
+	explicit		TriState() : x(0)	{ }
+	enum			Flags			{ IN_MAIN = 1, IN_SECN = 2 }; // Main, or Secondary, or both?
+	void			put_in_MAIN()		{ x |= IN_MAIN; }
+	void			put_in_SECN()		{ x |= IN_SECN; }
+	bool			test_in_MAIN() const	{ return x & IN_MAIN; }
+	bool			test_in_SECN() const	{ return x & IN_SECN; }
+};
+
+void			empty_both_clusters(
+					const int main_cluster,
+					const int secondary_cluster,
+					const std :: tr1 :: unordered_map< int64_t , TriState > & original_state_of_these_edges,
+					State & state
+				) {
+	For(edge_with_state, original_state_of_these_edges) {
+		if(edge_with_state->second.test_in_MAIN()) { state.remove_edge(edge_with_state->first, main_cluster); }
+		if(edge_with_state->second.test_in_SECN()) { state.remove_edge(edge_with_state->first, secondary_cluster); }
+	}
+	assert(state.get_comms().at(main_cluster     ).empty());
+	assert(state.get_comms().at(secondary_cluster).empty());
 }
 
 long double		metroK(Score & sc) {
