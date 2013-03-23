@@ -86,7 +86,7 @@ void oscf(Net net) {
 	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
-	for (int rep = 0; rep < 25000; ++rep) {
+	for (int rep = 0; rep < 250000; ++rep) {
 		if(rep % 10000 == 0)
 			cerr << rep << endl;
 		if(rep % 1000 == 0)
