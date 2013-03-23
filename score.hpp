@@ -34,8 +34,6 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	f(const OneCommunitySummary ocs)						const;
 
 	// send the modifications through here
-	void		add_edge	(int64_t e, int64_t comm_id)		;
-	void		remove_edge	(int64_t e, int64_t comm_id)		;
 	long double	append_empty_cluster()	;
 	long double	delete_empty_cluster_from_the_end()	;
 };

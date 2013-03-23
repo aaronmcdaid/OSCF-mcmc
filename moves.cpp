@@ -64,7 +64,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
 			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
 			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
-			sc.remove_edge(e, comm_id_to_remove);
+			sc.state.remove_edge(e, comm_id_to_remove);
 			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(comm_id_to_remove);
 			delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
 		}
@@ -76,11 +76,11 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		for(int k = 0; k<K; ++k) {
 			// const long double not_in = sc.score();
 			const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
-			sc.add_edge(e, k);
+			sc.state.add_edge(e, k);
 			const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
 			const long double delta_score_one_edge = sc.f(new_one_comm) - sc.f(old_one_comm);
 			// const long double is_in = sc.score();
-			sc.remove_edge(e, k);
+			sc.state.remove_edge(e, k);
 			// assert(not_in == sc.score());
 			// assertVERYCLOSE(delta_score_one_edge, is_in - not_in);
 
@@ -103,7 +103,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 		for(int k = 0; k<K; ++k) {
 			if(new_values_for_this_edge.first.at(k)) {
 				const OneCommunitySummary old_one_comm = sc.state.get_one_community_summary(k);
-				sc.add_edge(e, k);
+				sc.state.add_edge(e, k);
 				const OneCommunitySummary new_one_comm = sc.state.get_one_community_summary(k);
 				delta_in_gibbs += sc.f(new_one_comm) - sc.f(old_one_comm);
 			}

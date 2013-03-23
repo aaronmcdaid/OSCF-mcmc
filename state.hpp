@@ -133,7 +133,10 @@ public:
 	const OneCommunitySummary					  get_one_community_summary(const int k)	const {
 		return this->comms.at(k).get_one_community_summary();
 	}
-private:
+	// I'll allow {add,remove}_edge to be public, as they return void
+	// and don't imply that they calculate the delta-score.
+	// If there are Score::{add,remove}_edge, they should calculate the delta-score
+public:
 	void		add_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);
 										this->comms.at(comm_id).add_edge(e, this->net);
@@ -146,6 +149,7 @@ private:
 										size_t wasErased = this->edge_to_set_of_comms.at(e).erase(comm_id);
 										assert(wasErased == 1);
 	}
+private:
 	int64_t		append_empty_cluster()				{
 										assert(this->K == (int64_t) this->comms.size());
 										const int64_t new_cluster_id = this->K;

@@ -106,12 +106,6 @@ long double	Score :: f	(const OneCommunitySummary ocs)	const {
 	return this->f(ocs.num_edges, ocs.num_unique_nodes_in_this_community);
 }
 
-void			Score :: add_edge	(int64_t e, int64_t comm_id)		{
-	this->state.add_edge(e,comm_id);
-}
-void			Score :: remove_edge	(int64_t e, int64_t comm_id)		{
-	this->state.remove_edge(e,comm_id);
-}
 
 long double		Score :: append_empty_cluster()	 {
 	const long double f_0_0 = this->f(0,0);
