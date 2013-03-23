@@ -189,21 +189,20 @@ struct TriState {
 	void			put_in_SECN()		{ x |= IN_SECN; }
 	bool			test_in_MAIN() const	{ return x & IN_MAIN; }
 	bool			test_in_SECN() const	{ return x & IN_SECN; }
+	typedef      bool (TriState :: *test_function_type) () const;
 };
 
-long double		empty_both_clusters(
-					const int main_cluster,
-					const int secondary_cluster,
+long double		empty_one_cluster(
+					const int cluster_to_empty,
+					TriState :: test_function_type selector_function,
 					const std :: tr1 :: unordered_map< int64_t , TriState > & original_state_of_these_edges,
 					Score & sc
 				) {
 	long double delta_score = 0.0L;
 	For(edge_with_state, original_state_of_these_edges) {
-		if(edge_with_state->second.test_in_MAIN()) { delta_score += sc.remove_edge(edge_with_state->first, main_cluster); }
-		if(edge_with_state->second.test_in_SECN()) { delta_score += sc.remove_edge(edge_with_state->first, secondary_cluster); }
+		if( (edge_with_state->second.*selector_function) ()) { delta_score += sc.remove_edge(edge_with_state->first, cluster_to_empty); }
 	}
-	assert(sc.state.get_comms().at(main_cluster     ).empty());
-	assert(sc.state.get_comms().at(secondary_cluster).empty());
+	assert(sc.state.get_comms().at(cluster_to_empty     ).empty());
 	return delta_score;
 }
 long double		set_up_launch_state(
@@ -258,7 +257,14 @@ long double		merge(Score &sc) {
 	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
 
 	// Empty both of them:
-	delta_score += empty_both_clusters(main_cluster, secondary_cluster, original_state_of_these_edges, sc);
+	delta_score += empty_one_cluster(main_cluster,      & TriState :: test_in_MAIN, original_state_of_these_edges, sc);
+	delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
+	assert(sc.state.get_comms().at(main_cluster     ).empty());
+	assert(sc.state.get_comms().at(secondary_cluster).empty());
+
+	{ // I should take this opportunity to calculate the score that *would* exist
+	  // if the two clusters were merged
+	}
 
 	// Set up the launch state
 	delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
