@@ -21,8 +21,18 @@ void			seed_the_random_number_generator(int seed) {
 }
 
 
-static pair< vector<bool>, long double>	bernoullis_not_all_failed(const vector<long double> p_k) {
+static pair< vector<bool>, long double>	bernoullis_not_all_failed(
+							const vector<long double> p_k
+							, std :: pair<int,int> possibly_force = std :: make_pair(-1,-1)
+							) {
 					const int64_t K = p_k.size();
+	{
+		if(possibly_force.first != -1) {
+			assert(possibly_force.first  >= 0 && possibly_force.first  < 2); // It's just zero or one
+			assert(possibly_force.second >= 0 && possibly_force.second < 2); // It's just zero or one
+			assert(K==2);
+		}
+	}
 					long double log2_product_of_accepted_probabilities = 0.0L;
 
 					long double p_rest_all_zeros = 0.0L;
@@ -42,7 +52,12 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(const vector<l
 								p /= 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-p));
 							}
 						}
-						const bool b = gsl_ran_bernoulli(r, p);
+						bool b = false;
+						if(possibly_force.first!=-1) {
+							if(k==0) b = possibly_force.first;
+							if(k==1) b = possibly_force.second;
+						} else
+							b = gsl_ran_bernoulli(r, p);
 						if(b)
 							++ num_of_successes;
 						bools.at(k) = b;
@@ -121,7 +136,13 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return delta_in_gibbs;
 }
-pair<long double,long double> 	gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) {
+pair<long double,long double> 	gibbsUpdateJustTwoComms(
+							int64_t e
+							, Score & sc, const int64_t main_cluster
+							, const int64_t secondary_cluster
+							, pair<int,int> possibly_force /* DEFAULTED = make_pair(-1,-1)*/ 
+							)
+{
 	// const int64_t K = sc.state.get_K();
 	assert(main_cluster != secondary_cluster);
 	// This is used with the split() and merge() moves.
@@ -150,7 +171,7 @@ pair<long double,long double> 	gibbsUpdateJustTwoComms(int64_t e, Score & sc, co
 	}
 
 	// Assign the new values
-	const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
+	const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k, possibly_force);
 	{
 		if(new_values_for_this_edge.first.at(0))
 				delta_in_gibbs += sc.add_edge(e, main_cluster);
