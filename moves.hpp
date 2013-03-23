@@ -15,10 +15,11 @@
 #define MOVES_HPP__
 
 #include"score.hpp"
+#include<utility>
 
 void			seed_the_random_number_generator(int seed);
 long double		gibbsUpdate(int64_t e, Score & sc);
 long double		metroK(Score & sc);
-long double 		gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) ;
+std :: pair<long double,long double> 	gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) ;
 
 #endif

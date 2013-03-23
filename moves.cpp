@@ -121,7 +121,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return delta_in_gibbs;
 }
-long double 		gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) {
+pair<long double,long double> 	gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_cluster, const int64_t secondary_cluster) {
 	// const int64_t K = sc.state.get_K();
 	assert(main_cluster != secondary_cluster);
 	// This is used with the split() and merge() moves.
@@ -150,14 +150,14 @@ long double 		gibbsUpdateJustTwoComms(int64_t e, Score & sc, const int64_t main_
 	}
 
 	// Assign the new values
+	const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 	{
-		const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k);
 		if(new_values_for_this_edge.first.at(0))
 				delta_in_gibbs += sc.add_edge(e, main_cluster);
 		if(new_values_for_this_edge.first.at(1))
 				delta_in_gibbs += sc.add_edge(e, secondary_cluster);
 	}
-	return delta_in_gibbs;
+	return make_pair(delta_in_gibbs, new_values_for_this_edge.second); // includes the proposal probability
 }
 
 struct TriState {
