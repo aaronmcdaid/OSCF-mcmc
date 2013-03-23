@@ -270,7 +270,7 @@ long double		merge(Score &sc) {
 		assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 
 	}
-	// const long double this_is_the_merged_score_BUT_WITH_AN_EXTRA_EMPTY_CLUSTER = delta_score;
+	const long double this_is_the_merged_score = delta_score + sc.what_would_change_if_I_deleted_an_empty_community();
 
 	// Now, empty both of them:
 	{
@@ -303,6 +303,13 @@ long double		merge(Score &sc) {
 	assertVERYCLOSE(delta_score, 0.0L);
 
 	// Now, calculate the acceptance probability
+	//   The cmf at the target (merging)        is this_is_the_merged_score {relatively speaking}
+	//   The cmf at the source (split/original) is 0.0L                     {relatively speaking}
+	//   The proposal probabilities are {up to proportionality}:
+	//   		source -> target	0
+	//   		target -> source	log2_product_of_accepted_probabilities_FOR_ALL_EDGES
+	//   {The proposal probabilities associated with selecting a pair of clusters will cancel}
+	// We accept the merge with acceptance probability exp2l{ this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES}
 
 	return delta_score;
 }
