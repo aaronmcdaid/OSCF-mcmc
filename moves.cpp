@@ -335,8 +335,100 @@ long double		merge(Score &sc) {
 		return delta_score;
 	}
 }
-long double		split(Score &) {
-	return 0.0L;
+long double		split(Score &sc) {
+	// - Select one cluster at random, main_cluster
+	// - Select another cluster_id at random, secondary_cluster, to be the cluster id of the new cluster
+	// - (They do *not* need to different from each other)
+	// - Randomize the order of the edges
+	// - Empty it, create the new (empty) secondary_cluster, and Set up launch state
+	// - Do the proposal, (no need for "forcing" here)
+	// - Calculate acceptance probability, and proceed as usual
+
+	const int main_cluster      =  sc.state.get_K()    * gsl_rng_uniform(r);
+	const int secondary_cluster_NOT_TO_BE_USED_UNTIL_THE_SPLIT_IS_ACCEPTED = (sc.state.get_K()+1) * gsl_rng_uniform(r);
+
+	long double delta_score = 0.0L;
+	/// cout << endl << "About to attempt a split\t";
+	/// dump_all(sc.state);
+	const long double this_is_the_merged_score = delta_score; // == 0.0;
+
+	// Gather the list of edges.
+	// Randomize the order of the edges:
+	vector<int64_t> edges_in_a_random_order; // each edge to appear just once
+	For(main_edge, sc.state.get_comms().at(main_cluster     ).get_my_edges()) {
+		edges_in_a_random_order.push_back(*main_edge);
+	}
+	assert(sc.state.get_comms().at(main_cluster).get_my_edges().size() == edges_in_a_random_order.size());
+	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
+
+	// Now, empty it:
+	{
+		For(edge, edges_in_a_random_order) {
+			delta_score += sc.remove_edge(*edge, main_cluster);
+		}
+		assert(sc.state.get_comms().at(main_cluster     ).empty());
+	}
+	// Create the new, empty, secondary_cluster
+	const int temporary_secondary_cluster_on_the_end = sc.state.get_K();
+	delta_score += sc.append_empty_cluster(); // initially, this is on the end.  We'll only swap it in if the split it accepted.
+	assert(temporary_secondary_cluster_on_the_end < sc.state.get_K());
+
+
+	// Set up the launch state
+	delta_score += set_up_launch_state(main_cluster, temporary_secondary_cluster_on_the_end, edges_in_a_random_order      , sc);
+
+	// Now finally ready for the "random" proposal
+	long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
+	For(edge, edges_in_a_random_order) {
+		pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, main_cluster, temporary_secondary_cluster_on_the_end);
+		log2_product_of_accepted_probabilities_FOR_ALL_EDGES += ab.second;
+		delta_score += ab.first;
+	}
+
+	// Store the cmf {relatively speaking} at this split state
+	const long double this_is_the_split_score = delta_score;
+
+	// Now, calculate the acceptance probability
+	//   The cmf at the target (split)           is this_is_the_split_score {relatively speaking}
+	//   The cmf at the source (merged/original) is 0.0L                    {relatively speaking}
+	//   The proposal probabilities are {up to proportionality}:
+	//   		source -> target	log2_product_of_accepted_probabilities_FOR_ALL_EDGES
+	//   		target -> source	0
+	//   {The proposal probabilities associated with selecting a pair of clusters will cancel}
+	// We accept the split with acceptance probability exp2l{ this_is_the_split_score - log2_product_of_accepted_probabilities_FOR_ALL_EDGES }
+	const long double acceptance_prob = this_is_the_split_score - log2_product_of_accepted_probabilities_FOR_ALL_EDGES;
+	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
+		// Accept
+		// The split is accepted.  Not much more to do, except to swap
+		sc.state.swap_cluster_to_the_end(secondary_cluster_NOT_TO_BE_USED_UNTIL_THE_SPLIT_IS_ACCEPTED);
+		return delta_score;
+	} else {
+		// Rejected.  Must merge them again.
+		{
+			// delta_score += empty_one_cluster(temporary_secondary_cluster_on_the_end, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
+			// Put every edge into the main_cluster, and not in the secondary, if they weren't already
+			cout << "About to remerge\t";
+			dump_all(sc.state);
+			For(edge, edges_in_a_random_order) {
+				if( sc.state.get_edge_to_set_of_comms().at(*edge).count(main_cluster) == 0)
+					delta_score += sc.add_edge(*edge, main_cluster);
+				if( sc.state.get_edge_to_set_of_comms().at(*edge).count(temporary_secondary_cluster_on_the_end) == 1)
+					delta_score += sc.remove_edge(*edge, temporary_secondary_cluster_on_the_end);
+			}
+			assert( sc.state.get_comms().at(temporary_secondary_cluster_on_the_end).get_my_edges().size() == 0);
+			assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == edges_in_a_random_order.size());
+
+			// Now, to delete that empty cluster
+			cout << "remerged\t";
+			dump_all(sc.state);
+			delta_score += sc.delete_empty_cluster_from_the_end();
+			cout << "deleted the temp\t";
+			dump_all(sc.state);
+			assertVERYCLOSE(delta_score, this_is_the_merged_score);
+		}
+		assertVERYCLOSE(delta_score, 0.0L);
+		return delta_score;
+	}
 }
 
 long double		metroK(Score & sc) {

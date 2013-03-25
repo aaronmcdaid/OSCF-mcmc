@@ -97,6 +97,7 @@ void oscf(Net net) {
 			cmf_track += metroK(sc);
 
 			cmf_track += merge(sc);
+			cmf_track += split(sc);
 		}
 		dump_all(st);
 	}
