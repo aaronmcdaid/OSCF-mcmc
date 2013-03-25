@@ -29,6 +29,7 @@
 #include <vector>
 #include <cassert>
 #include "tr1/unordered_set"
+#include "tr1/unordered_map"
 #include <gsl/gsl_sf.h>
 
 #include "network.hpp"
@@ -44,7 +45,7 @@ struct Community {
 	friend struct State;
 private:
 	std :: tr1 :: unordered_set<int64_t> my_edges;
-	std :: tr1 :: unordered_multiset<int64_t> my_nodes; // each node can appear multiple times
+	std :: tr1 :: unordered_map<int64_t,int64_t> my_nodes; // each node can appear multiple times
 	int64_t num_unique_nodes_in_this_community;
 public:
 	Community() : num_unique_nodes_in_this_community(0) {}
@@ -78,21 +79,23 @@ private:
 		}
 	}
 	void add_node(int64_t n) {
-		this->my_nodes.insert(n);
-		const size_t how_many = this->my_nodes.count(n);
+		this->my_nodes[n]++;
+		const size_t how_many = this->my_nodes[n];
 		assert(how_many>0);
 		if(how_many == 1) { // we've just added this new unique node
 			++ this->num_unique_nodes_in_this_community;
 		}
 	}
 	void remove_node(int64_t n) {
-		std :: tr1 :: unordered_multiset <int64_t> :: iterator it = this->my_nodes.find(n);
+		std :: tr1 :: unordered_map <int64_t,int64_t> :: iterator it = this->my_nodes.find(n);
 		assert(it != this->my_nodes.end());
-		assert(*it == n);
-		this->my_nodes.erase(it);
-		const size_t how_many = this->my_nodes.count(n);
+		assert(it->second>0);
+		assert(it->first == n);
+		it->second --;
+		const size_t how_many = it->second;
 		if(how_many == 0) { // we've just removed the last copy of this node
 			-- this->num_unique_nodes_in_this_community;
+			this->my_nodes.erase(it);
 		}
 	}
 public:

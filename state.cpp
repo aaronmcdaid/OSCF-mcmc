@@ -37,7 +37,6 @@ void		Community :: dump_me()			const	{
 							else
 								cout << ' ';
 						}
-						assert(this->my_nodes.size() == 2*this->my_edges.size());
 }
 void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
 					assert(cluster_id < this->K);
