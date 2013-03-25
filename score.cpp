@@ -23,7 +23,7 @@ static inline double LOG2BINOM(const int n, const int m) {
 	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
 }
 
-		Score :: Score(State & state_)	: state(state_) {
+		Score :: Score(State & state_)	: state(state_), cache(state_.N+1) {
 }
 long double	Score :: score()			const {
 							const long double total_score = this->prior_on_K() + this->product_on_fs();
@@ -90,11 +90,13 @@ long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_
 }
 long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
 					// I should check for overflows here, and for conversion down to int32_t
-							const Cache_T :: key_type key = make_pair(num_edges, num_unique_nodes_in_this_community);
+							const Cache_T :: key_type key = num_edges;
+							Cache_T & cache_for_this_value_of_num_unique_nodes_in_this_community
+								= this->cache.at(num_unique_nodes_in_this_community);
 							{
 								// First, check the cache
-								Cache_T :: iterator it = this->cache.find(key);
-								if(it != this->cache.end()) {
+								Cache_T :: iterator it = cache_for_this_value_of_num_unique_nodes_in_this_community.find(key);
+								if(it != cache_for_this_value_of_num_unique_nodes_in_this_community.end()) {
 									if(it->second.second < std :: numeric_limits< int64_t > :: max() )
 										++ it->second.second; // increment the hit count
 									assert(it->second.second > 0);
@@ -102,7 +104,7 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 								}
 							}
 							long double total = f_full(num_edges, num_unique_nodes_in_this_community, state.N);
-							this->cache.insert( make_pair(key, make_pair(total,0) ) );
+							cache_for_this_value_of_num_unique_nodes_in_this_community.insert( make_pair(key, make_pair(total,0) ) );
 							return total;
 }
 long double	Score :: f	(const OneCommunitySummary ocs)	const {

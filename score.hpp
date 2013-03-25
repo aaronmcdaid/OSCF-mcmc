@@ -3,6 +3,7 @@
 
 #include "state.hpp"
 
+#include<vector>
 #include<utility>
 #include<tr1/unordered_map>
 namespace std {
@@ -24,8 +25,8 @@ namespace tr1 {
 struct Score { // every modification *should* go through here eventually, so as to track the score.
 	// But for now, this is just a passive object that recalculates all the scores from scratch each time
 	State &		state;
-	typedef std :: tr1 :: unordered_map < std :: pair<int64_t, int64_t>, std :: pair<long double, int64_t> > Cache_T;
-	mutable Cache_T cache;
+	typedef std :: tr1 :: unordered_map < int64_t , std :: pair<long double, int64_t> > Cache_T;
+	mutable std :: vector<Cache_T> cache; // One  cache for each number between 0 and N (inclusive). i.e. N+1 entries
 	explicit	Score(State & state_)	;
 	long double	score()			const;
 	long double	prior_on_K()		const;
