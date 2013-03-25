@@ -407,8 +407,8 @@ long double		split(Score &sc) {
 		{
 			// delta_score += empty_one_cluster(temporary_secondary_cluster_on_the_end, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
 			// Put every edge into the main_cluster, and not in the secondary, if they weren't already
-			cout << "About to remerge\t";
-			dump_all(sc.state);
+			// cout << "About to remerge\t";
+			// dump_all(sc.state);
 			For(edge, edges_in_a_random_order) {
 				if( sc.state.get_edge_to_set_of_comms().at(*edge).count(main_cluster) == 0)
 					delta_score += sc.add_edge(*edge, main_cluster);
@@ -419,11 +419,11 @@ long double		split(Score &sc) {
 			assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == edges_in_a_random_order.size());
 
 			// Now, to delete that empty cluster
-			cout << "remerged\t";
-			dump_all(sc.state);
+			// cout << "remerged\t";
+			// dump_all(sc.state);
 			delta_score += sc.delete_empty_cluster_from_the_end();
-			cout << "deleted the temp\t";
-			dump_all(sc.state);
+			// cout << "deleted the temp\t";
+			// dump_all(sc.state);
 			assertVERYCLOSE(delta_score, this_is_the_merged_score);
 		}
 		assertVERYCLOSE(delta_score, 0.0L);
