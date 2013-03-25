@@ -74,7 +74,7 @@ void dump_all(const State & st) {
 	cout << endl << " ===" << endl;
 	cout << st.get_K();
 	for(int k=0; k<st.get_K(); ++k) {
-		cout << '\t';
+		cout << ";   ";
 		st.get_comms().at(k).dump_me();
 	}
 	cout << endl;

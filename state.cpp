@@ -1,9 +1,14 @@
 #include "state.hpp"
 
 #include<iostream>
+#include<iomanip>
 using namespace std;
 
 #include "macros.hpp"
+
+#include "format_flag_stack/format_flag_stack.hpp"
+format_flag_stack :: FormatFlagStack stack;
+
 
 		State :: State(Net net_) : net(net_), N(net_->N()), E(net_->E()), edge_to_set_of_comms(net_->E()) {
 	this->K = 0;
@@ -18,8 +23,21 @@ using namespace std;
 void		Community :: dump_me()			const	{
 						cout
 							<< this->num_unique_nodes_in_this_community
-							<< ',' << this->my_edges.size()
-							<< ',' << this->my_nodes.size();
+							<< ' ' << this->my_edges.size();
+						{
+							const int64_t possible_pairs = this->num_unique_nodes_in_this_community * (this->num_unique_nodes_in_this_community-1) / 2;
+							assert((int64_t)this->my_edges.size() <= possible_pairs);
+							const long double density = double(this->my_edges.size()) / double(possible_pairs);
+							if(possible_pairs>0) {
+								cout << ' ';
+								cout << stack.push << fixed <<  setprecision(1);
+								cout << 100.0L * density << "% ";
+								cout << stack.pop;
+							}
+							else
+								cout << ' ';
+						}
+						assert(this->my_nodes.size() == 2*this->my_edges.size());
 }
 void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
 					assert(cluster_id < this->K);
