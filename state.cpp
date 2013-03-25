@@ -30,12 +30,18 @@ void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
 					std :: tr1 :: unordered_set<int64_t> left_edges = this->comms.at(cluster_id)      .my_edges;
 					std :: tr1 :: unordered_set<int64_t> last_edges = this->comms.at(last_cluster_id) .my_edges;
 
+					// Don't forget that some edges might already be in both
+					// For efficiency, I should ignore the intersection of those two sets
 					For(left_edge, left_edges) {
 						this->remove_edge( *left_edge, cluster_id);
-						this->add_edge    ( *left_edge, last_cluster_id);
 					}
 					For(last_edge, last_edges) {
 						this->remove_edge( *last_edge, last_cluster_id);
+					}
+					For(left_edge, left_edges) {
+						this->add_edge    ( *left_edge, last_cluster_id);
+					}
+					For(last_edge, last_edges) {
 						this->add_edge    ( *last_edge, cluster_id);
 					}
 }
