@@ -99,8 +99,7 @@ void oscf(Net net) {
 			cmf_track += gibbsUpdate(e, sc);
 			cmf_track += metroK(sc);
 
-			//cmf_track += merge(sc);
-			//cmf_track += split(sc);
+			cmf_track += split_or_merge(sc);
 		}
 		dump_all(st);
 	}

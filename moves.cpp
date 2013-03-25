@@ -489,3 +489,9 @@ long double		metroK(Score & sc) {
 						}
 					}
 }
+long double		split_or_merge(Score & sc) {
+	if(gsl_ran_bernoulli(r, 0.5))
+		return merge(sc);
+	else
+		return split(sc);
+}
