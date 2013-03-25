@@ -309,9 +309,31 @@ long double		merge(Score &sc) {
 	//   		source -> target	0
 	//   		target -> source	log2_product_of_accepted_probabilities_FOR_ALL_EDGES
 	//   {The proposal probabilities associated with selecting a pair of clusters will cancel}
-	// We accept the merge with acceptance probability exp2l{ this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES}
+	// We accept the merge with acceptance probability exp2l{ this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES }
+	const long double acceptance_prob = this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES;
+	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
+		// Accept
+		// This means I must merge them again
+		{
+			delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
+			// Put every edge into the main_cluster, if it wasn't already
+			For(edge_with_state, original_state_of_these_edges) {
+				if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
+			}
+			assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
+			assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 
-	return delta_score;
+			// Now, to delete that empty cluster
+			sc.state.swap_cluster_to_the_end(secondary_cluster);
+			delta_score += sc.delete_empty_cluster_from_the_end();
+			assertVERYCLOSE(delta_score, this_is_the_merged_score);
+		}
+		return delta_score;
+	} else {
+		// Leave them unmerged
+		assertVERYCLOSE(delta_score, 0.0L);
+		return delta_score;
+	}
 }
 long double		split(Score &) {
 	return 0.0L;
