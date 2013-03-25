@@ -39,37 +39,24 @@ long double	Score :: product_on_fs()		const {
 							}
 							return s;
 }
-long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
-					// I should check for overflows here, and for conversion down to int32_t
-							const Cache_T :: key_type key = make_pair(num_edges, num_unique_nodes_in_this_community);
-							{
-								// First, check the cache
-								Cache_T :: iterator it = this->cache.find(key);
-								if(it != this->cache.end()) {
-									if(it->second.second < std :: numeric_limits< int64_t > :: max() )
-										++ it->second.second; // increment the hit count
-									assert(it->second.second > 0);
-									return it->second.first;
-								}
-							}
-
+long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community, const int64_t N) {
 							long double s_one_comm_sans_baseline = 0.0L;
 							long double baseline = NAN; // this 'baseline' technique should improve accuracy
 							assert(!isfinite(baseline));
-							assert(num_unique_nodes_in_this_community <= state.N);
-							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 100 && sz<=state.N; ++sz) {
+							assert(num_unique_nodes_in_this_community <= N);
+							for(int64_t sz = num_unique_nodes_in_this_community; sz<num_unique_nodes_in_this_community + 100 && sz<=N; ++sz) {
 								long double score_one_comm_one_sz = 0.0L;
 								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
 
 								// four factors
-								score_one_comm_one_sz += - log2l(state.N+1);
+								score_one_comm_one_sz += - log2l(N+1);
 
 								{
 									const int64_t s_prime = num_unique_nodes_in_this_community;
 									const int64_t s = sz;
 									assert(s_prime <= s);
-									score_one_comm_one_sz   += LOG2BINOM(state.N - s_prime, s - s_prime)
-									                          - LOG2BINOM(state.N          , s          );
+									score_one_comm_one_sz   += LOG2BINOM(N - s_prime, s - s_prime)
+									                          - LOG2BINOM(N          , s          );
 								}
 
 								score_one_comm_one_sz += - log2l(1+num_pairs);
@@ -99,6 +86,22 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 							const long double total = baseline + log2l(s_one_comm_sans_baseline);
 							assert(isfinite(total));
 
+							return total;
+}
+long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const {
+					// I should check for overflows here, and for conversion down to int32_t
+							const Cache_T :: key_type key = make_pair(num_edges, num_unique_nodes_in_this_community);
+							{
+								// First, check the cache
+								Cache_T :: iterator it = this->cache.find(key);
+								if(it != this->cache.end()) {
+									if(it->second.second < std :: numeric_limits< int64_t > :: max() )
+										++ it->second.second; // increment the hit count
+									assert(it->second.second > 0);
+									return it->second.first;
+								}
+							}
+							long double total = f_full(num_edges, num_unique_nodes_in_this_community, state.N);
 							this->cache.insert( make_pair(key, make_pair(total,0) ) );
 							return total;
 }
