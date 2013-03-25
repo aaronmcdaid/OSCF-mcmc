@@ -90,8 +90,10 @@ void oscf(Net net) {
 	for (int rep = 0; rep < 250000; ++rep) {
 		if(rep % 10000 == 0)
 			cerr << rep << endl;
-		if(rep % 1000 == 0)
+		if(rep % 1000 == 0) {
+			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
+		}
 		for(int64_t e = 0; e<net->E(); ++e) {
 			cmf_track += gibbsUpdate(e, sc);
 			cmf_track += metroK(sc);
