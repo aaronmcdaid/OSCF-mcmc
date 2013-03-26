@@ -35,35 +35,67 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 	}
 					long double log2_product_of_accepted_probabilities = 0.0L;
 
-					long double p_rest_all_zeros = 0.0L;
-					for(int k=0; k<K; ++k) {
-						p_rest_all_zeros += log2l(1.0L - p_k.at(k));
+					long double _p_rest_all_zeros = 0.0L;
+					vector<long double> p_rest_all_zeros_vector(K+1);
+					p_rest_all_zeros_vector.at(K) = 0.0L;
+					for(int k=K-1; k>=0; --k) {
+						p_rest_all_zeros_vector.at(k) = p_rest_all_zeros_vector.at(k+1) + log2l(1.0L - p_k.at(k));
+						assert(isfinite(p_rest_all_zeros_vector.at(k)));
+						_p_rest_all_zeros += log2l(1.0L - p_k.at(k));
+						//PP4(k, p_k.at(k), _p_rest_all_zeros, p_rest_all_zeros_vector.at(k));
 					}
+					// for(int k=0; k<K; ++k) { PP2(k, p_rest_all_zeros_vector.at(k)); }
+					assert(isfinite(_p_rest_all_zeros));
 
 					int num_of_successes = 0;
 					vector<bool> bools(K);
 
 					for(int k = 0; k<K; ++k) {
-						long double p = p_k.at(k);
-						p_rest_all_zeros -= log2l(1.0L - p);
+						// At the start of an iteration in this loop,
+						// p_rest_all_zeros *should* be equal to p_rest_all_zeros.at(k);
+
+						//unless(VERYCLOSE(p_rest_all_zeros, p_rest_all_zeros_vector.at(k)))
+						// PP2            (p_rest_all_zeros, p_rest_all_zeros_vector.at(k));
+						// PP             (p_rest_all_zeros- p_rest_all_zeros_vector.at(k));
+						const long double uncond_p = p_k.at(k);
+						const long double OLD_p_rest_all_zeros = p_rest_all_zeros_vector.at(k);
+						const long double NEW_p_rest_all_zeros = p_rest_all_zeros_vector.at(k+1);
+						long double cond_p = uncond_p;
 						{ // IF num_of_successes == 0, then we need to do something special
 						  // in order to condition on there finally being at least one success
 							if(num_of_successes==0) {
-								p /= 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-p));
+								cond_p = uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros ) );
+								//cond_p = uncond_p / ( 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-uncond_p) ) );
 							}
 						}
+						// assert(cond_p > 0);
+						// assert(cond_p < 1);
 						bool b = false;
 						if(possibly_force.first!=-1) {
 							if(k==0) b = possibly_force.first;
 							if(k==1) b = possibly_force.second;
 						} else
-							b = gsl_ran_bernoulli(r, p);
+							b = gsl_ran_bernoulli(r, cond_p);
 						if(b)
 							++ num_of_successes;
 						bools.at(k) = b;
-						log2_product_of_accepted_probabilities += b ? log2l(p) : log2l(1.0L-p);
+						log2_product_of_accepted_probabilities += b ? log2l(cond_p) : log2l(1.0L-cond_p);
+						unless(isfinite(log2_product_of_accepted_probabilities)) {
+							PP4(b, k, cond_p, uncond_p);
+							PP2(NEW_p_rest_all_zeros, OLD_p_rest_all_zeros);
+							PP( 1.0L - exp2l(OLD_p_rest_all_zeros) );
+							PP5(b,uncond_p, cond_p,log2l(cond_p), log2l(1.0L-cond_p));
+							PP( uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros            ) ));
+							PP( uncond_p / ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
+							PP2(uncond_p , ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
+							PP(                     exp2l(p_rest_all_zeros_vector.at(k)   )  );
+							PP(                           p_rest_all_zeros_vector.at(k)      );
+							PP2( k,K);
+							for(int k=0; k<K; ++k) { PP3(k, p_k.at(k), p_rest_all_zeros_vector.at(k)); }
+						}
+						assert(isfinite(log2_product_of_accepted_probabilities));
 					}
-					assertVERYCLOSE(p_rest_all_zeros , 0.0L);
+					//assertVERYCLOSE(NEW_p_rest_all_zeros , 0.0L);
 					assert(num_of_successes > 0);
 					assert(isfinite(log2_product_of_accepted_probabilities));
 					return make_pair(bools, log2_product_of_accepted_probabilities);
