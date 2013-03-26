@@ -78,16 +78,6 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 							log2_cond_ratio += shrink_for_the_conditionality;
 						}
 						assert(isfinite(log2_cond_ratio));
-						if(k+1==K && num_of_successes==0)
-							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
-						if(!isfinite(log2_cond_ratio)) {
-							// This should only happen if NEW_p_rest_all_zeros is very small
-							assert(VERYCLOSE(NEW_p_rest_all_zeros, 0.0L));
-							assert(fpclassify (log2_cond_ratio) == FP_INFINITE);
-							assert(isinfl (log2_cond_ratio) == 1);
-							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
-						}
-						assert(isfinite(log2_cond_ratio));
 						assert(log2_cond_ratio >= log2_uncond_ratio);
 
 						long double cond_p = uncond_p;
