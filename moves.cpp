@@ -34,12 +34,14 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 		}
 	}
 					long double log2_product_of_accepted_probabilities = 0.0L;
+#define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
 
 					long double _p_rest_all_zeros = 0.0L;
 					vector<long double> p_rest_all_zeros_vector(K+1);
 					p_rest_all_zeros_vector.at(K) = 0.0L;
 					for(int k=K-1; k>=0; --k) {
-						p_rest_all_zeros_vector.at(k) = p_rest_all_zeros_vector.at(k+1) + log2l(1.0L - p_k.at(k));
+						         p_rest_all_zeros_vector.at(k) = p_rest_all_zeros_vector.at(k+1) + log2_one_plus_l(- p_k.at(k));
+						assertVERYCLOSE(p_rest_all_zeros_vector.at(k) , p_rest_all_zeros_vector.at(k+1) + log2l(1.0L - p_k.at(k))       );
 						assert(isfinite(p_rest_all_zeros_vector.at(k)));
 						_p_rest_all_zeros += log2l(1.0L - p_k.at(k));
 						//PP4(k, p_k.at(k), _p_rest_all_zeros, p_rest_all_zeros_vector.at(k));
