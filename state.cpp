@@ -38,6 +38,13 @@ void		Community :: dump_me()			const	{
 								cout << ' ';
 						}
 }
+std :: vector<int64_t>	Community :: get_my_nodes_NO_COUNT() const {
+		vector<int64_t> the_nodes;
+		For(node_and_count, this->my_nodes) {
+			the_nodes.push_back(node_and_count->first);
+		}
+		return the_nodes;
+}
 void			State :: swap_cluster_to_the_end(const int64_t cluster_id)	{
 					assert(cluster_id < this->K);
 					if(cluster_id + 1 == this->K)

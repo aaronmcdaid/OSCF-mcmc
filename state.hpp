@@ -56,6 +56,7 @@ public:
 		ocs.num_unique_nodes_in_this_community = this->get_num_unique_nodes_in_this_community();
 		return ocs;
 	}
+	std :: vector<int64_t> get_my_nodes_NO_COUNT() const;
 private:
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
