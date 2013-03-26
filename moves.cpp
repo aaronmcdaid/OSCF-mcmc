@@ -80,17 +80,6 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 						assert(isfinite(log2_cond_ratio));
 						assert(log2_cond_ratio >= log2_uncond_ratio);
 
-						long double cond_p = uncond_p;
-						{ // IF num_of_successes == 0, then we need to do something special
-						  // in order to condition on there finally being at least one success
-							if(num_of_successes==0) {
-								if(k+1==K)
-									cond_p = 1.0;
-								else
-									cond_p = uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros ) );
-								//cond_p = uncond_p / ( 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-uncond_p) ) );
-							}
-						}
 						long double cond_p_via_ratio = (k+1==K && num_of_successes==0)
 							? 1.0L
 							:
@@ -104,14 +93,6 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 						assert(cond_p_via_ratio >= 0);
 						assert(cond_p_via_ratio > 0);
 						assert(cond_p_via_ratio <= 1); // The last one might be forced on, if all the previous ones failed.
-						unless(VERYCLOSE(cond_p, cond_p_via_ratio)) {
-							for(int k_=0; k_<K; ++k_) { PP3(k_, p_k.at(k_), p_rest_all_zeros_vector.at(k_)); }
-							PP3(k,K, num_of_successes);
-							PP2(cond_p, cond_p_via_ratio);
-						}
-						assert(VERYCLOSE(cond_p, cond_p_via_ratio));
-						assert(VERYCLOSE(cond_p, cond_p_via_ratio) || cond_p > 1);
-						cond_p = cond_p_via_ratio;
 						bool b = false;
 						if(possibly_force.first!=-1) {
 							if(k==0) b = possibly_force.first;
