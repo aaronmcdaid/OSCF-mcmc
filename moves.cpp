@@ -53,10 +53,11 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 					int num_of_successes = 0;
 					vector<bool> bools(K);
 					for(int k = 0; k<K; ++k) {
-						// New method, based on the ratio  P(X_k=1)/P(X_k=0)
-						// At the start of an iteration in this loop,
-						//
-						const long double OLD_p_rest_all_zeros = p_rest_all_zeros_vector.at(k);
+						// - Take the unconditional p
+						// - Calculate the unconditional ratio
+						// - Calculate the   conditional ratio
+						// - It should still be a finate number
+
 						const long double NEW_p_rest_all_zeros = p_rest_all_zeros_vector.at(k+1);
 
 						const long double uncond_p = p_k.at(k);
@@ -80,19 +81,12 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 						assert(isfinite(log2_cond_ratio));
 						assert(log2_cond_ratio >= log2_uncond_ratio);
 
-						long double cond_p_via_ratio = (k+1==K && num_of_successes==0)
-							? 1.0L
-							:
-							// exp2l( log2_cond_ratio  - log2_one_plus_l(exp2l( log2_cond_ratio ) ) )
-							// 1.0L / ( 1.0L + exp2l(- log2_cond_ratio) )
-							exp2l( - log2_one_plus_l( exp2l(-log2_cond_ratio) ) )
-							;
-						if(cond_p_via_ratio>1)
-							cond_p_via_ratio=1;
+						long double cond_p_via_ratio = exp2l( - log2_one_plus_l( exp2l(-log2_cond_ratio) ) ) ;
+						if(k+1==K && num_of_successes==0)
+							cond_p_via_ratio = 1.0L; // must be forced on if it's the last one
 						assert(isfinite(cond_p_via_ratio));
-						assert(cond_p_via_ratio >= 0);
 						assert(cond_p_via_ratio > 0);
-						assert(cond_p_via_ratio <= 1); // The last one might be forced on, if all the previous ones failed.
+						assert(cond_p_via_ratio <= 1);
 						bool b = false;
 						if(possibly_force.first!=-1) {
 							if(k==0) b = possibly_force.first;
@@ -103,31 +97,13 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 							++ num_of_successes;
 						bools.at(k) = b;
 						assert(isfinite(log2_product_of_accepted_probabilities));
-						// PP4(b, cond_p_via_ratio, cond_p_via_ratio==1.0L, cond_p_via_ratio -1.0L);
 						if(b==0 && cond_p_via_ratio == 1.0L) { // Can only happen with possibly_force
 							log2_product_of_accepted_probabilities += - std :: numeric_limits<long double> :: max();
 						} else {
 							log2_product_of_accepted_probabilities += b ? log2l(cond_p_via_ratio) : log2_one_plus_l(-cond_p_via_ratio);
 						}
-						unless(isfinite(log2_product_of_accepted_probabilities)) {
-							PP2(possibly_force.first, possibly_force.second);
-							PP6(b, k, K, cond_p_via_ratio, cond_p_via_ratio, uncond_p);
-							PP2(NEW_p_rest_all_zeros, OLD_p_rest_all_zeros);
-							PP( 1.0L - exp2l(OLD_p_rest_all_zeros) );
-							PP5(b,uncond_p, cond_p_via_ratio,log2l(cond_p_via_ratio), log2l(1.0L-cond_p_via_ratio));
-							PP( uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros            ) ));
-							PP( uncond_p / ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
-							PP2(uncond_p , ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
-							PP(                     exp2l(p_rest_all_zeros_vector.at(k)   )  );
-							PP(                           p_rest_all_zeros_vector.at(k)      );
-							PP2(b , log2_one_plus_l(-cond_p_via_ratio));
-							PP(log2_product_of_accepted_probabilities);
-							PP2( k,K);
-							for(int k=0; k<K; ++k) { PP3(k, p_k.at(k), p_rest_all_zeros_vector.at(k)); }
-						}
 						assert(isfinite(log2_product_of_accepted_probabilities));
 					}
-					//assertVERYCLOSE(NEW_p_rest_all_zeros , 0.0L);
 					assert(num_of_successes > 0);
 					assert(isfinite(log2_product_of_accepted_probabilities));
 					return make_pair(bools, log2_product_of_accepted_probabilities);
