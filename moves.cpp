@@ -6,6 +6,7 @@
 #include <gsl/gsl_randist.h>
 #include <cassert>
 #include <cstdlib>
+#include <limits>
 #include <algorithm>
 using namespace std;
 
@@ -51,8 +52,8 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 
 					int num_of_successes = 0;
 					vector<bool> bools(K);
-
 					for(int k = 0; k<K; ++k) {
+						// New method, based on the ratio  P(X_k=1)/P(X_k=0)
 						// At the start of an iteration in this loop,
 						// p_rest_all_zeros *should* be equal to p_rest_all_zeros.at(k);
 
@@ -60,38 +61,109 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 						// PP2            (p_rest_all_zeros, p_rest_all_zeros_vector.at(k));
 						// PP             (p_rest_all_zeros- p_rest_all_zeros_vector.at(k));
 						const long double uncond_p = p_k.at(k);
+						assert(uncond_p > 0 && uncond_p < 1);
 						const long double OLD_p_rest_all_zeros = p_rest_all_zeros_vector.at(k);
 						const long double NEW_p_rest_all_zeros = p_rest_all_zeros_vector.at(k+1);
+
+						const long double log2_uncond_ratio = log2l(uncond_p) - log2l(1.0L-uncond_p);
+						assert(isfinite(log2_uncond_ratio));
+						long double log2_cond_ratio =
+							num_of_successes > 0 ? log2_uncond_ratio // no need to change, we've already had success
+							// : (k+1 == K)         ? 10000000 // force the last one on
+							: (log2_uncond_ratio - log2_one_plus_l(-exp2l(NEW_p_rest_all_zeros)));
+						if(k+1==K && num_of_successes==0)
+							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
+						if(!isfinite(log2_cond_ratio)) {
+							// This should only happen if NEW_p_rest_all_zeros is very small
+							assert(VERYCLOSE(NEW_p_rest_all_zeros, 0.0L));
+							assert(fpclassify (log2_cond_ratio) == FP_INFINITE);
+							assert(isinfl (log2_cond_ratio) == 1);
+							PP(log2_cond_ratio);
+							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
+							PP(log2_cond_ratio);
+						}
+						assert(isfinite(log2_cond_ratio));
+						assert(log2_cond_ratio >= log2_uncond_ratio);
+
 						long double cond_p = uncond_p;
 						{ // IF num_of_successes == 0, then we need to do something special
 						  // in order to condition on there finally being at least one success
 							if(num_of_successes==0) {
-								cond_p = uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros ) );
+								if(k+1==K)
+									cond_p = 1.0;
+								else
+									cond_p = uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros ) );
 								//cond_p = uncond_p / ( 1.0L - exp2l(p_rest_all_zeros + log2l(1.0L-uncond_p) ) );
 							}
 						}
-						// assert(cond_p > 0);
-						// assert(cond_p < 1);
+						long double cond_p_via_ratio = (k+1==K && num_of_successes==0)
+							? 1.0L
+							:
+							// exp2l( log2_cond_ratio  - log2_one_plus_l(exp2l( log2_cond_ratio ) ) )
+							// 1.0L / ( 1.0L + exp2l(- log2_cond_ratio) )
+							exp2l( - log2_one_plus_l( exp2l(-log2_cond_ratio) ) )
+							;
+						if(cond_p_via_ratio>1)
+							cond_p_via_ratio=1;
+						unless(cond_p_via_ratio > 0 && cond_p_via_ratio <= 1) {
+							for(int k_=0; k_<K; ++k_) { PP3(k_, p_k.at(k_), p_rest_all_zeros_vector.at(k_)); }
+							PP2(cond_p_via_ratio,cond_p_via_ratio-1.0L);
+							PP( exp2l( log2_cond_ratio ) / (1+exp2l( log2_cond_ratio ) ) );
+							PP2(exp2l( log2_cond_ratio ) , (1+exp2l( log2_cond_ratio ) ) );
+							PP2(       log2_cond_ratio   , (1+exp2l( log2_cond_ratio ) ) );
+							PP2(       log2_cond_ratio   ,    exp2l( log2_cond_ratio )   );
+							PP2(       log2_cond_ratio   ,           log2_cond_ratio     );
+							PP (       log2_uncond_ratio       );
+							PP (log2_uncond_ratio - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
+							PP (                  - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
+							PP (                          1.0L-exp2l(NEW_p_rest_all_zeros) );
+							PP (                               exp2l(NEW_p_rest_all_zeros) );
+							PP (                                     NEW_p_rest_all_zeros  );
+							PP2(k,K);
+							PP (log2_uncond_ratio - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
+							PP2(log2_uncond_ratio , log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
+						}
+						assert(isfinite(cond_p_via_ratio));
+						assert(cond_p_via_ratio >= 0);
+						assert(cond_p_via_ratio > 0);
+						assert(cond_p_via_ratio <= 1); // The last one might be forced on, if all the previous ones failed.
+						unless(VERYCLOSE(cond_p, cond_p_via_ratio)) {
+							for(int k_=0; k_<K; ++k_) { PP3(k_, p_k.at(k_), p_rest_all_zeros_vector.at(k_)); }
+							PP3(k,K, num_of_successes);
+							PP2(cond_p, cond_p_via_ratio);
+						}
+						assert(VERYCLOSE(cond_p, cond_p_via_ratio));
+						assert(VERYCLOSE(cond_p, cond_p_via_ratio) || cond_p > 1);
+						cond_p = cond_p_via_ratio;
 						bool b = false;
 						if(possibly_force.first!=-1) {
 							if(k==0) b = possibly_force.first;
 							if(k==1) b = possibly_force.second;
 						} else
-							b = gsl_ran_bernoulli(r, cond_p);
+							b = gsl_ran_bernoulli(r, cond_p_via_ratio);
 						if(b)
 							++ num_of_successes;
 						bools.at(k) = b;
-						log2_product_of_accepted_probabilities += b ? log2l(cond_p) : log2l(1.0L-cond_p);
+						assert(isfinite(log2_product_of_accepted_probabilities));
+						// PP4(b, cond_p_via_ratio, cond_p_via_ratio==1.0L, cond_p_via_ratio -1.0L);
+						if(b==0 && cond_p_via_ratio == 1.0L) { // Can only happen with possibly_force
+							log2_product_of_accepted_probabilities += - std :: numeric_limits<long double> :: max();
+						} else {
+							log2_product_of_accepted_probabilities += b ? log2l(cond_p_via_ratio) : log2_one_plus_l(-cond_p_via_ratio);
+						}
 						unless(isfinite(log2_product_of_accepted_probabilities)) {
-							PP4(b, k, cond_p, uncond_p);
+							PP2(possibly_force.first, possibly_force.second);
+							PP6(b, k, K, cond_p_via_ratio, cond_p_via_ratio, uncond_p);
 							PP2(NEW_p_rest_all_zeros, OLD_p_rest_all_zeros);
 							PP( 1.0L - exp2l(OLD_p_rest_all_zeros) );
-							PP5(b,uncond_p, cond_p,log2l(cond_p), log2l(1.0L-cond_p));
+							PP5(b,uncond_p, cond_p_via_ratio,log2l(cond_p_via_ratio), log2l(1.0L-cond_p_via_ratio));
 							PP( uncond_p / ( 1.0L - exp2l(OLD_p_rest_all_zeros            ) ));
 							PP( uncond_p / ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
 							PP2(uncond_p , ( 1.0L - exp2l(p_rest_all_zeros_vector.at(k)   ) ));
 							PP(                     exp2l(p_rest_all_zeros_vector.at(k)   )  );
 							PP(                           p_rest_all_zeros_vector.at(k)      );
+							PP2(b , log2_one_plus_l(-cond_p_via_ratio));
+							PP(log2_product_of_accepted_probabilities);
 							PP2( k,K);
 							for(int k=0; k<K; ++k) { PP3(k, p_k.at(k), p_rest_all_zeros_vector.at(k)); }
 						}
