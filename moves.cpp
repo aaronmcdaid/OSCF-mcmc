@@ -55,22 +55,25 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 					for(int k = 0; k<K; ++k) {
 						// New method, based on the ratio  P(X_k=1)/P(X_k=0)
 						// At the start of an iteration in this loop,
-						// p_rest_all_zeros *should* be equal to p_rest_all_zeros.at(k);
-
-						//unless(VERYCLOSE(p_rest_all_zeros, p_rest_all_zeros_vector.at(k)))
-						// PP2            (p_rest_all_zeros, p_rest_all_zeros_vector.at(k));
-						// PP             (p_rest_all_zeros- p_rest_all_zeros_vector.at(k));
-						const long double uncond_p = p_k.at(k);
-						assert(uncond_p > 0 && uncond_p < 1);
+						//
 						const long double OLD_p_rest_all_zeros = p_rest_all_zeros_vector.at(k);
 						const long double NEW_p_rest_all_zeros = p_rest_all_zeros_vector.at(k+1);
 
-						const long double log2_uncond_ratio = log2l(uncond_p) - log2l(1.0L-uncond_p);
+						const long double uncond_p = p_k.at(k);
+						assert(uncond_p > 0 && uncond_p < 1);
+
+						const long double log2_uncond_ratio = log2l(uncond_p) - log2_one_plus_l(-uncond_p);
 						assert(isfinite(log2_uncond_ratio));
-						long double log2_cond_ratio =
-							num_of_successes > 0 ? log2_uncond_ratio // no need to change, we've already had success
-							// : (k+1 == K)         ? 10000000 // force the last one on
-							: (log2_uncond_ratio - log2_one_plus_l(-exp2l(NEW_p_rest_all_zeros)));
+
+						long double log2_cond_ratio = log2_uncond_ratio;
+						if(num_of_successes == 0) {
+							const long double shrink_for_the_conditionality = - log2_one_plus_l(-exp2l(NEW_p_rest_all_zeros));
+							unless(shrink_for_the_conditionality > 0) {
+								PP(shrink_for_the_conditionality);
+							}
+							assert(shrink_for_the_conditionality > 0);
+							log2_cond_ratio += shrink_for_the_conditionality;
+						}
 						if(k+1==K && num_of_successes==0)
 							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
 						if(!isfinite(log2_cond_ratio)) {
@@ -78,9 +81,7 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 							assert(VERYCLOSE(NEW_p_rest_all_zeros, 0.0L));
 							assert(fpclassify (log2_cond_ratio) == FP_INFINITE);
 							assert(isinfl (log2_cond_ratio) == 1);
-							PP(log2_cond_ratio);
 							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
-							PP(log2_cond_ratio);
 						}
 						assert(isfinite(log2_cond_ratio));
 						assert(log2_cond_ratio >= log2_uncond_ratio);
@@ -105,24 +106,6 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 							;
 						if(cond_p_via_ratio>1)
 							cond_p_via_ratio=1;
-						unless(cond_p_via_ratio > 0 && cond_p_via_ratio <= 1) {
-							for(int k_=0; k_<K; ++k_) { PP3(k_, p_k.at(k_), p_rest_all_zeros_vector.at(k_)); }
-							PP2(cond_p_via_ratio,cond_p_via_ratio-1.0L);
-							PP( exp2l( log2_cond_ratio ) / (1+exp2l( log2_cond_ratio ) ) );
-							PP2(exp2l( log2_cond_ratio ) , (1+exp2l( log2_cond_ratio ) ) );
-							PP2(       log2_cond_ratio   , (1+exp2l( log2_cond_ratio ) ) );
-							PP2(       log2_cond_ratio   ,    exp2l( log2_cond_ratio )   );
-							PP2(       log2_cond_ratio   ,           log2_cond_ratio     );
-							PP (       log2_uncond_ratio       );
-							PP (log2_uncond_ratio - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
-							PP (                  - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
-							PP (                          1.0L-exp2l(NEW_p_rest_all_zeros) );
-							PP (                               exp2l(NEW_p_rest_all_zeros) );
-							PP (                                     NEW_p_rest_all_zeros  );
-							PP2(k,K);
-							PP (log2_uncond_ratio - log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
-							PP2(log2_uncond_ratio , log2l(1.0L-exp2l(NEW_p_rest_all_zeros)));
-						}
 						assert(isfinite(cond_p_via_ratio));
 						assert(cond_p_via_ratio >= 0);
 						assert(cond_p_via_ratio > 0);
