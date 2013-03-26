@@ -67,13 +67,17 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 
 						long double log2_cond_ratio = log2_uncond_ratio;
 						if(num_of_successes == 0) {
-							const long double shrink_for_the_conditionality = - log2_one_plus_l(-exp2l(NEW_p_rest_all_zeros));
-							unless(shrink_for_the_conditionality > 0) {
-								PP(shrink_for_the_conditionality);
+							long double shrink_for_the_conditionality = - log2_one_plus_l(-exp2l(NEW_p_rest_all_zeros));
+							if(k+1==K)
+								assertVERYCLOSE(NEW_p_rest_all_zeros, 0.0L);
+							if(isinfl(shrink_for_the_conditionality) == 1) {
+								shrink_for_the_conditionality = std :: numeric_limits<long double> :: max(); // to effectively guarantee a success
 							}
 							assert(shrink_for_the_conditionality > 0);
+							assert(isfinite(shrink_for_the_conditionality));
 							log2_cond_ratio += shrink_for_the_conditionality;
 						}
+						assert(isfinite(log2_cond_ratio));
 						if(k+1==K && num_of_successes==0)
 							log2_cond_ratio = std :: numeric_limits<long double> :: max(); // to effectively guarantee an acceptance
 						if(!isfinite(log2_cond_ratio)) {
