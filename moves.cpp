@@ -309,6 +309,20 @@ vector<int64_t> those_edges_in_a_random_order(const Original_state_of_these_edge
 	return edges_in_a_random_order;
 }
 
+long double		merge_into_one_cluster(Score &sc, const int64_t main_cluster, const int64_t secondary_cluster, const vector<int64_t> & edges_in_a_random_order) {
+		long double delta_score = 0.0L;
+		// Remove every edge from the secondary_cluster, if it wasn't already
+		delta_score += empty_one_cluster(secondary_cluster, sc);
+
+		// Put every edge into the main_cluster, if it wasn't already
+		For(edge, edges_in_a_random_order) {
+			delta_score += sc.add_edge_if_not_already(*edge, main_cluster);
+		}
+
+		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
+		return delta_score;
+}
+
 long double		merge(Score &sc) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;
@@ -335,19 +349,8 @@ long double		merge(Score &sc) {
 	const vector<int64_t> edges_in_a_random_order = those_edges_in_a_random_order(original_state_of_these_edges);
 
 	// Before emptying them, let's calculate the score of the merged version
-	{
-		// Remove every edge from the secondary_cluster, if it wasn't already
-		delta_score += empty_one_cluster(secondary_cluster, sc);
-
-		// Put every edge into the main_cluster, if it wasn't already
-		For(edge, edges_in_a_random_order) {
-			delta_score += sc.add_edge_if_not_already(*edge, main_cluster);
-		}
-
-		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
-		assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
-
-	}
+	delta_score += merge_into_one_cluster(sc, main_cluster, secondary_cluster, edges_in_a_random_order);
+	assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 	const long double this_is_the_merged_score = delta_score + sc.what_would_change_if_I_deleted_an_empty_community();
 
 	// Now, empty both of them:
