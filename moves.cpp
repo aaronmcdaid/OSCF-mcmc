@@ -234,16 +234,15 @@ struct TriState {
 
 long double		empty_one_cluster(
 					const int cluster_to_empty,
-					TriState :: test_function_type selector_function,
-					const std :: tr1 :: unordered_map< int64_t , TriState > & original_state_of_these_edges,
 					Score & sc
 				) {
 	long double delta_score = 0.0L;
-	For(edge_with_state, original_state_of_these_edges) {
-		if( (edge_with_state->second.*selector_function) ()) { delta_score += sc.remove_edge(edge_with_state->first, cluster_to_empty); }
+	const std :: tr1 :: unordered_set<int64_t> the_edges = sc.state.get_comms().at(cluster_to_empty).get_my_edges();
+	For(edge, the_edges) {
+		delta_score += sc.remove_edge(*edge, cluster_to_empty);
 	}
-	assert(sc.state.get_comms().at(cluster_to_empty     ).empty());
 	return delta_score;
+
 }
 long double		set_up_launch_state(
 					const int main_cluster,
@@ -327,14 +326,14 @@ long double		merge(Score &sc) {
 
 	// Before emptying them, let's calculate the score of the merged version
 	{
-		delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
+		delta_score += empty_one_cluster(secondary_cluster, sc);
+		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
 
 		// Put every edge into the main_cluster, if it wasn't already
 		For(edge_with_state, original_state_of_these_edges) {
 			if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
 		}
 
-		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
 		assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 
 	}
@@ -342,9 +341,8 @@ long double		merge(Score &sc) {
 
 	// Now, empty both of them:
 	{
-		For(edge_with_state, original_state_of_these_edges) {
-			delta_score += sc.remove_edge(edge_with_state->first, main_cluster);
-		}
+		delta_score += empty_one_cluster(main_cluster, sc);
+		delta_score += empty_one_cluster(secondary_cluster, sc); // This is already empty, but it's no harm to be explicit
 
 		assert(sc.state.get_comms().at(secondary_cluster).empty());
 		assert(sc.state.get_comms().at(main_cluster     ).empty());
@@ -383,7 +381,7 @@ long double		merge(Score &sc) {
 		// Accept
 		// This means I must merge them again
 		{
-			delta_score += empty_one_cluster(secondary_cluster, & TriState :: test_in_SECN, original_state_of_these_edges, sc);
+			delta_score += empty_one_cluster(secondary_cluster, sc);
 			// Put every edge into the main_cluster, if it wasn't already
 			For(edge_with_state, original_state_of_these_edges) {
 				if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
