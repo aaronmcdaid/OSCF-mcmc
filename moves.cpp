@@ -291,6 +291,18 @@ long double		set_up_launch_state(
 	}
 	return delta_score;
 }
+long double		set_up_launch_state_POLICY_WITHIN_SPLIT_MERGE(
+					const int main_cluster,
+					const int secondary_cluster,
+					const vector<int64_t>	& edges_in_a_random_order,
+					Score & sc
+				) {
+	if(gsl_ran_bernoulli(r, 0.5)) {
+		return set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order, sc);
+	} else {
+		return 0.0L;
+	}
+}
 
 typedef std :: tr1 :: unordered_map< int64_t , TriState > Original_state_of_these_edges_T;
 Original_state_of_these_edges_T remember_the_state_of_these_edges(const State &st, const int main_cluster, const int secondary_cluster) {
@@ -408,8 +420,8 @@ long double		merge(Score &sc) {
 	}
 
 
-	// Set up the launch state
-	delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
+	// Set up the launch state BUT ONLY 50% OF THE TIME
+	delta_score += set_up_launch_state_POLICY_WITHIN_SPLIT_MERGE(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
 
 	// Now finally ready for the "random" proposal
 	pair<long double, long double> result = from_launch_state_to_forced_proposal(
@@ -493,8 +505,8 @@ long double		split(Score &sc) {
 	assert(temporary_secondary_cluster_on_the_end < sc.state.get_K());
 
 
-	// Set up the launch state
-	delta_score += set_up_launch_state(main_cluster, temporary_secondary_cluster_on_the_end, edges_in_a_random_order      , sc);
+	// Set up the launch state BUT ONLY 50% OF THE TIME
+	delta_score += set_up_launch_state_POLICY_WITHIN_SPLIT_MERGE(main_cluster, temporary_secondary_cluster_on_the_end, edges_in_a_random_order      , sc);
 
 	// Now finally ready for the "random" proposal
 	long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
