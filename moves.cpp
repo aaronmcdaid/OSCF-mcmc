@@ -292,6 +292,23 @@ long double		set_up_launch_state(
 	return delta_score;
 }
 
+typedef std :: tr1 :: unordered_map< int64_t , TriState > Original_state_of_these_edges_T;
+Original_state_of_these_edges_T remember_the_state_of_these_edges(const State &st, const int main_cluster, const int secondary_cluster) {
+	Original_state_of_these_edges_T original_state_of_these_edges;
+	For(main_edge, st.get_comms().at(main_cluster     ).get_my_edges()) { original_state_of_these_edges[ *main_edge ] . put_in_MAIN(); }
+	For(secn_edge, st.get_comms().at(secondary_cluster).get_my_edges()) { original_state_of_these_edges[ *secn_edge ] . put_in_SECN(); }
+	return original_state_of_these_edges;
+}
+vector<int64_t> those_edges_in_a_random_order(const Original_state_of_these_edges_T & original_state) {
+	vector<int64_t> edges_in_a_random_order; // each edge to appear just once
+	For(edge_with_state, original_state) {
+		edges_in_a_random_order.push_back(edge_with_state->first);
+	}
+	assert(original_state.size() == edges_in_a_random_order.size());
+	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
+	return edges_in_a_random_order;
+}
+
 long double		merge(Score &sc) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;
@@ -312,17 +329,10 @@ long double		merge(Score &sc) {
 	long double delta_score = 0.0L;
 
 	// Remember their current state:
-	std :: tr1 :: unordered_map< int64_t , TriState > original_state_of_these_edges;
-	For(main_edge, sc.state.get_comms().at(main_cluster     ).get_my_edges()) { original_state_of_these_edges[ *main_edge ] . put_in_MAIN(); }
-	For(secn_edge, sc.state.get_comms().at(secondary_cluster).get_my_edges()) { original_state_of_these_edges[ *secn_edge ] . put_in_SECN(); }
+	Original_state_of_these_edges_T original_state_of_these_edges = remember_the_state_of_these_edges(sc.state, main_cluster, secondary_cluster);
 
 	// Randomize the order of the edges:
-	vector<int64_t> edges_in_a_random_order; // each edge to appear just once
-	For(edge_with_state, original_state_of_these_edges) {
-		edges_in_a_random_order.push_back(edge_with_state->first);
-	}
-	assert(original_state_of_these_edges.size() == edges_in_a_random_order.size());
-	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
+	const vector<int64_t> edges_in_a_random_order = those_edges_in_a_random_order(original_state_of_these_edges);
 
 	// Before emptying them, let's calculate the score of the merged version
 	{
