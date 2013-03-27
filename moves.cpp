@@ -251,16 +251,46 @@ long double		set_up_launch_state(
 					const vector<int64_t>	& edges_in_a_random_order,
 					Score & sc
 				) {
-	long double delta_score = 0.0L;
-	// Ensure none of the edges are in either of the two communities
+	// Initially, ensure none of the edges are in either of the two communities
 	For(edge, edges_in_a_random_order) {
 		const int64_t edge_id = *edge;
 		assert( sc.state.get_comms().at(main_cluster).get_my_edges().count(edge_id) == 0);
 		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().count(edge_id) == 0);
 	}
-	// Just one Gibbs sweep for now.  I think Jain&Neal showed that five sweeps was good for them though
+
+
+	const double alpha[3] = {0.1, 0.1, 0.1};
+	double theta[3];
+	gsl_ran_dirichlet(r, 3, alpha, theta);
+	for(int i=0;i<3;++i) {
+		// PP2(i, theta[i]);
+	}
+
+	long double delta_score = 0.0L;
 	For(edge, edges_in_a_random_order) {
-		delta_score += gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster).first;
+		unsigned int n[3];
+		gsl_ran_multinomial(r, 3, 1, theta, n);
+		// PP3(n[0],n[1],n[2]);
+		if(n[0]) {
+			delta_score += sc.add_edge(*edge, main_cluster);
+		}
+		if(n[1]) {
+			delta_score += sc.add_edge(*edge, secondary_cluster);
+		}
+		if(n[2]) {
+			delta_score += sc.add_edge(*edge, main_cluster);
+			delta_score += sc.add_edge(*edge, secondary_cluster);
+		}
+	}
+	// cout << endl;
+
+
+	// Just one Gibbs sweep for now.  I think Jain&Neal showed that five sweeps was good for them though
+	// Let's force the first two nodes into different clusters MUST BE TESTED THOROUGHLY
+	for(int jain_neal_repeats=0; jain_neal_repeats<5; ++jain_neal_repeats) {
+		For(edge, edges_in_a_random_order) {
+			delta_score += gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster).first;
+		}
 	}
 	return delta_score;
 }
