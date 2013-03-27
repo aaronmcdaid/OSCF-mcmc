@@ -259,12 +259,10 @@ long double		set_up_launch_state(
 	}
 
 
-	const double alpha[3] = {0.1, 0.1, 0.1};
+	const double alpha[3] = {1.0, 1.0, 1.0};
 	double theta[3];
 	gsl_ran_dirichlet(r, 3, alpha, theta);
-	for(int i=0;i<3;++i) {
-		// PP2(i, theta[i]);
-	}
+	// for(int i=0;i<3;++i) { PP2(i, theta[i]); } cout << endl;
 
 	long double delta_score = 0.0L;
 	For(edge, edges_in_a_random_order) {
