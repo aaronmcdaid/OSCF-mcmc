@@ -361,6 +361,7 @@ long double		move_from_secondary_into_main(Score &sc, const int64_t main_cluster
 }
 
 pair<int, int> two_distinct_clusters(const int64_t K) {
+	assert(K>=2);
 	const int main_cluster = K * gsl_rng_uniform(r);
 	int secondary_cluster;
 	do { secondary_cluster = K * gsl_rng_uniform(r); }
