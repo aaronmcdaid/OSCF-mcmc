@@ -330,6 +330,21 @@ pair<long double, long double> from_launch_state_to_forced_proposal(
 				}
 				return make_pair(delta_score, log2_product_of_accepted_probabilities_FOR_ALL_EDGES);
 }
+pair<long double, long double> from_launch_state_to_UNforced_proposal(
+					const vector<int64_t>			& edges_in_a_random_order,
+					int64_t					  main_cluster,
+					int64_t					  secondary_cluster,
+					Score					& sc
+		) {
+				long double delta_score = 0.0L;
+				long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
+				For(edge, edges_in_a_random_order) {
+					pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster);
+					log2_product_of_accepted_probabilities_FOR_ALL_EDGES += ab.second;
+					delta_score += ab.first;
+				}
+				return make_pair(delta_score, log2_product_of_accepted_probabilities_FOR_ALL_EDGES);
+}
 
 long double		move_from_secondary_into_main(Score &sc, const int64_t main_cluster, const int64_t secondary_cluster, const vector<int64_t> & edges_in_a_random_order) {
 		long double delta_score = 0.0L;
