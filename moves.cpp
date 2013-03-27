@@ -309,6 +309,28 @@ vector<int64_t> those_edges_in_a_random_order(const Original_state_of_these_edge
 	return edges_in_a_random_order;
 }
 
+pair<long double, long double> from_launch_state_to_forced_proposal(
+					const vector<int64_t>			& edges_in_a_random_order,
+					int64_t					  main_cluster,
+					int64_t					  secondary_cluster,
+					      Original_state_of_these_edges_T	& original_state_of_these_edges,
+					Score					& sc
+		) {
+				long double delta_score = 0.0L;
+				long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
+				For(edge, edges_in_a_random_order) {
+					pair<int,int> possibly_force(0,0);
+					if(original_state_of_these_edges [*edge].test_in_MAIN())
+						possibly_force.first = 1;
+					if(original_state_of_these_edges [*edge].test_in_SECN())
+						possibly_force.second = 1;
+					pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster, possibly_force);
+					log2_product_of_accepted_probabilities_FOR_ALL_EDGES += ab.second;
+					delta_score += ab.first;
+				}
+				return make_pair(delta_score, log2_product_of_accepted_probabilities_FOR_ALL_EDGES);
+}
+
 long double		merge_into_one_cluster(Score &sc, const int64_t main_cluster, const int64_t secondary_cluster, const vector<int64_t> & edges_in_a_random_order) {
 		long double delta_score = 0.0L;
 		// Remove every edge from the secondary_cluster, if it wasn't already
@@ -367,17 +389,14 @@ long double		merge(Score &sc) {
 	delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
 
 	// Now finally ready for the "random" proposal
-	long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = 0.0L;
-	For(edge, edges_in_a_random_order) {
-		pair<int,int> possibly_force(0,0);
-		if(original_state_of_these_edges [*edge].test_in_MAIN())
-			possibly_force.first = 1;
-		if(original_state_of_these_edges [*edge].test_in_SECN())
-			possibly_force.second = 1;
-		pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster, possibly_force);
-		log2_product_of_accepted_probabilities_FOR_ALL_EDGES += ab.second;
-		delta_score += ab.first;
-	}
+	pair<long double, long double> result = from_launch_state_to_forced_proposal(
+			edges_in_a_random_order,
+			main_cluster,
+			secondary_cluster,
+			original_state_of_these_edges,
+			sc);
+	const long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES = result.second;
+	delta_score += result.first;
 
 	// We're back at the start again. Unmerged!
 	assertVERYCLOSE(delta_score, 0.0L);
