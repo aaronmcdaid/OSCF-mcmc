@@ -336,14 +336,15 @@ long double		merge(Score &sc) {
 
 	// Before emptying them, let's calculate the score of the merged version
 	{
+		// Remove every edge from the secondary_cluster, if it wasn't already
 		delta_score += empty_one_cluster(secondary_cluster, sc);
-		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
 
 		// Put every edge into the main_cluster, if it wasn't already
-		For(edge_with_state, original_state_of_these_edges) {
-			if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
+		For(edge, edges_in_a_random_order) {
+			delta_score += sc.add_edge_if_not_already(*edge, main_cluster);
 		}
 
+		assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
 		assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 
 	}

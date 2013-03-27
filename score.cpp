@@ -125,6 +125,16 @@ long double	Score :: remove_edge(int64_t e, int64_t comm_id_to_remove) {
 			const OneCommunitySummary new_one_comm = this->state.get_one_community_summary(comm_id_to_remove);
 			return this->f(new_one_comm) - this->f(old_one_comm);
 }
+long double	Score :: add_edge_if_not_already(int64_t e, int64_t comm_id_to_add) {
+	if(this->state.edge_to_set_of_comms.at(e).count(comm_id_to_add))
+		return 0.0L; // It's already there. No need to do anything
+	return this->add_edge(e,comm_id_to_add);
+}
+long double	Score :: remove_edge_if_not_already(int64_t e, int64_t comm_id_to_remove) {
+	if(this->state.edge_to_set_of_comms.at(e).count(comm_id_to_remove)==0)
+		return 0.0L; // It's already removed. No need to do anything
+	return this->remove_edge(e,comm_id_to_remove);
+}
 
 long double		Score :: append_empty_cluster()	 {
 	const long double f_0_0 = this->f(0,0);
