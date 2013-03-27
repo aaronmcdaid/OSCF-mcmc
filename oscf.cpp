@@ -99,6 +99,13 @@ void dump_truncated_node_cover(const State & st) {
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
+	for(int e=1; e<net->E(); ++e) {
+		st.remove_edge(e,e);
+		st.add_edge(e,0);
+	}
+	for(int e=1; e<net->E(); ++e) {
+		sc.delete_empty_cluster_from_the_end();
+	}
 	long double cmf_track = sc.score();
 	assert(st.every_edge_non_empty());
 	PP(cmf_track);
