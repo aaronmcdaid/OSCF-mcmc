@@ -382,6 +382,116 @@ pair<int, int> two_distinct_clusters(const int64_t K) {
 	return make_pair(main_cluster, secondary_cluster);
 }
 
+long double		M3(Score &sc) { // Does not change K
+	if(sc.state.get_K() < 2)
+		return 0.0L;
+	// - Select two clusters at random
+	// - Remember their current state
+	// - Randomize the order of the edges
+
+	// - Empty both of them, and Set up launch state
+	// - Remember the launch state
+	// - Do the "proposal", but with "forcing" of course
+
+	// - Now, empty again and set up launch state again
+	// - Reapply the launch state
+	// - Do the  proposal , without forcing
+
+	// - Calculate acceptance probability, and proceed as usual
+
+	long double delta_score = 0.0L;
+	const long double pre_score = delta_score;
+
+	// - Select two clusters at random
+	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
+	const int main_cluster = two_clusters.first;
+	const int secondary_cluster = two_clusters.second;
+
+	// - Remember their current state
+	Original_state_of_these_edges_T original_state_of_these_edges = remember_the_state_of_these_edges(sc.state, main_cluster, secondary_cluster);
+
+	// - Randomize the order of the edges
+	const vector<int64_t> edges_in_a_random_order = those_edges_in_a_random_order(original_state_of_these_edges);
+
+	// - Empty both of them, and Set up launch state
+	delta_score += empty_one_cluster(main_cluster, sc);
+	delta_score += empty_one_cluster(secondary_cluster, sc);
+
+	/* Do not use a launch state here in M3. It actually makes it perform very badly.
+	 * We need an easy-ish way to get to the bad (pre-) state.
+	//delta_score += set_up_launch_state(main_cluster, secondary_cluster, edges_in_a_random_order      , sc);
+	 */
+	const long double score_at_launch_state = delta_score;
+	Original_state_of_these_edges_T launch_state_of_these_edges = remember_the_state_of_these_edges(sc.state, main_cluster, secondary_cluster);
+
+	// - Do the "proposal", but with "forcing" of course
+	pair<long double, long double> result_forced = from_launch_state_to_forced_proposal(
+			edges_in_a_random_order,
+			main_cluster,
+			secondary_cluster,
+			original_state_of_these_edges,
+			sc);
+	const long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED = result_forced.second;
+	delta_score += result_forced.first;
+
+	// - Now, reapply the launch state
+		delta_score += empty_one_cluster(main_cluster, sc);
+		delta_score += empty_one_cluster(secondary_cluster, sc);
+		For(edge_with_state, launch_state_of_these_edges) {
+			const int64_t edge_id = edge_with_state->first;
+			if(edge_with_state->second.test_in_MAIN())
+				delta_score += sc.add_edge_if_not_already(edge_id, main_cluster);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, main_cluster);
+			if(edge_with_state->second.test_in_SECN())
+				delta_score += sc.add_edge_if_not_already(edge_id, secondary_cluster);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, secondary_cluster);
+
+		}
+		assertVERYCLOSE(delta_score, score_at_launch_state);
+
+	// - Do the  proposal , without forcing
+	pair<long double, long double> result_unforced = from_launch_state_to_UNforced_proposal(
+			edges_in_a_random_order,
+			main_cluster,
+			secondary_cluster,
+			sc);
+	const long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED = result_unforced.second;
+	delta_score += result_unforced.first;
+
+	const long double post_score = delta_score;
+
+	// - Calculate acceptance probability, and proceed as usual
+	const long double acceptance_prob = post_score - pre_score
+				- log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED
+				+ log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED;
+	//PP5(pre_score, post_score, log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED, log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED, acceptance_prob);
+
+	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
+		// Accept this new split
+		//PP(acceptance_prob);
+		return delta_score;
+	} else {
+		// Rejected. Must return to the original state
+		For(edge_with_state, original_state_of_these_edges) {
+			const int64_t edge_id = edge_with_state->first;
+			if(edge_with_state->second.test_in_MAIN())
+				delta_score += sc.add_edge_if_not_already(edge_id, main_cluster);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, main_cluster);
+			if(edge_with_state->second.test_in_SECN())
+				delta_score += sc.add_edge_if_not_already(edge_id, secondary_cluster);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, secondary_cluster);
+
+		}
+		assertVERYCLOSE(delta_score, 0.0L);
+		return delta_score;
+	}
+}
+
+
 long double		merge(Score &sc) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;

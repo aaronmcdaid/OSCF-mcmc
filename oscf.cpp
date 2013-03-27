@@ -123,6 +123,7 @@ void oscf(Net net) {
 		}
 		for(int i=0; i<100; ++i) {
 			cmf_track += split_or_merge(sc);
+			cmf_track += M3(sc);
 		}
 		PP(rep);
 		dump_all(st);
