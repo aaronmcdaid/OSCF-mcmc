@@ -129,7 +129,7 @@ long double		Score :: append_empty_cluster()	 {
 	const long double pre_prior = this->prior_on_K();
 	this->state.append_empty_cluster();
 	const long double post_prior = this->prior_on_K();
-	assert(post_prior < pre_prior);
+	//assert(post_prior < pre_prior);
 	return post_prior - pre_prior + f_0_0;
 }
 long double		Score :: delete_empty_cluster_from_the_end()	 {
@@ -138,7 +138,7 @@ long double		Score :: delete_empty_cluster_from_the_end()	 {
 	const long double pre_prior = this->prior_on_K();
 	this->state.delete_empty_cluster_from_the_end();
 	const long double post_prior = this->prior_on_K();
-	assert(post_prior > pre_prior);
+	//assert(post_prior > pre_prior);
 	assert(verify == post_prior - pre_prior - f_0_0);
 	return post_prior - pre_prior - f_0_0;
 }
@@ -148,7 +148,7 @@ long double 		Score :: what_would_change_if_I_deleted_an_empty_community()				co
 	const long double pre_prior = this->prior_on_K();
 	-- this->state.K;
 	const long double post_prior = this->prior_on_K();
-	assert(post_prior > pre_prior);
+	//assert(post_prior > pre_prior);
 	++ this->state.K;
 	return post_prior - pre_prior - f_0_0;
 }
