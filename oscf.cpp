@@ -86,7 +86,8 @@ void dump_truncated_node_cover(const State & st) {
 		vector<int64_t> nodes_in_this_comm = st.get_comms().at(k).get_my_nodes_NO_COUNT();
 		sort(nodes_in_this_comm.begin(), nodes_in_this_comm.end());
 		For(n, nodes_in_this_comm) {
-			if(n!=nodes_in_this_comm.begin()) cout << ' ';
+			if(n!=nodes_in_this_comm.begin())
+				cout << ' ';
 			string node_name = st.net->node_set->as_string(*n);
 			cout << node_name;
 		}
@@ -110,10 +111,9 @@ void oscf(Net net) {
 	assert(st.every_edge_non_empty());
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
-	for (int rep = 0; rep < 250000; ++rep) {
-		if(rep % 10000 == 0)
-			cerr << rep << endl;
+	for (int rep = 0; rep < 100000; ++rep) {
 		if(rep % 1000 == 0) {
+			cerr << rep << endl;
 			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
@@ -121,9 +121,10 @@ void oscf(Net net) {
 			cmf_track += gibbsUpdate(e, sc);
 			cmf_track += metroK(sc);
 		}
-		for(int i=0; i<25; ++i) {
+		for(int i=0; i<100; ++i) {
 			cmf_track += split_or_merge(sc);
 		}
+		PP(rep);
 		dump_all(st);
 		dump_truncated_node_cover(st);
 	}

@@ -31,6 +31,8 @@ long double	Score :: score()			const {
 							return total_score;
 }
 long double	Score :: prior_on_K()		const { return -LOG2FACT(state.K); }
+//long double	Score :: prior_on_K()		const { return -state.K; }
+//long double	Score :: prior_on_K()		const { return 0; }
 long double	Score :: product_on_fs()		const {
 							long double s = 0.0L;
 							for(int k=0; k<state.K; ++k) {
