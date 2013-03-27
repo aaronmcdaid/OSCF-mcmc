@@ -345,6 +345,15 @@ long double		move_from_secondary_into_main(Score &sc, const int64_t main_cluster
 		return delta_score;
 }
 
+pair<int, int> two_distinct_clusters(const int64_t K) {
+	const int main_cluster = K * gsl_rng_uniform(r);
+	int secondary_cluster;
+	do { secondary_cluster = K * gsl_rng_uniform(r); }
+	while (secondary_cluster == main_cluster);
+	assert(secondary_cluster != main_cluster);
+	return make_pair(main_cluster, secondary_cluster);
+}
+
 long double		merge(Score &sc) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;
@@ -356,11 +365,9 @@ long double		merge(Score &sc) {
 	// - Do the "proposal", but with "forcing" of course
 	// - Calculate acceptance probability, and proceed as usual
 
-	const int main_cluster = sc.state.get_K() * gsl_rng_uniform(r);
-	int secondary_cluster;
-	do { secondary_cluster = sc.state.get_K() * gsl_rng_uniform(r); }
-	while (secondary_cluster == main_cluster);
-	assert(secondary_cluster != main_cluster);
+	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
+	const int main_cluster = two_clusters.first;
+	const int secondary_cluster = two_clusters.second;
 
 	long double delta_score = 0.0L;
 
