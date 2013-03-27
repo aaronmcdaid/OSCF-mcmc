@@ -120,6 +120,8 @@ void oscf(Net net) {
 		for(int64_t e = 0; e<net->E(); ++e) {
 			cmf_track += gibbsUpdate(e, sc);
 			cmf_track += metroK(sc);
+		}
+		for(int i=0; i<25; ++i) {
 			cmf_track += split_or_merge(sc);
 		}
 		dump_all(st);
