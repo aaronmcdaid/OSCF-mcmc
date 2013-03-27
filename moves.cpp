@@ -331,7 +331,7 @@ pair<long double, long double> from_launch_state_to_forced_proposal(
 				return make_pair(delta_score, log2_product_of_accepted_probabilities_FOR_ALL_EDGES);
 }
 
-long double		merge_into_one_cluster(Score &sc, const int64_t main_cluster, const int64_t secondary_cluster, const vector<int64_t> & edges_in_a_random_order) {
+long double		move_from_secondary_into_main(Score &sc, const int64_t main_cluster, const int64_t secondary_cluster, const vector<int64_t> & edges_in_a_random_order) {
 		long double delta_score = 0.0L;
 		// Remove every edge from the secondary_cluster, if it wasn't already
 		delta_score += empty_one_cluster(secondary_cluster, sc);
@@ -371,7 +371,7 @@ long double		merge(Score &sc) {
 	const vector<int64_t> edges_in_a_random_order = those_edges_in_a_random_order(original_state_of_these_edges);
 
 	// Before emptying them, let's calculate the score of the merged version
-	delta_score += merge_into_one_cluster(sc, main_cluster, secondary_cluster, edges_in_a_random_order);
+	delta_score += move_from_secondary_into_main(sc, main_cluster, secondary_cluster, edges_in_a_random_order);
 	assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 	const long double this_is_the_merged_score = delta_score + sc.what_would_change_if_I_deleted_an_empty_community();
 
@@ -414,11 +414,8 @@ long double		merge(Score &sc) {
 		// Accept
 		// This means I must merge them again
 		{
-			delta_score += empty_one_cluster(secondary_cluster, sc);
-			// Put every edge into the main_cluster, if it wasn't already
-			For(edge_with_state, original_state_of_these_edges) {
-				if( !edge_with_state->second.test_in_MAIN() ) { delta_score += sc.add_edge(edge_with_state->first, main_cluster); }
-			}
+			delta_score += move_from_secondary_into_main(sc, main_cluster, secondary_cluster, edges_in_a_random_order);
+
 			assert( sc.state.get_comms().at(secondary_cluster).get_my_edges().size() == 0);
 			assert( sc.state.get_comms().at(main_cluster).get_my_edges().size() == original_state_of_these_edges.size());
 
