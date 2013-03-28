@@ -119,6 +119,7 @@ public:
 
 struct State {
 	friend class Score; // Score is allowed to edit this
+	friend void dump_all(const State &);
 	Net net;
 	const int64_t N;
 	const int64_t E;
@@ -128,6 +129,9 @@ private:
 	std :: vector<Community> comms; // the length of this vector is *not* necessarily equal to K
 
 	std :: vector< std :: tr1 :: unordered_set<int64_t> > edge_to_set_of_comms;
+
+	std :: vector<size_t> frequencies_of_edge_occupancy;
+	std :: int64_t total_count_of_edge_assignments;
 
 
 public:
@@ -145,14 +149,20 @@ public:
 	void		add_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);
 										this->comms.at(comm_id).add_edge(e, this->net);
+										-- this->frequencies_of_edge_occupancy.at( this->edge_to_set_of_comms.at(e).size() );
 										bool wasInserted = this->edge_to_set_of_comms.at(e).insert(comm_id).second;
 										assert(wasInserted);
+										++ this->frequencies_of_edge_occupancy.at( this->edge_to_set_of_comms.at(e).size() );
+										++ this->total_count_of_edge_assignments;
 	}
 	void		remove_edge(int64_t e, int64_t comm_id)		{
 										assert(comm_id < this->K);
 										this->comms.at(comm_id).remove_edge(e, this->net);
+										-- this->frequencies_of_edge_occupancy.at( this->edge_to_set_of_comms.at(e).size() );
 										size_t wasErased = this->edge_to_set_of_comms.at(e).erase(comm_id);
 										assert(wasErased == 1);
+										++ this->frequencies_of_edge_occupancy.at( this->edge_to_set_of_comms.at(e).size() );
+										-- this->total_count_of_edge_assignments;
 	}
 private:
 	int64_t		append_empty_cluster()				{

@@ -19,7 +19,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<limits>
 #include<algorithm>
 #include<fstream>
-#include<array>
+#include<sstream>
 
 //#include"format_flag_stack/format_flag_stack.hpp"
 
@@ -72,6 +72,25 @@ int main(int argc, char **argv) {
 
 void dump_all(const State & st) {
 	cout << endl << " ===" << endl;
+	{
+		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
+		int64_t printed_so_far = 0;
+		assert(0 == st.frequencies_of_edge_occupancy.at(0));
+		for(size_t f = 1; f<st.frequencies_of_edge_occupancy.size(); ++f) {
+			ostringstream oss;
+			const int64_t freq_f = st.frequencies_of_edge_occupancy.at(f);
+			if(freq_f != 0)
+				oss << st.frequencies_of_edge_occupancy.at(f) << '(' << f << ')';
+			cout << setw(8) << oss.str();
+			printed_so_far += f * freq_f;
+			if(printed_so_far >= st.total_count_of_edge_assignments) {
+				assert(printed_so_far == st.total_count_of_edge_assignments);
+				break;
+				cout << '*';
+			}
+		}
+		cout << endl;
+	}
 	cout << st.get_K();
 	for(int k=0; k<st.get_K(); ++k) {
 		cout << ";   ";

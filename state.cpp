@@ -10,8 +10,12 @@ using namespace std;
 format_flag_stack :: FormatFlagStack stack;
 
 
-		State :: State(Net net_) : net(net_), N(net_->N()), E(net_->E()), edge_to_set_of_comms(net_->E()) {
+		State :: State(Net net_) : net(net_), N(net_->N()), E(net_->E()), edge_to_set_of_comms(net_->E())
+					   , frequencies_of_edge_occupancy(10000, 0)
+					   , total_count_of_edge_assignments(0)
+{
 	this->K = 0;
+	this->frequencies_of_edge_occupancy.at(0) = this->E;
 	// initially, there are no communities, and no edges are in any community.
 	// But we'll initialize by placing each each in a community of its own.
 	for(int64_t e = 0; e < E; ++e) {
