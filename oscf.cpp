@@ -119,17 +119,28 @@ void dump_truncated_node_cover(const State & st) {
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
-	if(0) {
-		for(int e=1; e<net->E(); ++e) {
-			st.remove_edge(e,e);
-			st.add_edge(e,0);
-		}
-		for(int e=1; e<net->E(); ++e) {
-			sc.delete_empty_cluster_from_the_end();
+	assert(st.get_K() == 0);
+	if(0) { // every edge in its own cluster
+		for(int64_t e = 0; e < st.E; ++e) {
+			const int64_t new_cluster_id = st.append_empty_cluster();
+			assert(new_cluster_id == e);
+			sc.add_edge(e, e);
 		}
 	}
-	long double cmf_track = sc.score();
+	if(1) {
+		const int64_t only_cluster_id = st.append_empty_cluster();
+		assert(0 == only_cluster_id);
+		for(int64_t e = 0; e < st.E; ++e) {
+			st.add_edge(e, only_cluster_id);
+		}
+	}
+
+	// Next, we ensure that each edge is fully assigned.
+	// Do the test twice,
+	assert(0 == st.get_frequencies_of_edge_occupancy().at(0));
 	assert(st.every_edge_non_empty());
+
+	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
 	for (int rep = 0; rep < 100000; ++rep) {

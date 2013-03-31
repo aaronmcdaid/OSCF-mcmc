@@ -18,11 +18,6 @@ format_flag_stack :: FormatFlagStack stack;
 	this->frequencies_of_edge_occupancy.at(0) = this->E;
 	// initially, there are no communities, and no edges are in any community.
 	// But we'll initialize by placing each each in a community of its own.
-	for(int64_t e = 0; e < E; ++e) {
-		const int64_t new_cluster_id = this->append_empty_cluster();
-		assert(new_cluster_id == e);
-		this->add_edge(e, e);
-	}
 }
 void		Community :: dump_me()			const	{
 						cout

@@ -164,7 +164,7 @@ public:
 										++ this->frequencies_of_edge_occupancy.at( this->edge_to_set_of_comms.at(e).size() );
 										-- this->total_count_of_edge_assignments;
 	}
-private:
+public:
 	int64_t		append_empty_cluster()				{
 										assert(this->K == (int64_t) this->comms.size());
 										const int64_t new_cluster_id = this->K;
@@ -191,6 +191,9 @@ public: // swap is public because it doesn't affect the score
 						return false;
 				}
 				return true;
+	}
+	const std :: vector<size_t> & get_frequencies_of_edge_occupancy() const {
+		return this->frequencies_of_edge_occupancy;
 	}
 };
 
