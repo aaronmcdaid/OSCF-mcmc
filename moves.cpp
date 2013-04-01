@@ -736,3 +736,21 @@ long double		split_or_merge(Score & sc) {
 	else
 		return split(sc);
 }
+
+pair<int, int> find_two_comms_that_share_an_edge(const State &st) {
+	const int64_t random_edge = st.E * gsl_rng_uniform(r);
+	const vector<int64_t> comms_at_this_edge (st.get_edge_to_set_of_comms().at(random_edge).begin(), st.get_edge_to_set_of_comms().at(random_edge).end());
+	assert( ! comms_at_this_edge.empty() );
+	assert( comms_at_this_edge.size() == st.get_edge_to_set_of_comms().at(random_edge).size() );
+	const int num_comms_here = comms_at_this_edge.size();
+	if( num_comms_here == 1 ) {
+		return make_pair(-1,-1);
+	}
+	assert(num_comms_here >= 2);
+	const int main_cluster = num_comms_here * gsl_rng_uniform(r);
+	int secondary_cluster;
+	do {
+		secondary_cluster = num_comms_here * gsl_rng_uniform(r);
+	} while(secondary_cluster == main_cluster);
+	return make_pair(main_cluster, secondary_cluster);
+}
