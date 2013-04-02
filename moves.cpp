@@ -13,6 +13,9 @@ using namespace std;
 #include "macros.hpp"
 
 gsl_rng * r = NULL;
+
+static long double probability_of_selecting_these_two_comms(const int main_cluster, const int secondary_cluster, const State &st);
+
 void			seed_the_random_number_generator(int seed) {
 					assert( r == NULL );
 					r = gsl_rng_alloc (gsl_rng_taus);
@@ -491,21 +494,12 @@ long double		M3(Score &sc) { // Does not change K
 	}
 }
 
-
-long double		merge(Score &sc) {
-	if(sc.state.get_K() < 2)
-		return 0.0L;
-	// - Select two clusters at random
-	// - Remember their current state
-	// - Randomize the order of the edges
-	// - Before emptying them, let's calculate the score of the merged version
-	// - Empty both of them, and Set up launch state
-	// - Do the "proposal", but with "forcing" of course
-	// - Calculate acceptance probability, and proceed as usual
-
-	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
-	const int main_cluster = two_clusters.first;
-	const int secondary_cluster = two_clusters.second;
+long double merge_these_two(Score &sc, const int main_cluster, const int secondary_cluster, const long double adjustment_to_acceptance = 0.0L) {
+	assert(main_cluster >= 0);
+	assert(secondary_cluster >= 0);
+	assert(main_cluster != secondary_cluster);
+	assert(secondary_cluster < sc.state.get_K());
+	assert(main_cluster < sc.state.get_K());
 
 	long double delta_score = 0.0L;
 
@@ -554,7 +548,9 @@ long double		merge(Score &sc) {
 	//   		target -> source	log2_product_of_accepted_probabilities_FOR_ALL_EDGES
 	//   {The proposal probabilities associated with selecting a pair of clusters will cancel}
 	// We accept the merge with acceptance probability exp2l{ this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES }
-	const long double acceptance_prob = this_is_the_merged_score + log2_product_of_accepted_probabilities_FOR_ALL_EDGES;
+	const long double acceptance_prob = this_is_the_merged_score
+		+ log2_product_of_accepted_probabilities_FOR_ALL_EDGES
+		+ adjustment_to_acceptance;
 	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
 		// Accept
 		// This means I must merge them again
@@ -576,7 +572,7 @@ long double		merge(Score &sc) {
 		return delta_score;
 	}
 }
-long double		split(Score &sc) {
+long double		split(Score &sc, const bool adjust_for_shared_edge_proposal = false) {
 	// - Select one cluster at random, main_cluster
 	// - Select another cluster_id at random, secondary_cluster, to be the cluster id of the new cluster
 	// - (They do *not* need to different from each other)
@@ -626,6 +622,17 @@ long double		split(Score &sc) {
 		delta_score += ab.first;
 	}
 
+	long double adjustment_to_acceptance = 0.0L;
+	if(adjust_for_shared_edge_proposal) {
+		// Now, we have our split.  What's the probability of proposing the reverse edge?
+		// For example, their must be a shared edge.
+		const long double p_shared_edge = probability_of_selecting_these_two_comms(main_cluster, temporary_secondary_cluster_on_the_end, sc.state);
+		//  If there's no shared edge, then this will be minus-infinity and it will work out fine below.
+		const int bigK = sc.state.get_K();
+		const int smallK = bigK - 1;
+		adjustment_to_acceptance += p_shared_edge + log2l(bigK) + log2l(smallK);
+	}
+
 	// Store the cmf {relatively speaking} at this split state
 	const long double this_is_the_split_score = delta_score;
 
@@ -637,7 +644,7 @@ long double		split(Score &sc) {
 	//   		target -> source	0
 	//   {The proposal probabilities associated with selecting a pair of clusters will cancel}
 	// We accept the split with acceptance probability exp2l{ this_is_the_split_score - log2_product_of_accepted_probabilities_FOR_ALL_EDGES }
-	const long double acceptance_prob = this_is_the_split_score - log2_product_of_accepted_probabilities_FOR_ALL_EDGES;
+	const long double acceptance_prob = this_is_the_split_score - log2_product_of_accepted_probabilities_FOR_ALL_EDGES + adjustment_to_acceptance;
 	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
 		// Accept
 		// The split is accepted.  Not much more to do, except to swap
@@ -730,12 +737,6 @@ long double		metroK(Score & sc) {
 						}
 					}
 }
-long double		split_or_merge(Score & sc) {
-	if(gsl_ran_bernoulli(r, 0.5))
-		return merge(sc);
-	else
-		return split(sc);
-}
 
 pair<int, int> find_two_comms_that_share_an_edge(const State &st) {
 	const int64_t random_edge = st.E * gsl_rng_uniform(r);
@@ -753,4 +754,72 @@ pair<int, int> find_two_comms_that_share_an_edge(const State &st) {
 		secondary_cluster = num_comms_here * gsl_rng_uniform(r);
 	} while(secondary_cluster == main_cluster);
 	return make_pair(main_cluster, secondary_cluster);
+}
+
+struct most_negative_ {
+	operator long double() {
+		return - numeric_limits<long double> :: max();
+	}
+};
+most_negative_ most_negative() { return most_negative_(); }
+
+static long double probability_of_selecting_these_two_comms(const int main_cluster, const int secondary_cluster, const State &st) {
+	// First, find out which edges are shared between these two clusters.
+	vector<int64_t> shared_edges;
+	For(main_edge, st.get_comms().at(main_cluster).get_my_edges()) {
+		if( st.get_comms().at(secondary_cluster).get_my_edges().count(*main_edge)) {
+			shared_edges.push_back(*main_edge);
+		}
+	}
+	if( shared_edges.empty() )
+		return most_negative(); // log2 of zero is effectively minus-infinity
+	long double total_probability = 0.0L;
+	For(shared_edge, shared_edges) {
+		const int64_t num_comms_at_this_shared_edge = st.get_edge_to_set_of_comms().at(*shared_edge).size();
+		assert(num_comms_at_this_shared_edge >= 2);
+		total_probability += 1.0L / num_comms_at_this_shared_edge / (num_comms_at_this_shared_edge-1);
+	}
+	assert(isfinite(total_probability));
+	return log2l(total_probability);
+}
+
+static long double		merge_two_random_clusters(Score &sc) {
+	if(sc.state.get_K() < 2)
+		return 0.0L;
+	// - Select two clusters at random
+	// - Remember their current state
+	// - Randomize the order of the edges
+	// - Before emptying them, let's calculate the score of the merged version
+	// - Empty both of them, and Set up launch state
+	// - Do the "proposal", but with "forcing" of course
+	// - Calculate acceptance probability, and proceed as usual
+
+	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
+	const int main_cluster = two_clusters.first;
+	const int secondary_cluster = two_clusters.second;
+	return merge_these_two(sc, main_cluster, secondary_cluster);
+}
+long double		split_or_merge(Score & sc) {
+	if(gsl_ran_bernoulli(r, 0.5))
+		return merge_two_random_clusters(sc);
+	else
+		return split(sc);
+}
+long double		split_or_merge_on_a_shared_edge(Score & sc) {
+	// The differences are:
+	// - When calculating acceptance, we put (p_shared_edge * K * K') into the mix
+	// - We decide which two to merge based on a random edge
+	if(gsl_ran_bernoulli(r, 0.5)) {
+		const pair<int,int> two_comms = find_two_comms_that_share_an_edge(sc.state);
+		if(two_comms.first == -1)
+			return 0.0L;
+		else {
+			const long double p_shared_edge = probability_of_selecting_these_two_comms(two_comms.first, two_comms.second, sc.state);
+			const int K = sc.state.get_K();
+			const long double adjustment_to_acceptance = - p_shared_edge - log2l(K) - log2l(K-1);
+			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance);
+		}
+	} else {
+		return split(sc, true);
+	}
 }
