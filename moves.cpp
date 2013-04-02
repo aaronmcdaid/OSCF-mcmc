@@ -500,6 +500,7 @@ long double merge_these_two(Score &sc, const int main_cluster, const int seconda
 	assert(main_cluster != secondary_cluster);
 	assert(secondary_cluster < sc.state.get_K());
 	assert(main_cluster < sc.state.get_K());
+	assert(isfinite(adjustment_to_acceptance));
 
 	long double delta_score = 0.0L;
 
@@ -777,9 +778,12 @@ static long double probability_of_selecting_these_two_comms(const int main_clust
 	For(shared_edge, shared_edges) {
 		const int64_t num_comms_at_this_shared_edge = st.get_edge_to_set_of_comms().at(*shared_edge).size();
 		assert(num_comms_at_this_shared_edge >= 2);
-		total_probability += 1.0L / num_comms_at_this_shared_edge / (num_comms_at_this_shared_edge-1);
+		total_probability += (1.0L / num_comms_at_this_shared_edge) / double(num_comms_at_this_shared_edge-1);
 	}
+	total_probability /= st.E;
 	assert(isfinite(total_probability));
+	assert(total_probability > 0.0L);
+	assert(total_probability < 1.0L); // it should be less than (or close to) 0.5, I think
 	return log2l(total_probability);
 }
 
