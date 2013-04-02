@@ -748,12 +748,12 @@ pair<int, int> find_two_comms_that_share_an_edge(const State &st) {
 		return make_pair(-1,-1);
 	}
 	assert(num_comms_here >= 2);
-	const int main_cluster = num_comms_here * gsl_rng_uniform(r);
-	int secondary_cluster;
+	const int main_cluster_offset = num_comms_here * gsl_rng_uniform(r);
+	int secondary_cluster_offset;
 	do {
-		secondary_cluster = num_comms_here * gsl_rng_uniform(r);
-	} while(secondary_cluster == main_cluster);
-	return make_pair(main_cluster, secondary_cluster);
+		secondary_cluster_offset = num_comms_here * gsl_rng_uniform(r);
+	} while(secondary_cluster_offset == main_cluster_offset);
+	return make_pair(comms_at_this_edge.at(main_cluster_offset), comms_at_this_edge.at(secondary_cluster_offset));
 }
 
 struct most_negative_ {
@@ -815,6 +815,7 @@ long double		split_or_merge_on_a_shared_edge(Score & sc) {
 			return 0.0L;
 		else {
 			const long double p_shared_edge = probability_of_selecting_these_two_comms(two_comms.first, two_comms.second, sc.state);
+			assert(p_shared_edge != most_negative());
 			const int K = sc.state.get_K();
 			const long double adjustment_to_acceptance = - p_shared_edge - log2l(K) - log2l(K-1);
 			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance);
