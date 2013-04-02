@@ -285,8 +285,7 @@ long double		set_up_launch_state(
 	// cout << endl;
 
 
-	// Just one Gibbs sweep for now.  I think Jain&Neal showed that five sweeps was good for them though
-	// Let's force the first two nodes into different clusters MUST BE TESTED THOROUGHLY
+	// I think Jain&Neal showed that five sweeps was good for them though
 	for(int jain_neal_repeats=0; jain_neal_repeats<5; ++jain_neal_repeats) {
 		For(edge, edges_in_a_random_order) {
 			delta_score += gibbsUpdateJustTwoComms(*edge, sc, main_cluster, secondary_cluster).first;
