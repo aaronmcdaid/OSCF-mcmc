@@ -143,11 +143,16 @@ void oscf(Net net) {
 	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
-	for (int rep = 0; rep < 100000; ++rep) {
-		if(rep % 1000 == 0) {
+	for (int rep = 0; rep < 1000000; ++rep) {
+		if(rep % 50000 == 0) {
 			cerr << rep << endl;
 			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
+		}
+		if(1 || rep % 100 == 0 || rep < 100) {
+			dump_all(st);
+			dump_truncated_node_cover(st);
+			PP(rep);
 		}
 		for(int64_t e = 0; e<net->E(); ++e) {
 			cmf_track += gibbsUpdate(e, sc);
@@ -157,9 +162,6 @@ void oscf(Net net) {
 			cmf_track += split_or_merge(sc);
 			cmf_track += M3(sc);
 		}
-		PP(rep);
-		dump_all(st);
-		dump_truncated_node_cover(st);
 	}
 	assert(st.every_edge_non_empty());
 	PP(cmf_track);
