@@ -264,13 +264,14 @@ long double		set_up_launch_state(
 	const double alpha[3] = {1.0, 1.0, 1.0};
 	double theta[3];
 	gsl_ran_dirichlet(r, 3, alpha, theta);
-	// for(int i=0;i<3;++i) { PP2(i, theta[i]); } cout << endl;
+	//PP3(theta[0], theta[1], theta[2]);
 
 	long double delta_score = 0.0L;
 	For(edge, edges_in_a_random_order) {
 		unsigned int n[3];
 		gsl_ran_multinomial(r, 3, 1, theta, n);
-		// PP3(n[0],n[1],n[2]);
+		assert( n[0] + n[1] + n[2] == 1);
+		//PP3(n[0],n[1],n[2]);
 		if(n[0]) {
 			delta_score += sc.add_edge(*edge, main_cluster);
 		}
