@@ -134,6 +134,13 @@ void oscf(Net net) {
 			st.add_edge(e, only_cluster_id);
 		}
 	}
+	const bool K_can_vary = args_info.K_arg == -1;
+	if( !K_can_vary ) {
+		while(st.get_K() < args_info.K_arg) {
+			st.append_empty_cluster();
+		}
+		assert(st.get_K() == args_info.K_arg);
+	}
 
 	// Next, we ensure that each edge is fully assigned.
 	// Do the test twice,
@@ -159,13 +166,17 @@ void oscf(Net net) {
 			dump_truncated_node_cover(st);
 			PP(rep);
 		}
+		{ // check for the -K arg
+			if(!K_can_vary)
+				assert(st.get_K() == args_info.K_arg);
+		}
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
 		For(e, edges_in_random_order) {
+			if(K_can_vary) cmf_track += metroK(sc);
 			cmf_track += gibbsUpdate(*e, sc);
-			cmf_track += metroK(sc);
 		}
 		for(int i=0; i<100; ++i) {
-			cmf_track += split_or_merge(sc);
+			if(K_can_vary) cmf_track += split_or_merge(sc);
 			cmf_track += M3(sc);
 		}
 	}
