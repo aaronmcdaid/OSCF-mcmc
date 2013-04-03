@@ -384,6 +384,9 @@ pair<int, int> two_distinct_clusters(const int64_t K) {
 	assert(secondary_cluster != main_cluster);
 	return make_pair(main_cluster, secondary_cluster);
 }
+pair<int, int> two_distinct_clusters(const State &st) {
+	return two_distinct_clusters(st.get_K());
+}
 
 long double		M3(Score &sc) { // Does not change K
 	if(sc.state.get_K() < 2)
@@ -827,4 +830,52 @@ long double		split_or_merge_on_a_shared_edge(Score & sc) {
 	} else {
 		return split(sc, true);
 	}
+}
+
+long double swap_this_node_wrt_two_clusters(Score &sc, const int64_t n, const int clusterA, const int clusterB) {
+	Net net = sc.state.net;
+	long double delta_score = 0.0L;
+	For(junction, net->i.at(n).my_junctions) {
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junction);
+		assert(n == junc.this_node_id);
+		const int edge_id = junc.edge_id;
+
+		const bool is_in_clusterA = sc.state.get_edge_to_set_of_comms().at(edge_id).count(clusterA);
+		const bool is_in_clusterB = sc.state.get_edge_to_set_of_comms().at(edge_id).count(clusterB);
+		if(is_in_clusterA && !is_in_clusterB) {
+			delta_score += sc.remove_edge(edge_id, clusterA);
+			delta_score += sc.add_edge(edge_id, clusterB);
+		}
+		if(is_in_clusterB && !is_in_clusterA) {
+			delta_score += sc.remove_edge(edge_id, clusterB);
+			delta_score += sc.add_edge(edge_id, clusterA);
+		}
+	}
+	return delta_score;
+}
+
+long double one_node_simple_update(Score &sc) {
+	if(sc.state.get_K() == 1)
+		return 0.0L;
+	// Select a node at random,
+	// and two distinct clusters at random
+	// Swap the neighbouring edges from one cluster to another.
+	const int64_t N = sc.state.N;
+	const int64_t random_node = gsl_rng_uniform(r) * N;
+
+	pair<int, int> two_clusters = two_distinct_clusters(sc.state);
+
+	long double delta_score = 0.0L;
+	delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second);
+
+	const long double acceptance_prob = delta_score;
+	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
+		// Accept, do nothing and return
+		// PP2(random_node, sc.state.net->node_set->as_string(random_node));
+	} else {
+		// Reject, Undo
+		delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second);
+		assertVERYCLOSE(delta_score, 0.0L);
+	}
+	return delta_score;
 }

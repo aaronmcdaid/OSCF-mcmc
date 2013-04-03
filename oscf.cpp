@@ -174,10 +174,11 @@ void oscf(Net net) {
 		For(e, edges_in_random_order) {
 			if(K_can_vary) cmf_track += metroK(sc);
 			cmf_track += gibbsUpdate(*e, sc);
+			cmf_track += one_node_simple_update(sc);
 		}
 		for(int i=0; i<10; ++i) {
 			if(K_can_vary) cmf_track += split_or_merge(sc);
-			//cmf_track += split_or_merge_on_a_shared_edge(sc);
+			//if(K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
 			cmf_track += M3(sc);
 		}
 	}
