@@ -143,6 +143,11 @@ void oscf(Net net) {
 	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
+	vector<int64_t> edges_in_random_order; // will randomize later, at the start of each iteration
+	for(int64_t e = 0; e<net->E(); ++e) {
+		edges_in_random_order.push_back(e);
+	}
+	assert((int64_t)edges_in_random_order.size() == net->E());
 	for (int rep = 0; rep < 1000000; ++rep) {
 		if(rep % 50000 == 0) {
 			cerr << rep << endl;
@@ -154,8 +159,9 @@ void oscf(Net net) {
 			dump_truncated_node_cover(st);
 			PP(rep);
 		}
-		for(int64_t e = 0; e<net->E(); ++e) {
-			cmf_track += gibbsUpdate(e, sc);
+		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
+		For(e, edges_in_random_order) {
+			cmf_track += gibbsUpdate(*e, sc);
 			cmf_track += metroK(sc);
 		}
 		for(int i=0; i<100; ++i) {
