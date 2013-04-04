@@ -883,6 +883,7 @@ long double one_node_CHEATING(Score &sc) {
 
 	Net net = sc.state.net;
 	vector<int> edges; // this is to be the set of all edges associated with this node, which are in at least one of the comms
+	Original_state_of_these_edges_T original_state_of_these_edges;
 	for(int d= 0; d < degree; ++d ) {
 		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(random_node).my_junctions.at(d));
 		assert(random_node == junc.this_node_id);
@@ -891,7 +892,10 @@ long double one_node_CHEATING(Score &sc) {
 		const bool is_in_clusterB = sc.state.get_edge_to_set_of_comms().at(e).count(clusterB);
 		if(is_in_clusterA || is_in_clusterB)
 			edges.push_back(e);
+		if(is_in_clusterA) { original_state_of_these_edges[ e ] . put_in_MAIN(); }
+		if(is_in_clusterB) { original_state_of_these_edges[ e ] . put_in_SECN(); }
 	}
+	assert(original_state_of_these_edges.size() == edges.size());
 	if(edges.empty())
 		return 0.0L;
 	assert((int)edges.size() <= degree);
