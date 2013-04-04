@@ -870,6 +870,7 @@ long double one_node_CHEATING(Score &sc) {
 	const int degree = sc.state.net->i.at(random_node).total_degree();
 
 	long double delta_score = 0.0L;
+	const long double pre_score = delta_score;
 
 	// randomize that one node's edge wrt both clusters
 	// .. BUT ignoring edges that are BOTH outside the cluster
@@ -882,7 +883,7 @@ long double one_node_CHEATING(Score &sc) {
 	//PP3(theta[0], theta[1], theta[2]);
 
 	Net net = sc.state.net;
-	vector<int> edges; // this is to be the set of all edges associated with this node, which are in at least one of the comms
+	vector<int64_t> edges; // this is to be the set of all edges associated with this node, which are in at least one of the comms
 	Original_state_of_these_edges_T original_state_of_these_edges;
 	for(int d= 0; d < degree; ++d ) {
 		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(random_node).my_junctions.at(d));
@@ -898,6 +899,7 @@ long double one_node_CHEATING(Score &sc) {
 	assert(original_state_of_these_edges.size() == edges.size());
 	if(edges.empty())
 		return 0.0L;
+	random_shuffle(edges.begin(), edges.end());
 	assert((int)edges.size() <= degree);
 
 	For(edge, edges) {
@@ -918,19 +920,90 @@ long double one_node_CHEATING(Score &sc) {
 		if(n[1]==1) { /* just A */ delta_score += sc.add_edge(e, clusterA); }
 		if(n[2]==1) { /* just B */ delta_score += sc.add_edge(e, clusterB); }
 	}
-	for(int rep=0; rep<100; ++rep) {
+
+	for(int rep=0; rep<20; ++rep) {
 		For(edge, edges) {
 			pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, clusterA, clusterB);
 			delta_score += ab.first;
 		}
 	}
-	return delta_score;
+
+	const long double delta_score_at_launch_state = delta_score;
+
+	// Store the launch state
+	Original_state_of_these_edges_T launch_state_of_these_edges;
+	For(edge, edges) {
+		const int e = *edge;
+		if(sc.state.get_edge_to_set_of_comms().at(e).count(clusterA)) { launch_state_of_these_edges[ e ] . put_in_MAIN(); }
+		if(sc.state.get_edge_to_set_of_comms().at(e).count(clusterB)) { launch_state_of_these_edges[ e ] . put_in_SECN(); }
+	}
+	assert(launch_state_of_these_edges.size() == edges.size());
+
+	// Force back to the original state, remembering the proposal probability
+	pair<long double, long double> result_forced = from_launch_state_to_forced_proposal(
+			edges,
+			clusterA,
+			clusterB,
+			original_state_of_these_edges,
+			sc);
+	const long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED = result_forced.second;
+	delta_score += result_forced.first;
+
+	assertVERYCLOSE(delta_score, 0.0L);
+
+	// Restore the launch state
+	For(edge_with_state, launch_state_of_these_edges) {
+		const int64_t edge_id = edge_with_state->first;
+		if(edge_with_state->second.test_in_MAIN())
+			delta_score += sc.add_edge_if_not_already(edge_id, clusterA);
+		else
+			delta_score += sc.remove_edge_if_not_already(edge_id, clusterA);
+		if(edge_with_state->second.test_in_SECN())
+			delta_score += sc.add_edge_if_not_already(edge_id, clusterB);
+		else
+			delta_score += sc.remove_edge_if_not_already(edge_id, clusterB);
+	}
+	assertVERYCLOSE(delta_score, delta_score_at_launch_state);
+
+	pair<long double, long double> result_unforced = from_launch_state_to_UNforced_proposal(
+			edges,
+			clusterA,
+			clusterB,
+			sc);
+	const long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED = result_unforced.second;
+	delta_score += result_unforced.first;
+
+	const long double post_score = delta_score;
+
+	const long double acceptance_prob = post_score - pre_score
+				- log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED
+				+ log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED;
+
+	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
+		// Accept. Do nothing
+		return delta_score;
+	} else {
+		// Restore the original state
+		For(edge_with_state, original_state_of_these_edges) {
+			const int64_t edge_id = edge_with_state->first;
+			if(edge_with_state->second.test_in_MAIN())
+				delta_score += sc.add_edge_if_not_already(edge_id, clusterA);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, clusterA);
+			if(edge_with_state->second.test_in_SECN())
+				delta_score += sc.add_edge_if_not_already(edge_id, clusterB);
+			else
+				delta_score += sc.remove_edge_if_not_already(edge_id, clusterB);
+		}
+		assertVERYCLOSE(delta_score, pre_score);
+		return delta_score;
+	}
+
 }
 
 long double one_node_simple_update(Score &sc) {
 	if(sc.state.get_K() == 1)
 		return 0.0L;
-	return one_node_CHEATING(sc);
 	// Select a node at random,
 	// and two distinct clusters at random
 	// Swap the neighbouring edges from one cluster to another.
