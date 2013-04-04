@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+#include "lvalue_input.hpp"
 using namespace std;
 
 #include "macros.hpp"
@@ -1036,5 +1037,104 @@ long double one_node_simple_update(Score &sc) {
 		delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second, swap_or_not);
 		assertVERYCLOSE(delta_score, 0.0L);
 	}
+	return delta_score;
+}
+
+vector<bool> store_these_edges_wrt_this_comm(const vector<int64_t> &edges, int comm, in<State> st) {
+	vector<bool> is_in_here;
+	For(edge, edges) {
+		if(st->get_edge_to_set_of_comms().at(*edge).count(comm))
+			is_in_here.push_back(true);
+		else
+			is_in_here.push_back(false);
+	}
+	assert(is_in_here.size() == edges.size());
+	return is_in_here;
+}
+
+pair<long double, long double> make_proposal_for_SIMPLEST(
+			Score &sc,
+			const int64_t edge,
+			in< vector<int> > communities,
+			const bool must_keep,
+			const long double, const long double
+			) {
+	// must_keep means that at least one of the communities should successfully get an edge
+	if(must_keep && communities->size() == 1) { // we must simply assign this, with probability 1.
+		return make_pair( sc.add_edge( edge, communities->front() ) , 0.0L );
+	}
+	return make_pair(-5, -6);
+}
+long double one_node_SIMPLEST_update(Score &sc) {
+	// Select one node at random
+	// Select a (small) number of communities at random
+	// Store the state wrt to those communities
+	// The proposal:
+	//   Select two probs, an in-prob and an out-prob
+	//   The edges of that node will be assigned using the in-prob or out-prob, depending on whether the other endpoint is in the comm.
+	//   (Check that all edges are accounted for.  If not, abandon.)
+	//   Calculate the reverse proposal probability.
+
+
+	Net net = sc.state.net;
+	const int64_t N = sc.state.N;
+	const int64_t random_node = gsl_rng_uniform(r) * N;
+
+	const int degree = sc.state.net->i.at(random_node).total_degree();
+	if(degree == 0)
+		return 0.0L; // I don't think this will every happen though.
+	vector<int64_t> edges;
+	for(int d= 0; d < degree; ++d ) {
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(random_node).my_junctions.at(d));
+		assert(random_node == junc.this_node_id);
+		const int e = junc.edge_id;
+		edges.push_back(e);
+	}
+	assert(!edges.empty());
+
+	const int how_many_communities = 1 + gsl_ran_bernoulli(r, 0.5); // either one or two, for now
+	const int64_t K = sc.state.get_K();
+	if(how_many_communities > K)
+		return 0.0L; // Abandon
+	vector<int> communities;
+	switch(how_many_communities) {
+		break; case 1: communities.push_back(gsl_rng_uniform(r)*K); assert(1==2);
+		break; case 2: {
+				pair<int,int> distinct = two_distinct_clusters(K);
+				communities.push_back(distinct.first);
+				communities.push_back(distinct.second);
+				assert(1==2);
+		}
+		break; default: assert(1==2); // shouldn't reach here
+	}
+
+	vector< vector<bool> >original_state;
+	For(comm, communities) {
+		original_state.push_back( store_these_edges_wrt_this_comm(edges, *comm, sc.state) );
+	}
+	assert((int)original_state.size() == how_many_communities);
+
+	long double delta_score = 0.0L;
+	// Now, remove the nodes from those communities, and remember whether they are in any other communities
+	vector<bool> must_keep_an_edge;
+	For(edge, edges) {
+		For(comm, communities) {
+			delta_score += sc.set(*edge, *comm, false); // remove it, if it's not already gone
+		}
+		must_keep_an_edge.push_back( sc.state.get_edge_to_set_of_comms().at(*edge).empty() );
+	}
+	assert(must_keep_an_edge.size() == edges.size());
+
+	// We've stored all we need to about the current state. Next to start making proposals
+	const long double pin  = gsl_rng_uniform(r);
+	const long double pout = gsl_rng_uniform(r);
+
+	for(size_t e=0; e<edges.size(); ++e) {
+		const int64_t edge = edges.at(e);
+		const bool must_keep = must_keep_an_edge.at(e);
+		// Make proposal on these one/two comm(s)
+		make_proposal_for_SIMPLEST(sc, edge, communities, must_keep, pin, pout);
+	}
+
 	return delta_score;
 }
