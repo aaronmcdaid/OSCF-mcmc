@@ -832,11 +832,16 @@ long double		split_or_merge_on_a_shared_edge(Score & sc) {
 	}
 }
 
-long double swap_this_node_wrt_two_clusters(Score &sc, const int64_t n, const int clusterA, const int clusterB) {
+long double swap_this_node_wrt_two_clusters(Score &sc, const int64_t n, const int clusterA, const int clusterB, const vector<bool> &swap_or_not) {
 	Net net = sc.state.net;
 	long double delta_score = 0.0L;
-	For(junction, net->i.at(n).my_junctions) {
-		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junction);
+	assert( swap_or_not.size() == net->i.at(n).my_junctions.size() );
+	const int degree = swap_or_not.size();
+	for(int d= 0; d < degree; ++d ) {
+		const bool should_I_swap_this = swap_or_not.at(d);
+		if(!should_I_swap_this)
+			continue;
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(n).my_junctions.at(d));
 		assert(n == junc.this_node_id);
 		const int edge_id = junc.edge_id;
 
@@ -866,7 +871,19 @@ long double one_node_simple_update(Score &sc) {
 	pair<int, int> two_clusters = two_distinct_clusters(sc.state);
 
 	long double delta_score = 0.0L;
-	delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second);
+
+	// We won't swap all of them, just a randomly-selected subset of the edges
+	const int degree = sc.state.net->i.at(random_node).total_degree();
+	vector<bool> swap_or_not;
+	const long double policy = gsl_rng_uniform(r);
+	// PP(policy);
+	for(int d = 0; d< degree; ++d) {
+		swap_or_not.push_back( gsl_ran_bernoulli(r, policy) );
+		// PP(swap_or_not.back());
+	}
+	assert(degree == (int)swap_or_not.size());
+
+	delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second, swap_or_not);
 
 	const long double acceptance_prob = delta_score;
 	if(log2l(gsl_rng_uniform(r)) < acceptance_prob) {
@@ -874,7 +891,7 @@ long double one_node_simple_update(Score &sc) {
 		// PP2(random_node, sc.state.net->node_set->as_string(random_node));
 	} else {
 		// Reject, Undo
-		delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second);
+		delta_score += swap_this_node_wrt_two_clusters(sc, random_node, two_clusters.first, two_clusters.second, swap_or_not);
 		assertVERYCLOSE(delta_score, 0.0L);
 	}
 	return delta_score;
