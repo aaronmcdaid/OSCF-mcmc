@@ -859,9 +859,74 @@ long double swap_this_node_wrt_two_clusters(Score &sc, const int64_t n, const in
 	return delta_score;
 }
 
+long double one_node_CHEATING(Score &sc) {
+	const int64_t N = sc.state.N;
+	const int64_t random_node = gsl_rng_uniform(r) * N;
+
+	pair<int, int> two_clusters = two_distinct_clusters(sc.state);
+	const int clusterA = two_clusters.first;
+	const int clusterB = two_clusters.second;
+
+	const int degree = sc.state.net->i.at(random_node).total_degree();
+
+	long double delta_score = 0.0L;
+
+	// randomize that one node's edge wrt both clusters
+	// .. BUT ignoring edges that are BOTH outside the cluster
+	// .. then perform a load of Gibbs updates
+	// (I really should allow rejection afterwards, as per Jain+Neal
+
+	const double alpha[3] = {1.0, 1.0, 1.0};
+	double theta[3];
+	gsl_ran_dirichlet(r, 3, alpha, theta);
+	//PP3(theta[0], theta[1], theta[2]);
+
+	Net net = sc.state.net;
+	vector<int> edges; // this is to be the set of all edges associated with this node, which are in at least one of the comms
+	for(int d= 0; d < degree; ++d ) {
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(random_node).my_junctions.at(d));
+		assert(random_node == junc.this_node_id);
+		const int e = junc.edge_id;
+		const bool is_in_clusterA = sc.state.get_edge_to_set_of_comms().at(e).count(clusterA);
+		const bool is_in_clusterB = sc.state.get_edge_to_set_of_comms().at(e).count(clusterB);
+		if(is_in_clusterA || is_in_clusterB)
+			edges.push_back(e);
+	}
+	if(edges.empty())
+		return 0.0L;
+	assert((int)edges.size() <= degree);
+
+	For(edge, edges) {
+		const int e = *edge;
+
+		assert(!sc.state.get_edge_to_set_of_comms().at(e).empty());
+		delta_score += remove_edge_from_one_community_if_present(e, sc, clusterA);
+		delta_score += remove_edge_from_one_community_if_present(e, sc, clusterB);
+
+		unsigned int n[3];
+		gsl_ran_multinomial(r, 3, 1, theta, n);
+		assert( n[0] + n[1] + n[2] == 1);
+
+		if(n[0]==1) { // both
+			delta_score += sc.add_edge(e, clusterA);
+			delta_score += sc.add_edge(e, clusterB);
+		}
+		if(n[1]==1) { /* just A */ delta_score += sc.add_edge(e, clusterA); }
+		if(n[2]==1) { /* just B */ delta_score += sc.add_edge(e, clusterB); }
+	}
+	for(int rep=0; rep<100; ++rep) {
+		For(edge, edges) {
+			pair<long double, long double> ab = gibbsUpdateJustTwoComms(*edge, sc, clusterA, clusterB);
+			delta_score += ab.first;
+		}
+	}
+	return delta_score;
+}
+
 long double one_node_simple_update(Score &sc) {
 	if(sc.state.get_K() == 1)
 		return 0.0L;
+	return one_node_CHEATING(sc);
 	// Select a node at random,
 	// and two distinct clusters at random
 	// Swap the neighbouring edges from one cluster to another.
