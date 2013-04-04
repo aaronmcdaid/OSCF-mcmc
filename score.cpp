@@ -135,6 +135,16 @@ long double	Score :: remove_edge_if_not_already(int64_t e, int64_t comm_id_to_re
 		return 0.0L; // It's already removed. No need to do anything
 	return this->remove_edge(e,comm_id_to_remove);
 }
+long double	Score :: set(const int64_t e, const int64_t comm_id_to_remove, const bool b) {
+	const bool current = this->state.edge_to_set_of_comms.at(e).count(comm_id_to_remove)==1;
+	if(current != b) {
+		if(b)
+			return this->add_edge(e,comm_id_to_remove);
+		else
+			return this->remove_edge(e,comm_id_to_remove);
+	} else
+		return 0.0L; // It's already correct
+}
 
 long double		Score :: append_empty_cluster()	 {
 	const long double f_0_0 = this->f(0,0);

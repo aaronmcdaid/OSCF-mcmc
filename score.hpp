@@ -41,6 +41,7 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	remove_edge(int64_t e, int64_t comm_id);
 	long double	add_edge_if_not_already(int64_t e, int64_t comm_id);
 	long double	remove_edge_if_not_already(int64_t e, int64_t comm_id);
+	long double	set(int64_t e, int64_t comm_id, bool b);
 	long double	append_empty_cluster()	;
 	long double	delete_empty_cluster_from_the_end()	;
 };
