@@ -115,6 +115,7 @@ public:
 										}
 	}
 	const std :: tr1 :: unordered_set<int64_t>		& get_my_edges()	const { return this->my_edges; }
+	bool	 						test_node(int64_t n)	const { return this->my_nodes.count(n) > 0; }
 };
 
 struct State {
