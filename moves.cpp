@@ -1099,7 +1099,7 @@ const pair<long double, long double> make_proposal_for_SIMPLEST(Score &sc
 	delta_score += sc.set(edge, clusterB, b);
 	return make_pair(delta_score, b ? log2l(p_b) : log2l(1.0-p_b) );
 }
-long double one_node_SIMPLEST_update(Score &sc) {
+long double one_node_SIMPLEST_update(Score &sc, const int64_t random_node) {
 	// Select one node at random
 	// Select two distinct communities at random
 	// Find the edges of that node which are in EXACTLY one of those two communities.
@@ -1111,8 +1111,6 @@ long double one_node_SIMPLEST_update(Score &sc) {
 		return 0.0L;
 
 	Net net = sc.state.net;
-	const int64_t N = sc.state.N;
-	const int64_t random_node = gsl_rng_uniform(r) * N;
 	const int degree = sc.state.net->i.at(random_node).total_degree();
 
 	pair<int,int> distinct = two_distinct_clusters(sc.state);

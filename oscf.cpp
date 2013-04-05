@@ -152,11 +152,15 @@ void oscf(Net net) {
 	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
+
 	vector<int64_t> edges_in_random_order; // will randomize later, at the start of each iteration
-	for(int64_t e = 0; e<net->E(); ++e) {
-		edges_in_random_order.push_back(e);
-	}
+	for(int64_t e = 0; e<net->E(); ++e) { edges_in_random_order.push_back(e); }
 	assert((int64_t)edges_in_random_order.size() == net->E());
+
+	vector<int64_t> nodes_in_random_order; // will randomize later, at the start of each iteration
+	for(int64_t n = 0; n<net->N(); ++n) { nodes_in_random_order.push_back(n); }
+	assert((int64_t)nodes_in_random_order.size() == net->N());
+
 	for (int rep = 0; rep < 1000000; ++rep) {
 		if(rep % 50000 == 0) {
 			cerr << rep << endl;
@@ -173,11 +177,19 @@ void oscf(Net net) {
 				assert(st.get_K() == args_info.K_arg);
 		}
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
+		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
+		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
 			if(K_can_vary) cmf_track += metroK(sc);
 			cmf_track += gibbsUpdate(*e, sc);
 			cmf_track += one_node_simple_update(sc);
-			cmf_track += one_node_SIMPLEST_update(sc);
+			{ // every time we do an edge, do a node aswell
+				cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
+				//PP2(node_offset, nodes_in_random_order.at(node_offset) );
+				++node_offset;
+				if(node_offset >= nodes_in_random_order.size())
+					node_offset = 0;
+			}
 		}
 		for(int i=0; i<10; ++i) {
 			if(K_can_vary) cmf_track += split_or_merge(sc);
