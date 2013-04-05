@@ -7,5 +7,6 @@ class in {
 public:
 			in(const volatile T &x_) : x(const_cast<const T*>(&x_)) {}
 	const T*	operator-> () const { return x; }
+	const T&	operator*  () const { return *x; }
 };
 #endif
