@@ -1065,117 +1065,95 @@ vector<bool>	store_this_edge_wrt_these_comms(const int64_t edge, in< vector<int>
 	return this_edge;
 }
 
-pair<long double, long double> make_proposal_for_SIMPLEST(
-			Score &sc,
-			const int64_t edge,
-			const int64_t opp,
-			in< vector<int> > communities,
-			const bool must_keep,
-			const long double pin, const long double pout
-			, const vector<bool> * possibly_force
-			) {
+struct p_B_fourCases {
+	const double p_B_opp_neither;
+	const double p_B_opp_A;
+	const double p_B_opp_B;
+	const double p_B_opp_both;
+	p_B_fourCases() : 
+			p_B_opp_neither(gsl_rng_uniform(r))
+			,p_B_opp_A(gsl_rng_uniform(r))
+			,p_B_opp_B(gsl_rng_uniform(r))
+			,p_B_opp_both(gsl_rng_uniform(r))
+	{}
+};
+const pair<long double, long double> make_proposal_for_SIMPLEST(Score &sc
+		, const int64_t edge, const int64_t opp
+		, const int clusterA, const int clusterB
+		, in<p_B_fourCases> p_B
+		, const int possibly_force_into_B = 300 // 0 or 1 will signify to force into A or B
+		) {
+	assert(possibly_force_into_B == 300 || possibly_force_into_B == 0 || possibly_force_into_B == 1);
+	const bool opp_is_in_A = sc.state.get_comms().at(clusterA).test_node(opp);
+	const bool opp_is_in_B = sc.state.get_comms().at(clusterB).test_node(opp);
+	double p_b = 2.0;
+	if(opp_is_in_A && opp_is_in_B)   p_b = p_B->p_B_opp_both;
+	if(opp_is_in_A && !opp_is_in_B)  p_b = p_B->p_B_opp_A;
+	if(!opp_is_in_A && opp_is_in_B)  p_b = p_B->p_B_opp_B;
+	if(!opp_is_in_A && !opp_is_in_B) p_b = p_B->p_B_opp_neither;
+	assert(p_b < 1.1);
+
 	long double delta_score = 0.0L;
-	if(possibly_force) assert(possibly_force->size() == communities->size());
-	// must_keep means that at least one of the communities should successfully get an edge
-	if(must_keep && communities->size() == 1) { // we must simply assign this, with probability 1.
-		return make_pair( sc.set( edge, communities->at(0), true ) , 0.0L );
-	}
-	if(!must_keep && communities->size() == 1) { // this is easy
-		const int only_comm_id = communities->at(0);
-		const bool is_an_in_edge = sc.state.get_comms().at(only_comm_id).test_node(opp); // test if the opposite end point is already in the community
-		const long double p_for_this_edge = is_an_in_edge ? pin : pout;
-		bool b = gsl_ran_bernoulli(r, p_for_this_edge);
-		if(possibly_force)
-			b = possibly_force->at(0);
-		delta_score += sc.set(edge, only_comm_id, b);
-		if(b) assert( sc.state.get_comms().at(only_comm_id).test_node(opp) );
-		return make_pair(delta_score, log2l(b ? p_for_this_edge : (1.0L-p_for_this_edge)  ));
-	}
-	assert(communities->size() == 1);
-	assert(communities->size() == 2);
-	return make_pair(-5, -6);
+	const bool b = possibly_force_into_B == 300 ? gsl_ran_bernoulli(r, p_b) : (possibly_force_into_B==1);
+	delta_score += sc.set(edge, clusterA, !b);
+	delta_score += sc.set(edge, clusterB, b);
+	return make_pair(delta_score, b ? log2l(p_b) : log2l(1.0-p_b) );
 }
 long double one_node_SIMPLEST_update(Score &sc) {
 	// Select one node at random
-	// Select a (small) number of communities at random
-	// Store the state wrt to those communities
-	// The proposal:
-	//   Select two probs, an in-prob and an out-prob
-	//   The edges of that node will be assigned using the in-prob or out-prob, depending on whether the other endpoint is in the comm.
-	//   (Check that all edges are accounted for.  If not, abandon.)
-	//   Calculate the reverse proposal probability.
+	// Select two distinct communities at random
+	// Find the edges of that node which are in EXACTLY one of those two communities.
+	// There will be four types of opposite-endpoints:
+	// 	Neither, A, B, Both
+	// 	We need four probabilities, P(current -> A), for each of those possibilities.
 
+	if(sc.state.get_K()==1)
+		return 0.0L;
 
 	Net net = sc.state.net;
 	const int64_t N = sc.state.N;
 	const int64_t random_node = gsl_rng_uniform(r) * N;
-
 	const int degree = sc.state.net->i.at(random_node).total_degree();
-	if(degree == 0)
-		return 0.0L; // I don't think this will every happen though.
+
+	pair<int,int> distinct = two_distinct_clusters(sc.state);
+	const int clusterA = distinct.first;
+	const int clusterB = distinct.second;
+
 	vector< pair<int64_t,int64_t> > edges;
+	vector<bool> original_state; // Is in B, not A
 	for(int d= 0; d < degree; ++d ) {
 		const network :: Junction junc = net->junctions->all_junctions_sorted.at(net->i.at(random_node).my_junctions.at(d));
 		assert(random_node == junc.this_node_id);
 		const int e = junc.edge_id;
-		const int opposite_end_node = junc.far_node_id;
-		assert(random_node != opposite_end_node); // not sure how to handle self loops in this method.  As in 'in' node?
-		edges.push_back( make_pair(e, opposite_end_node) );
-	}
-	assert(!edges.empty());
-
-	const int how_many_communities = 1; // + gsl_ran_bernoulli(r, 0.5); // either one or two, for now
-	const int64_t K = sc.state.get_K();
-	if(how_many_communities > K)
-		return 0.0L; // Abandon
-	vector<int> communities;
-	switch(how_many_communities) {
-		break; case 1: communities.push_back(gsl_rng_uniform(r)*K);
-		break; case 2: {
-				pair<int,int> distinct = two_distinct_clusters(K);
-				communities.push_back(distinct.first);
-				communities.push_back(distinct.second);
+		const bool is_in_clusterA = sc.state.get_edge_to_set_of_comms().at(e).count(clusterA);
+		const bool is_in_clusterB = sc.state.get_edge_to_set_of_comms().at(e).count(clusterB);
+		if( is_in_clusterA != is_in_clusterB) { // in one, but not both
+			const int opposite_end_node = junc.far_node_id;
+			assert(random_node != opposite_end_node); // not sure how to handle self loops in this method.
+			edges.push_back( make_pair(e, opposite_end_node) );
+			original_state.push_back(is_in_clusterB);
 		}
-		break; default: assert(1==2); // shouldn't reach here
-	}
-
-	vector< vector<bool> >original_state;
-	/*
-	For(comm, communities) {
-		original_state.push_back( store_these_edges_wrt_this_comm(edges, *comm, sc.state) );
-	}
-	assert((int)original_state.size() == how_many_communities);
-	*/
-	For(edge, edges) {
-		original_state.push_back( store_this_edge_wrt_these_comms(get_edge(*edge), communities, sc.state) );
 	}
 	assert(original_state.size() == edges.size());
+	if(edges.empty()) {
+		return 0.0L;
+	}
+
+	const p_B_fourCases p_B;
+
 
 	long double delta_score = 0.0L;
-	// Now, remove the nodes from those communities, and remember whether they are in any other communities
-	vector<bool> must_keep_an_edge;
-	For(edge, edges) {
-		For(comm, communities) {
-			delta_score += sc.set( get_edge(*edge), *comm, false); // remove it, if it's not already gone
-		}
-		must_keep_an_edge.push_back( sc.state.get_edge_to_set_of_comms().at( get_edge(*edge) ).empty() );
-	}
-	assert(must_keep_an_edge.size() == edges.size());
-
-	// We've stored all we need to about the current state. Next to start making proposals
-	const long double pin  = gsl_rng_uniform(r);
-	const long double pout = gsl_rng_uniform(r);
 
 	long double log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED = 0.0L;
 	for(size_t e=0; e<edges.size(); ++e) {
 		const int64_t edge = get_edge( edges.at(e) );
 		const int64_t opp = get_opp ( edges.at(e) );
-		const bool must_keep = must_keep_an_edge.at(e);
-		// Make proposal on these one/two comm(s)
-		const pair<long double, long double> delta_and_propprob = make_proposal_for_SIMPLEST(sc, edge, opp, communities, must_keep, pin, pout, &original_state.at(e));
+		assert(opp != random_node);
+		const pair<long double, long double> delta_and_propprob = make_proposal_for_SIMPLEST(sc, edge, opp, clusterA, clusterB, p_B, original_state.at(e));
 		delta_score += delta_and_propprob.first;
 		log2_product_of_accepted_probabilities_FOR_ALL_EDGES_FORCED += delta_and_propprob.second;
 	}
+
 	const long double score_forced = delta_score;
 	assertVERYCLOSE(score_forced, 0.0L); // to verify we're back at the start
 
@@ -1183,12 +1161,12 @@ long double one_node_SIMPLEST_update(Score &sc) {
 	for(size_t e=0; e<edges.size(); ++e) {
 		const int64_t edge = get_edge( edges.at(e) );
 		const int64_t opp = get_opp ( edges.at(e) );
-		const bool must_keep = must_keep_an_edge.at(e);
-		// Make proposal on these one/two comm(s)
-		const pair<long double, long double> delta_and_propprob = make_proposal_for_SIMPLEST(sc, edge, opp, communities, must_keep, pin, pout, NULL);
+		assert(opp != random_node);
+		const pair<long double, long double> delta_and_propprob = make_proposal_for_SIMPLEST(sc, edge, opp, clusterA, clusterB, p_B);
 		delta_score += delta_and_propprob.first;
 		log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED += delta_and_propprob.second;
 	}
+
 	const long double score_unforced = delta_score;
 
 	const long double acceptance_prob = score_unforced - score_forced - log2_product_of_accepted_probabilities_FOR_ALL_EDGES_UNFORCED
@@ -1201,10 +1179,9 @@ long double one_node_SIMPLEST_update(Score &sc) {
 		// Reject. Undo
 		for(size_t e=0; e<edges.size(); ++e) {
 			const int64_t edge = get_edge( edges.at(e) );
-			vector<bool> orig = original_state.at(e);
-			for(size_t c = 0; c < communities.size(); ++c) {
-				delta_score += sc.set( edge, communities.at(c), orig.at(c) );
-			}
+			bool orig_in_B = original_state.at(e);
+			delta_score += sc.set( edge, clusterA, !orig_in_B);
+			delta_score += sc.set( edge, clusterB,  orig_in_B);
 		}
 		assertVERYCLOSE(delta_score, 0.0L);
 		return delta_score;
