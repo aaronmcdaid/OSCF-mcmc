@@ -175,6 +175,7 @@ void oscf(Net net) {
 			if(K_can_vary) cmf_track += metroK(sc);
 			cmf_track += gibbsUpdate(*e, sc);
 			cmf_track += one_node_simple_update(sc);
+			cmf_track += one_node_SIMPLEST_update(sc);
 		}
 		for(int i=0; i<10; ++i) {
 			if(K_can_vary) cmf_track += split_or_merge(sc);

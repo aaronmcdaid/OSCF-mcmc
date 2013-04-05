@@ -30,5 +30,6 @@ long double		split_or_merge(Score & sc);
 long double		M3(Score & sc);
 long double		split_or_merge_on_a_shared_edge(Score & sc);
 long double one_node_simple_update(Score &sc);
+long double		one_node_SIMPLEST_update(Score &sc);
 
 #endif
