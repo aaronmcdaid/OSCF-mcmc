@@ -120,7 +120,7 @@ public:
 
 struct State {
 	friend class Score; // Score is allowed to edit this
-	friend void dump_all(const State &);
+	friend void dump_all(const State &, int64_t rep);
 	Net net;
 	const int64_t N;
 	const int64_t E;
