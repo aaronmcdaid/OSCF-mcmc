@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
-#include "lvalue_input.hpp"
 using namespace std;
+using namespace lvalue_input;
 
 #include "macros.hpp"
 
