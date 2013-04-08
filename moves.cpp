@@ -180,29 +180,37 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return delta_in_gibbs;
 }
-static	std :: tr1 :: unordered_set<int64_t>		findNearbyCommunities(in<State> state, const int64_t e) {
+vector<int64_t>		findNearbyCommunities(in<State> state, const int64_t e) {
 	// For this edge, find all the neighbouring edges,
 	// i.e. edges which share one endpoint.  Ignoring this edge, of course.
 	// Then return all the communities that are on those neighbouring edges.
-	std :: tr1 :: unordered_set<int64_t> nearby_communities; 
+	vector<int64_t> nearby_communities;
 	Net net = state->net;
 	const network :: EdgeSet :: Edge edge_details = net->edge_set->edges.at(e);
-	For(junc_id, net->i.at(edge_details.left).my_junctions) {
+	in< vector<int> > left_juncs = net->i.at(edge_details.left).my_junctions;
+	For(junc_id, *left_juncs) {
 		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junc_id);
 		if(junc.edge_id != e) {
 			For(comm_nearby, state->get_edge_to_set_of_comms().at(junc.edge_id)) {
-				nearby_communities.insert(*comm_nearby);
+				nearby_communities.push_back(*comm_nearby);
 			}
 		}
 	}
-	For(junc_id, net->i.at(edge_details.right).my_junctions) {
+	in< vector<int> > right_juncs = net->i.at(edge_details.right).my_junctions;
+	For(junc_id, *right_juncs) {
+	//For(junc_id, net->i.at(edge_details.right).my_junctions) {
 		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junc_id);
 		if(junc.edge_id != e) {
 			For(comm_nearby, state->get_edge_to_set_of_comms().at(junc.edge_id)) {
-				nearby_communities.insert(*comm_nearby);
+				nearby_communities.push_back(*comm_nearby);
 			}
 		}
 	}
+	sort(nearby_communities.begin(), nearby_communities.end());
+	nearby_communities.erase(
+		unique(nearby_communities.begin(), nearby_communities.end())
+		, nearby_communities.end()
+	);
 	return nearby_communities;
 }
 long double 		gibbsUpdateNearby(Score& sc, int64_t e) {
@@ -213,9 +221,7 @@ long double 		gibbsUpdateNearby(Score& sc, int64_t e) {
 	// 3. draw from the Bernoullis, but conditioning that it must be assigned to at least one community.
 
 	// First, find all this edges *nearby* communities
-	std :: tr1 :: unordered_set<int64_t> nearby_communities_ = findNearbyCommunities(sc.state, e);
-	vector<int64_t> nearby_communities ( nearby_communities_.begin(), nearby_communities_.end());
-	assert(nearby_communities.size() == nearby_communities_.size());
+	vector<int64_t> nearby_communities = findNearbyCommunities(sc.state, e);
 
 	const size_t K_nearby = nearby_communities.size();
 	if(K_nearby == 0)
