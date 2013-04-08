@@ -181,6 +181,7 @@ void oscf(Net net) {
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
 			if(K_can_vary) cmf_track += metroK(sc);
+			cmf_track += gibbs_one_comm_one_edge(sc, *e);
 			cmf_track += gibbsUpdate(*e, sc);
 			cmf_track += one_node_simple_update(sc);
 			{ // every time we do an edge, do a node aswell

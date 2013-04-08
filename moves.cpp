@@ -1185,3 +1185,35 @@ long double one_node_SIMPLEST_update(Score &sc, const int64_t random_node) {
 		return delta_score;
 	}
 }
+long double		gibbs_one_comm_one_edge(Score & sc, const int64_t e) {
+	const int K = sc.state.get_K();
+	const int k = gsl_rng_uniform(r) * K;
+
+	assert(!sc.state.get_edge_to_set_of_comms().at(e).empty());
+	long double delta_score = 0.0L;
+	delta_score += sc.set( e, k, false);
+
+	// If that was the only edge, we just have to include it again :-(
+	if(sc.state.get_edge_to_set_of_comms().at(e).empty()) {
+		delta_score += sc.set( e, k, true);
+		assertVERYCLOSE(0.0L, delta_score);
+		assert(!sc.state.get_edge_to_set_of_comms().at(e).empty());
+		return delta_score;
+	}
+	const long double extra_if_in = sc.set( e, k, true);
+	delta_score += extra_if_in;
+
+	const long double exponented = exp2l(extra_if_in);
+	const long double prob_connnected = exponented / (1.0L + exponented);
+	assert(isfinite(prob_connnected));
+
+	if(gsl_rng_uniform(r) < prob_connnected) {
+		// Connect
+		// It's already connected, just return
+		return delta_score;
+	} else {
+		// Disconnect
+		delta_score += sc.set( e, k, false);
+		return delta_score;
+	}
+}
