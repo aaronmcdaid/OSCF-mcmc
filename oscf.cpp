@@ -161,17 +161,7 @@ void oscf(Net net) {
 	for(int64_t n = 0; n<net->N(); ++n) { nodes_in_random_order.push_back(n); }
 	assert((int64_t)nodes_in_random_order.size() == net->N());
 
-	for (int rep = 0; rep < 1000000; ++rep) {
-		if(rep>0 && rep % 10000 == 0) {
-			//cerr << rep << endl;
-			assert(st.every_edge_non_empty());
-			CHECK_PMF_TRACKER(cmf_track, sc.score());
-		}
-		if(rep>0 && rep % 100 == 0) { // || rep < 100) {
-			dump_all(st, rep);
-			dump_truncated_node_cover(st);
-			PP(rep);
-		}
+	for (int rep = 1; rep <= 100; ++rep) {
 		{ // check for the -K arg
 			if(!K_can_vary)
 				assert(st.get_K() == args_info.K_arg);
@@ -197,6 +187,17 @@ void oscf(Net net) {
 			//if(K_can_vary) cmf_track += split_or_merge(sc);
 			//if(K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
 			//cmf_track += M3(sc);
+		}
+
+		if(rep>0 && rep % 100000 == 0) {
+			cerr << rep << endl;
+			assert(st.every_edge_non_empty());
+			CHECK_PMF_TRACKER(cmf_track, sc.score());
+		}
+		if(rep>0 && rep % 10 == 0) { // || rep < 100) {
+			dump_all(st, rep);
+			// dump_truncated_node_cover(st);
+			PP(rep);
 		}
 	}
 	assert(st.every_edge_non_empty());
