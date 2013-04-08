@@ -182,11 +182,11 @@ void oscf(Net net) {
 		For(e, edges_in_random_order) {
 			if(K_can_vary) cmf_track += metroK(sc);
 			cmf_track += gibbs_one_comm_one_edge(sc, *e);
-			cmf_track += gibbsUpdate(*e, sc);
-			cmf_track += one_node_simple_update(sc);
+			//cmf_track += gibbsUpdate(*e, sc);
+			//cmf_track += one_node_simple_update(sc);
 			cmf_track += gibbsUpdateNearby(sc, *e);
 			{ // every time we do an edge, do a node aswell
-				cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
+				//cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
 				//PP2(node_offset, nodes_in_random_order.at(node_offset) );
 				++node_offset;
 				if(node_offset >= nodes_in_random_order.size())
@@ -194,9 +194,9 @@ void oscf(Net net) {
 			}
 		}
 		for(int i=0; i<10; ++i) {
-			if(K_can_vary) cmf_track += split_or_merge(sc);
+			//if(K_can_vary) cmf_track += split_or_merge(sc);
 			//if(K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
-			cmf_track += M3(sc);
+			//cmf_track += M3(sc);
 		}
 	}
 	assert(st.every_edge_non_empty());
