@@ -122,14 +122,14 @@ void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
 	assert(st.get_K() == 0);
-	if(0) { // every edge in its own cluster
+	if(1) { // every edge in its own cluster
 		for(int64_t e = 0; e < st.E; ++e) {
 			const int64_t new_cluster_id = st.append_empty_cluster();
 			assert(new_cluster_id == e);
 			sc.add_edge(e, e);
 		}
 	}
-	for(int identical_clusters=0; identical_clusters<1; ++identical_clusters) {
+	for(int identical_clusters=0; identical_clusters<0; ++identical_clusters) {
 		const int64_t new_cluster_id = st.append_empty_cluster();
 		//assert(0 == new_cluster_id);
 		for(int64_t e = 0; e < st.E; ++e) {
