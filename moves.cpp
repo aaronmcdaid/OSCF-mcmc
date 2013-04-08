@@ -180,6 +180,82 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return delta_in_gibbs;
 }
+static	std :: tr1 :: unordered_set<int64_t>		findNearbyCommunities(in<State> state, const int64_t e) {
+	// For this edge, find all the neighbouring edges,
+	// i.e. edges which share one endpoint.  Ignoring this edge, of course.
+	// Then return all the communities that are on those neighbouring edges.
+	std :: tr1 :: unordered_set<int64_t> nearby_communities; 
+	Net net = state->net;
+	const network :: EdgeSet :: Edge edge_details = net->edge_set->edges.at(e);
+	For(junc_id, net->i.at(edge_details.left).my_junctions) {
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junc_id);
+		if(junc.edge_id != e) {
+			For(comm_nearby, state->get_edge_to_set_of_comms().at(junc.edge_id)) {
+				nearby_communities.insert(*comm_nearby);
+			}
+		}
+	}
+	For(junc_id, net->i.at(edge_details.right).my_junctions) {
+		const network :: Junction junc = net->junctions->all_junctions_sorted.at(*junc_id);
+		if(junc.edge_id != e) {
+			For(comm_nearby, state->get_edge_to_set_of_comms().at(junc.edge_id)) {
+				nearby_communities.insert(*comm_nearby);
+			}
+		}
+	}
+	return nearby_communities;
+}
+long double 		gibbsUpdateNearby(Score& sc, int64_t e) {
+	// Does NOT change K
+	//
+	// 1. remove the edge from its *nearby* communities
+	// 2. reassign to each in turn, calculating the delta-score in each case, giving the probability for that Bernoulli
+	// 3. draw from the Bernoullis, but conditioning that it must be assigned to at least one community.
+
+	// First, find all this edges *nearby* communities
+	std :: tr1 :: unordered_set<int64_t> nearby_communities_ = findNearbyCommunities(sc.state, e);
+	vector<int64_t> nearby_communities ( nearby_communities_.begin(), nearby_communities_.end());
+	assert(nearby_communities.size() == nearby_communities_.size());
+
+	const size_t K_nearby = nearby_communities.size();
+	if(K_nearby == 0)
+		return 0.0L;
+
+	long double delta_score = 0.0L;
+
+	// Then, remove this edge from all those nearby_communities
+	For(nearby_comm, nearby_communities) {
+		delta_score += sc.set(e, *nearby_comm, false);
+	}
+
+
+	// For each of the nearby commmunities, how does the corresponding f change with the (re)addition of this edge?
+	vector<long double> p_k_nearby;
+	{
+		For(nearby_comm, nearby_communities) {
+			const long double delta_score_one_edge = sc.add_edge(e, *nearby_comm);
+			sc.state.remove_edge(e, *nearby_comm);
+			p_k_nearby.push_back(calculate_p_based_on_the_log_ratio(delta_score_one_edge));
+		}
+		assert(p_k_nearby.size() == K_nearby);
+	}
+
+	if(!sc.state.get_edge_to_set_of_comms().at(e).empty()) {
+		// This is easy, just do independent draws
+		for(size_t k_nearby = 0; k_nearby < K_nearby; ++k_nearby) {
+			const long double p_of_being_in_this_comm = p_k_nearby.at(k_nearby);
+			assert(isfinite(p_of_being_in_this_comm));
+			delta_score += sc.set(e, nearby_communities.at(k_nearby), gsl_rng_uniform(r) < p_of_being_in_this_comm);
+		}
+	} else {
+		// Must use the conditional assignment
+		const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k_nearby);
+		for(size_t k_nearby = 0; k_nearby < K_nearby; ++k_nearby) {
+			delta_score += sc.set(e, nearby_communities.at(k_nearby), new_values_for_this_edge.first.at(k_nearby));
+		}
+	}
+	return delta_score;
+}
 pair<long double,long double> 	gibbsUpdateJustTwoComms(
 							int64_t e
 							, Score & sc, const int64_t main_cluster

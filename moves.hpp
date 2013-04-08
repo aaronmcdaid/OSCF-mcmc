@@ -33,5 +33,6 @@ long double		split_or_merge_on_a_shared_edge(Score & sc);
 long double one_node_simple_update(Score &sc);
 long double		one_node_SIMPLEST_update(Score &sc, int64_t n);
 long double		gibbs_one_comm_one_edge(Score & sc, const int64_t e);
+long double 		gibbsUpdateNearby(Score & sc, int64_t e);
 
 #endif
