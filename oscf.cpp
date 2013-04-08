@@ -162,8 +162,8 @@ void oscf(Net net) {
 	assert((int64_t)nodes_in_random_order.size() == net->N());
 
 	for (int rep = 0; rep < 1000000; ++rep) {
-		if(rep % 50000 == 0) {
-			cerr << rep << endl;
+		if(rep>0 && rep % 10000 == 0) {
+			//cerr << rep << endl;
 			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
