@@ -34,6 +34,7 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	f(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community)	const;
 	long double	f(const OneCommunitySummary ocs)						const;
 	long double 	what_would_change_if_I_deleted_an_empty_community()				const;
+	long double 	what_would_change_if_I_added_an_empty_community()				const;
 
 	// send the modifications through here
 
