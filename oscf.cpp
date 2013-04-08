@@ -167,7 +167,7 @@ void oscf(Net net) {
 			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
-		if(1 || rep % 100 == 0 || rep < 100) {
+		if(rep>0 && rep % 100 == 0) { // || rep < 100) {
 			dump_all(st, rep);
 			dump_truncated_node_cover(st);
 			PP(rep);
