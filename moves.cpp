@@ -243,18 +243,7 @@ long double 		gibbsUpdateNearby(Score& sc, int64_t e) {
 			// add_edge will do:
 			// - increase num_edges by 1
 			// - increase num_nodes by 0, 1 or 2
-			in<Community> that_comm = sc.state.get_comms().at(*nearby_comm);
-			const bool left_in_that_comm_already = that_comm->test_node(edge_details.left);
-			const bool right_in_that_comm_already = that_comm->test_node(edge_details.right);
-			assert(edge_details.left != edge_details.right);
-			const int num_extra_nodes = (left_in_that_comm_already?0:1) + (right_in_that_comm_already?0:1);
-
-			const int num_nodes_pre = that_comm->get_num_unique_nodes_in_this_community();
-			const int num_nodes_post = that_comm->get_num_unique_nodes_in_this_community() + num_extra_nodes;
-
-			const int64_t num_edges_pre = that_comm->get_num_edges();
-			const int64_t num_edges_post = num_edges_pre + 1;
-			const long double expected_delta_score = sc.f(num_edges_post, num_nodes_post) - sc.f(num_edges_pre, num_nodes_pre);
+			const long double expected_delta_score = sc.if_this_edge_is_added(*nearby_comm, edge_details.left, edge_details.right);
 
 			//const long double delta_score_one_edge = sc.add_edge(e, *nearby_comm);
 			//assertEQ(num_nodes_post, that_comm->get_num_unique_nodes_in_this_community());
@@ -310,8 +299,7 @@ pair<long double,long double> 	gibbsUpdateJustTwoComms(
 	{
 		for(int justIterateOverTwo = 0; justIterateOverTwo < 2; ++ justIterateOverTwo) {
 			const int k = justIterateOverTwo == 0 ? main_cluster : secondary_cluster;
-			const long double delta_score_one_edge = sc.add_edge(e, k);
-			sc.state.remove_edge(e, k); // Put things back the way they were
+			const long double delta_score_one_edge = sc.if_this_edge_is_added(k, e);
 			p_k.at(justIterateOverTwo) = calculate_p_based_on_the_log_ratio(delta_score_one_edge);
 		}
 

@@ -45,6 +45,27 @@ struct Score { // every modification *should* go through here eventually, so as 
 	long double	set(int64_t e, int64_t comm_id, bool b);
 	long double	append_empty_cluster()	;
 	long double	delete_empty_cluster_from_the_end()	;
+
+	// include some query funcs here, so they can be inlined
+	long double	if_this_edge_is_added(const int64_t comm, const int64_t edge) const {
+		const network :: EdgeSet :: Edge edge_details = this->state.net->edge_set->edges.at(edge);
+		return this->if_this_edge_is_added(comm, edge_details.left, edge_details.right);
+	}
+	long double	if_this_edge_is_added(const int64_t comm, const int64_t left, const int64_t right) const {
+			const Community & that_comm = this->state.get_comms().at(comm);
+			const bool left_in_that_comm_already = that_comm.test_node(left);
+			const bool right_in_that_comm_already = that_comm.test_node(right);
+			assert(left != right);
+			const int num_extra_nodes = (left_in_that_comm_already?0:1) + (right_in_that_comm_already?0:1);
+
+			const int num_nodes_pre = that_comm.get_num_unique_nodes_in_this_community();
+			const int num_nodes_post = that_comm.get_num_unique_nodes_in_this_community() + num_extra_nodes;
+
+			const int64_t num_edges_pre = that_comm.get_num_edges();
+			const int64_t num_edges_post = num_edges_pre + 1;
+			const long double expected_delta_score = this->f(num_edges_post, num_nodes_post) - this->f(num_edges_pre, num_nodes_pre);
+			return expected_delta_score;
+	}
 };
 
 #endif
