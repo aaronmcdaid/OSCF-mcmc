@@ -176,7 +176,7 @@ void oscf(Net net) {
 			//cmf_track += one_node_simple_update(sc);
 			cmf_track += gibbsUpdateNearby(sc, *e);
 			{ // every time we do an edge, do a node aswell
-				//cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
+				cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
 				//PP2(node_offset, nodes_in_random_order.at(node_offset) );
 				++node_offset;
 				if(node_offset >= nodes_in_random_order.size())
