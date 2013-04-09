@@ -113,7 +113,7 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 					return make_pair(bools, log2_product_of_accepted_probabilities);
 }
 
-long double		remove_edge_from_all_its_communities(int64_t e, Score &sc) {
+static long double		remove_edge_from_all_its_communities(int64_t e, Score &sc) {
 		long double delta_in_here = 0.0L;
 		while( ! sc.state.get_edge_to_set_of_comms().at(e).empty() ) {
 			int64_t comm_id_to_remove = * sc.state.get_edge_to_set_of_comms().at(e).begin();
@@ -121,14 +121,14 @@ long double		remove_edge_from_all_its_communities(int64_t e, Score &sc) {
 		}
 		return delta_in_here;
 }
-long double		remove_edge_from_one_community_if_present(int64_t e, Score &sc, const int64_t comm_id_to_remove) {
+static long double		remove_edge_from_one_community_if_present(int64_t e, Score &sc, const int64_t comm_id_to_remove) {
 		if( sc.state.get_edge_to_set_of_comms().at(e).count(comm_id_to_remove) == 1 )
 			return sc.remove_edge(e, comm_id_to_remove);
 		else
 			return 0.0L;
 }
 
-long double		calculate_p_based_on_the_log_ratio(const long double delta_score_one_edge) {
+static long double		calculate_p_based_on_the_log_ratio(const long double delta_score_one_edge) {
 			const long double a = exp2l(delta_score_one_edge);
 			const long double p = a / (1+a);
 			// PP3(extra_if_in, a, p);
@@ -180,7 +180,7 @@ long double 		gibbsUpdate(int64_t e, Score & sc) {
 	}
 	return delta_in_gibbs;
 }
-vector<int64_t>		findNearbyCommunities(in<State> state, const int64_t e) {
+static vector<int64_t>		findNearbyCommunities(in<State> state, const int64_t e) {
 	// For this edge, find all the neighbouring edges,
 	// i.e. edges which share one endpoint.  Ignoring this edge, of course.
 	// Then return all the communities that are on those neighbouring edges.
@@ -221,7 +221,7 @@ long double 		gibbsUpdateNearby(Score& sc, int64_t e) {
 	// 3. draw from the Bernoullis, but conditioning that it must be assigned to at least one community.
 
 	// First, find all this edges *nearby* communities
-	vector<int64_t> nearby_communities = findNearbyCommunities(sc.state, e);
+	const vector<int64_t> nearby_communities = findNearbyCommunities(sc.state, e);
 
 	const size_t K_nearby = nearby_communities.size();
 	if(K_nearby == 0)
