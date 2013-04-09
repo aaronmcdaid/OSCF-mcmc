@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
 
 void dump_all(const State & st, const int64_t rep) {
 	cout << endl;
-	PP(rep);
 	cout << " ===" << endl;
+	PP2(rep, st.get_K());
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;
@@ -93,12 +93,14 @@ void dump_all(const State & st, const int64_t rep) {
 		}
 		cout << endl;
 	}
-	cout << st.get_K();
-	for(int k=0; k<st.get_K(); ++k) {
-		cout << ";   ";
-		st.get_comms().at(k).dump_me();
+	if(0) { // print sizes of all clusters?
+		cout << st.get_K();
+		for(int k=0; k<st.get_K(); ++k) {
+			cout << ";   ";
+			st.get_comms().at(k).dump_me();
+		}
+		cout << endl;
 	}
-	cout << endl;
 	cout << " ==" << endl << endl;
 }
 void dump_truncated_node_cover(const State & st) {
