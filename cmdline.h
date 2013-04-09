@@ -41,12 +41,6 @@ struct gengetopt_args_info
   const char *version_help; /**< @brief Print version and exit help description.  */
   int git_version_flag;	/**< @brief detailed version description (default=off).  */
   const char *git_version_help; /**< @brief detailed version description help description.  */
-  int directed_flag;	/**< @brief directed (default=off).  */
-  const char *directed_help; /**< @brief directed help description.  */
-  int weighted_flag;	/**< @brief weighted (default=off).  */
-  const char *weighted_help; /**< @brief weighted help description.  */
-  int selfloop_flag;	/**< @brief selfloops allowed (default=off).  */
-  const char *selfloop_help; /**< @brief selfloops allowed help description.  */
   int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
   char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
   const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
@@ -63,42 +57,52 @@ struct gengetopt_args_info
   int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
   char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
   const char *K_help; /**< @brief Number of clusters, K help description.  */
-  float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='1').  */
-  char * alpha_orig;	/**< @brief alpha. How uniform the cluster sizes original value given at command line.  */
-  const char *alpha_help; /**< @brief alpha. How uniform the cluster sizes help description.  */
-  int uniformK_flag;	/**< @brief Use a Uniform prior for K (default=off).  */
-  const char *uniformK_help; /**< @brief Use a Uniform prior for K help description.  */
-  int iterations_arg;	/**< @brief How many iterations (default='120000').  */
+  int iterations_arg;	/**< @brief How many iterations (default='10000').  */
   char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
   const char *iterations_help; /**< @brief How many iterations help description.  */
-  int algo_metroK_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
-  char * algo_metroK_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
-  const char *algo_metroK_help; /**< @brief Use the simple Metropolis move on K help description.  */
-  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
-  char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
-  const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
-  int labels_arg;	/**< @brief Do label-unswitching, and a nice summary (default='1').  */
-  char * labels_orig;	/**< @brief Do label-unswitching, and a nice summary original value given at command line.  */
-  const char *labels_help; /**< @brief Do label-unswitching, and a nice summary help description.  */
+  int metroK_algo_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
+  char * metroK_algo_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
+  const char *metroK_algo_help; /**< @brief Use the simple Metropolis move on K help description.  */
+  int metro1Comm1Edge_algo_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
+  char * metro1Comm1Edge_algo_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
+  const char *metro1Comm1Edge_algo_help; /**< @brief Use the simple Metropolis move on K help description.  */
+  int NearbyGibbs_algo_arg;	/**< @brief Gibbs updated on All comms (default='1').  */
+  char * NearbyGibbs_algo_orig;	/**< @brief Gibbs updated on All comms original value given at command line.  */
+  const char *NearbyGibbs_algo_help; /**< @brief Gibbs updated on All comms help description.  */
+  int AllGibbs_algo_arg;	/**< @brief Gibbs updated on Nearby comms (default='0').  */
+  char * AllGibbs_algo_orig;	/**< @brief Gibbs updated on Nearby comms original value given at command line.  */
+  const char *AllGibbs_algo_help; /**< @brief Gibbs updated on Nearby comms help description.  */
+  int Simplest1Node_algo_arg;	/**< @brief  (default='0').  */
+  char * Simplest1Node_algo_orig;	/**< @brief  original value given at command line.  */
+  const char *Simplest1Node_algo_help; /**< @brief  help description.  */
+  int AnySM_algo_arg;	/**< @brief  (default='1').  */
+  char * AnySM_algo_orig;	/**< @brief  original value given at command line.  */
+  const char *AnySM_algo_help; /**< @brief  help description.  */
+  int SharedSM_algo_arg;	/**< @brief  (default='1').  */
+  char * SharedSM_algo_orig;	/**< @brief  original value given at command line.  */
+  const char *SharedSM_algo_help; /**< @brief  help description.  */
+  int M3_algo_arg;	/**< @brief  (default='1').  */
+  char * M3_algo_orig;	/**< @brief  original value given at command line.  */
+  const char *M3_algo_help; /**< @brief  help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int git_version_given ;	/**< @brief Whether git-version was given.  */
-  unsigned int directed_given ;	/**< @brief Whether directed was given.  */
-  unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
-  unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */
   unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
   unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
   unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
   unsigned int K_given ;	/**< @brief Whether K was given.  */
-  unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
-  unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
   unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
-  unsigned int algo_metroK_given ;	/**< @brief Whether algo.metroK was given.  */
-  unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
-  unsigned int labels_given ;	/**< @brief Whether labels was given.  */
+  unsigned int metroK_algo_given ;	/**< @brief Whether metroK.algo was given.  */
+  unsigned int metro1Comm1Edge_algo_given ;	/**< @brief Whether metro1Comm1Edge.algo was given.  */
+  unsigned int NearbyGibbs_algo_given ;	/**< @brief Whether NearbyGibbs.algo was given.  */
+  unsigned int AllGibbs_algo_given ;	/**< @brief Whether AllGibbs.algo was given.  */
+  unsigned int Simplest1Node_algo_given ;	/**< @brief Whether Simplest1Node.algo was given.  */
+  unsigned int AnySM_algo_given ;	/**< @brief Whether AnySM.algo was given.  */
+  unsigned int SharedSM_algo_given ;	/**< @brief Whether SharedSM.algo was given.  */
+  unsigned int M3_algo_given ;	/**< @brief Whether M3.algo was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

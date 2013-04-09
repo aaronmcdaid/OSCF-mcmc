@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
 	const char * edgeListFileName   = args_info.inputs[0];
 
-	const network :: Network * net = network :: build_network(edgeListFileName, args_info.stringIDs_flag, args_info.directed_flag, args_info.weighted_flag);
+	const network :: Network * net = network :: build_network(edgeListFileName, args_info.stringIDs_flag, false/*args_info.directed_flag*/, false/*args_info.weighted_flag*/);
 
 	// if(args_info.GT_vector_arg) { loadGroundTruth(args_info.GT_vector_arg); assert(global_groundTruth.size() == net->N()); }
 
@@ -170,13 +170,13 @@ void oscf(Net net) {
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
-			if(K_can_vary) cmf_track += metroK(sc);
-			cmf_track += gibbs_one_comm_one_edge(sc, *e);
+			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
+			if(args_info.metro1Comm1Edge_algo_arg) cmf_track += gibbs_one_comm_one_edge(sc, *e);
 			//cmf_track += gibbsUpdate(*e, sc);
 			//cmf_track += one_node_simple_update(sc);
-			cmf_track += gibbsUpdateNearby(sc, *e);
+			if(args_info.NearbyGibbs_algo_arg) cmf_track += gibbsUpdateNearby(sc, *e);
 			{ // every time we do an edge, do a node aswell
-				cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
+				if(args_info.Simplest1Node_algo_arg) cmf_track += one_node_SIMPLEST_update(sc, nodes_in_random_order.at(node_offset) );
 				//PP2(node_offset, nodes_in_random_order.at(node_offset) );
 				++node_offset;
 				if(node_offset >= nodes_in_random_order.size())
@@ -184,9 +184,9 @@ void oscf(Net net) {
 			}
 		}
 		for(int i=0; i<10; ++i) {
-			//if(K_can_vary) cmf_track += split_or_merge(sc);
-			//if(K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
-			//cmf_track += M3(sc);
+			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc);
+			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
+			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
 
 		if(rep>0 && rep % 100000 == 0) {

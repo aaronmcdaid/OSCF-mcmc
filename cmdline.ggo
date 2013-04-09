@@ -5,9 +5,9 @@ purpose "Fit models to network data"
 option  "git-version"        - "detailed version description"        flag       off
 #option  "verbose"            v "detailed debugging"                  flag       off
 
-option  "directed"           d "directed"                            flag       off
-option  "weighted"           w "weighted"                            flag       off
-option  "selfloop"           s "selfloops allowed"                   flag       off
+#option  "directed"           d "directed"                            flag       off
+#option  "weighted"           w "weighted"                            flag       off
+#option  "selfloop"           s "selfloops allowed"                   flag       off
 option  "assume_N_nodes"     - "Pre-create N nodes (0 to N-1), which may be left with zero degree"       int        default="0" no
 option  "stringIDs"          - "string IDs in the input"             flag       off
 
@@ -16,13 +16,19 @@ option  "GT.vector"          - "The ground truth. a file with N lines. Starts fr
 option  "initGT"             - "Initialize to the ground truth"      flag       off
 
 option  "K"                  K "Number of clusters, K"               int        default="-1" no
-option  "alpha"              - "alpha. How uniform the cluster sizes"        float        default="1" no
-option  "uniformK"           u "Use a Uniform prior for K"               flag       off
+#option  "alpha"              - "alpha. How uniform the cluster sizes"        float        default="1" no
+#option  "uniformK"           u "Use a Uniform prior for K"               flag       off
 
-option  "iterations"         i "How many iterations"                 int       default="120000" no
-option  "algo.metroK"        - "Use the simple Metropolis move on K"            int       default="1" no
-option  "algo.gibbs"         - "Use the simple Gibbs in the algorithm"          int       default="1" no
-option  "labels"             - "Do label-unswitching, and a nice summary"      int       default="1" no
+option  "iterations"         i "How many iterations"                 int       default="10000" no
+option  "metroK.algo"           - "Use the simple Metropolis move on K"            int       default="1" no
+option  "metro1Comm1Edge.algo"  - "Use the simple Metropolis move on K"            int       default="1" no
+option  "NearbyGibbs.algo"      - "Gibbs updated on All comms"                     int       default="1" no
+option  "AllGibbs.algo"         - "Gibbs updated on Nearby comms"                  int       default="0" no
+option  "Simplest1Node.algo"    - ""                                               int       default="0" no
+option  "AnySM.algo"    - ""                                               int       default="1" no
+option  "SharedSM.algo"    - ""                                               int       default="1" no
+option  "M3.algo"    - ""                                               int       default="1" no
+#option  "labels"             - "Do label-unswitching, and a nice summary"      int       default="1" no
 
 #option  "model.scf"          - "Stochastic community finding"        flag       off
 #option  "scf"                - "Collapsed SCF"                       flag       off

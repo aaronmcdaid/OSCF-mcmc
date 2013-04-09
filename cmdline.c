@@ -32,24 +32,24 @@ const char *gengetopt_args_info_usage = "Usage: Stochastic Block Models [OPTIONS
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                Print help and exit",
-  "  -V, --version             Print version and exit",
-  "      --git-version         detailed version description  (default=off)",
-  "  -d, --directed            directed  (default=off)",
-  "  -w, --weighted            weighted  (default=off)",
-  "  -s, --selfloop            selfloops allowed  (default=off)",
-  "      --assume_N_nodes=INT  Pre-create N nodes (0 to N-1), which may be left \n                              with zero degree  (default=`0')",
-  "      --stringIDs           string IDs in the input  (default=off)",
-  "      --seed=INT            seed to drand48() and gsl_rng_set  (default=`0')",
-  "      --GT.vector=STRING    The ground truth. a file with N lines. Starts from \n                              ZERO.",
-  "      --initGT              Initialize to the ground truth  (default=off)",
-  "  -K, --K=INT               Number of clusters, K  (default=`-1')",
-  "      --alpha=FLOAT         alpha. How uniform the cluster sizes  (default=`1')",
-  "  -u, --uniformK            Use a Uniform prior for K  (default=off)",
-  "  -i, --iterations=INT      How many iterations  (default=`120000')",
-  "      --algo.metroK=INT     Use the simple Metropolis move on K  (default=`1')",
-  "      --algo.gibbs=INT      Use the simple Gibbs in the algorithm  \n                              (default=`1')",
-  "      --labels=INT          Do label-unswitching, and a nice summary  \n                              (default=`1')",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
+  "      --git-version             detailed version description  (default=off)",
+  "      --assume_N_nodes=INT      Pre-create N nodes (0 to N-1), which may be \n                                  left with zero degree  (default=`0')",
+  "      --stringIDs               string IDs in the input  (default=off)",
+  "      --seed=INT                seed to drand48() and gsl_rng_set  \n                                  (default=`0')",
+  "      --GT.vector=STRING        The ground truth. a file with N lines. Starts \n                                  from ZERO.",
+  "      --initGT                  Initialize to the ground truth  (default=off)",
+  "  -K, --K=INT                   Number of clusters, K  (default=`-1')",
+  "  -i, --iterations=INT          How many iterations  (default=`10000')",
+  "      --metroK.algo=INT         Use the simple Metropolis move on K  \n                                  (default=`1')",
+  "      --metro1Comm1Edge.algo=INT\n                                Use the simple Metropolis move on K  \n                                  (default=`1')",
+  "      --NearbyGibbs.algo=INT    Gibbs updated on All comms  (default=`1')",
+  "      --AllGibbs.algo=INT       Gibbs updated on Nearby comms  (default=`0')",
+  "      --Simplest1Node.algo=INT    (default=`0')",
+  "      --AnySM.algo=INT            (default=`1')",
+  "      --SharedSM.algo=INT         (default=`1')",
+  "      --M3.algo=INT               (default=`1')",
     0
 };
 
@@ -57,7 +57,6 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
-  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -79,21 +78,21 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
   args_info->git_version_given = 0 ;
-  args_info->directed_given = 0 ;
-  args_info->weighted_given = 0 ;
-  args_info->selfloop_given = 0 ;
   args_info->assume_N_nodes_given = 0 ;
   args_info->stringIDs_given = 0 ;
   args_info->seed_given = 0 ;
   args_info->GT_vector_given = 0 ;
   args_info->initGT_given = 0 ;
   args_info->K_given = 0 ;
-  args_info->alpha_given = 0 ;
-  args_info->uniformK_given = 0 ;
   args_info->iterations_given = 0 ;
-  args_info->algo_metroK_given = 0 ;
-  args_info->algo_gibbs_given = 0 ;
-  args_info->labels_given = 0 ;
+  args_info->metroK_algo_given = 0 ;
+  args_info->metro1Comm1Edge_algo_given = 0 ;
+  args_info->NearbyGibbs_algo_given = 0 ;
+  args_info->AllGibbs_algo_given = 0 ;
+  args_info->Simplest1Node_algo_given = 0 ;
+  args_info->AnySM_algo_given = 0 ;
+  args_info->SharedSM_algo_given = 0 ;
+  args_info->M3_algo_given = 0 ;
 }
 
 static
@@ -101,9 +100,6 @@ void clear_args (struct gengetopt_args_info *args_info)
 {
   FIX_UNUSED (args_info);
   args_info->git_version_flag = 0;
-  args_info->directed_flag = 0;
-  args_info->weighted_flag = 0;
-  args_info->selfloop_flag = 0;
   args_info->assume_N_nodes_arg = 0;
   args_info->assume_N_nodes_orig = NULL;
   args_info->stringIDs_flag = 0;
@@ -114,17 +110,24 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->initGT_flag = 0;
   args_info->K_arg = -1;
   args_info->K_orig = NULL;
-  args_info->alpha_arg = 1;
-  args_info->alpha_orig = NULL;
-  args_info->uniformK_flag = 0;
-  args_info->iterations_arg = 120000;
+  args_info->iterations_arg = 10000;
   args_info->iterations_orig = NULL;
-  args_info->algo_metroK_arg = 1;
-  args_info->algo_metroK_orig = NULL;
-  args_info->algo_gibbs_arg = 1;
-  args_info->algo_gibbs_orig = NULL;
-  args_info->labels_arg = 1;
-  args_info->labels_orig = NULL;
+  args_info->metroK_algo_arg = 1;
+  args_info->metroK_algo_orig = NULL;
+  args_info->metro1Comm1Edge_algo_arg = 1;
+  args_info->metro1Comm1Edge_algo_orig = NULL;
+  args_info->NearbyGibbs_algo_arg = 1;
+  args_info->NearbyGibbs_algo_orig = NULL;
+  args_info->AllGibbs_algo_arg = 0;
+  args_info->AllGibbs_algo_orig = NULL;
+  args_info->Simplest1Node_algo_arg = 0;
+  args_info->Simplest1Node_algo_orig = NULL;
+  args_info->AnySM_algo_arg = 1;
+  args_info->AnySM_algo_orig = NULL;
+  args_info->SharedSM_algo_arg = 1;
+  args_info->SharedSM_algo_orig = NULL;
+  args_info->M3_algo_arg = 1;
+  args_info->M3_algo_orig = NULL;
   
 }
 
@@ -136,21 +139,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->git_version_help = gengetopt_args_info_help[2] ;
-  args_info->directed_help = gengetopt_args_info_help[3] ;
-  args_info->weighted_help = gengetopt_args_info_help[4] ;
-  args_info->selfloop_help = gengetopt_args_info_help[5] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[6] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[7] ;
-  args_info->seed_help = gengetopt_args_info_help[8] ;
-  args_info->GT_vector_help = gengetopt_args_info_help[9] ;
-  args_info->initGT_help = gengetopt_args_info_help[10] ;
-  args_info->K_help = gengetopt_args_info_help[11] ;
-  args_info->alpha_help = gengetopt_args_info_help[12] ;
-  args_info->uniformK_help = gengetopt_args_info_help[13] ;
-  args_info->iterations_help = gengetopt_args_info_help[14] ;
-  args_info->algo_metroK_help = gengetopt_args_info_help[15] ;
-  args_info->algo_gibbs_help = gengetopt_args_info_help[16] ;
-  args_info->labels_help = gengetopt_args_info_help[17] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[3] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[4] ;
+  args_info->seed_help = gengetopt_args_info_help[5] ;
+  args_info->GT_vector_help = gengetopt_args_info_help[6] ;
+  args_info->initGT_help = gengetopt_args_info_help[7] ;
+  args_info->K_help = gengetopt_args_info_help[8] ;
+  args_info->iterations_help = gengetopt_args_info_help[9] ;
+  args_info->metroK_algo_help = gengetopt_args_info_help[10] ;
+  args_info->metro1Comm1Edge_algo_help = gengetopt_args_info_help[11] ;
+  args_info->NearbyGibbs_algo_help = gengetopt_args_info_help[12] ;
+  args_info->AllGibbs_algo_help = gengetopt_args_info_help[13] ;
+  args_info->Simplest1Node_algo_help = gengetopt_args_info_help[14] ;
+  args_info->AnySM_algo_help = gengetopt_args_info_help[15] ;
+  args_info->SharedSM_algo_help = gengetopt_args_info_help[16] ;
+  args_info->M3_algo_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -239,11 +242,15 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->GT_vector_arg));
   free_string_field (&(args_info->GT_vector_orig));
   free_string_field (&(args_info->K_orig));
-  free_string_field (&(args_info->alpha_orig));
   free_string_field (&(args_info->iterations_orig));
-  free_string_field (&(args_info->algo_metroK_orig));
-  free_string_field (&(args_info->algo_gibbs_orig));
-  free_string_field (&(args_info->labels_orig));
+  free_string_field (&(args_info->metroK_algo_orig));
+  free_string_field (&(args_info->metro1Comm1Edge_algo_orig));
+  free_string_field (&(args_info->NearbyGibbs_algo_orig));
+  free_string_field (&(args_info->AllGibbs_algo_orig));
+  free_string_field (&(args_info->Simplest1Node_algo_orig));
+  free_string_field (&(args_info->AnySM_algo_orig));
+  free_string_field (&(args_info->SharedSM_algo_orig));
+  free_string_field (&(args_info->M3_algo_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -285,12 +292,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "version", 0, 0 );
   if (args_info->git_version_given)
     write_into_file(outfile, "git-version", 0, 0 );
-  if (args_info->directed_given)
-    write_into_file(outfile, "directed", 0, 0 );
-  if (args_info->weighted_given)
-    write_into_file(outfile, "weighted", 0, 0 );
-  if (args_info->selfloop_given)
-    write_into_file(outfile, "selfloop", 0, 0 );
   if (args_info->assume_N_nodes_given)
     write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
   if (args_info->stringIDs_given)
@@ -303,18 +304,24 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "initGT", 0, 0 );
   if (args_info->K_given)
     write_into_file(outfile, "K", args_info->K_orig, 0);
-  if (args_info->alpha_given)
-    write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
-  if (args_info->uniformK_given)
-    write_into_file(outfile, "uniformK", 0, 0 );
   if (args_info->iterations_given)
     write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
-  if (args_info->algo_metroK_given)
-    write_into_file(outfile, "algo.metroK", args_info->algo_metroK_orig, 0);
-  if (args_info->algo_gibbs_given)
-    write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
-  if (args_info->labels_given)
-    write_into_file(outfile, "labels", args_info->labels_orig, 0);
+  if (args_info->metroK_algo_given)
+    write_into_file(outfile, "metroK.algo", args_info->metroK_algo_orig, 0);
+  if (args_info->metro1Comm1Edge_algo_given)
+    write_into_file(outfile, "metro1Comm1Edge.algo", args_info->metro1Comm1Edge_algo_orig, 0);
+  if (args_info->NearbyGibbs_algo_given)
+    write_into_file(outfile, "NearbyGibbs.algo", args_info->NearbyGibbs_algo_orig, 0);
+  if (args_info->AllGibbs_algo_given)
+    write_into_file(outfile, "AllGibbs.algo", args_info->AllGibbs_algo_orig, 0);
+  if (args_info->Simplest1Node_algo_given)
+    write_into_file(outfile, "Simplest1Node.algo", args_info->Simplest1Node_algo_orig, 0);
+  if (args_info->AnySM_algo_given)
+    write_into_file(outfile, "AnySM.algo", args_info->AnySM_algo_orig, 0);
+  if (args_info->SharedSM_algo_given)
+    write_into_file(outfile, "SharedSM.algo", args_info->SharedSM_algo_orig, 0);
+  if (args_info->M3_algo_given)
+    write_into_file(outfile, "M3.algo", args_info->M3_algo_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -487,9 +494,6 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
-  case ARG_FLOAT:
-    if (val) *((float *)field) = (float)strtod (val, &stop_char);
-    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -505,7 +509,6 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
-  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -576,25 +579,25 @@ cmdline_parser_internal (
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "git-version",	0, NULL, 0 },
-        { "directed",	0, NULL, 'd' },
-        { "weighted",	0, NULL, 'w' },
-        { "selfloop",	0, NULL, 's' },
         { "assume_N_nodes",	1, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
         { "seed",	1, NULL, 0 },
         { "GT.vector",	1, NULL, 0 },
         { "initGT",	0, NULL, 0 },
         { "K",	1, NULL, 'K' },
-        { "alpha",	1, NULL, 0 },
-        { "uniformK",	0, NULL, 'u' },
         { "iterations",	1, NULL, 'i' },
-        { "algo.metroK",	1, NULL, 0 },
-        { "algo.gibbs",	1, NULL, 0 },
-        { "labels",	1, NULL, 0 },
+        { "metroK.algo",	1, NULL, 0 },
+        { "metro1Comm1Edge.algo",	1, NULL, 0 },
+        { "NearbyGibbs.algo",	1, NULL, 0 },
+        { "AllGibbs.algo",	1, NULL, 0 },
+        { "Simplest1Node.algo",	1, NULL, 0 },
+        { "AnySM.algo",	1, NULL, 0 },
+        { "SharedSM.algo",	1, NULL, 0 },
+        { "M3.algo",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVdwsK:ui:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVK:i:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -610,36 +613,6 @@ cmdline_parser_internal (
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'd':	/* directed.  */
-        
-        
-          if (update_arg((void *)&(args_info->directed_flag), 0, &(args_info->directed_given),
-              &(local_args_info.directed_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "directed", 'd',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'w':	/* weighted.  */
-        
-        
-          if (update_arg((void *)&(args_info->weighted_flag), 0, &(args_info->weighted_given),
-              &(local_args_info.weighted_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "weighted", 'w',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 's':	/* selfloops allowed.  */
-        
-        
-          if (update_arg((void *)&(args_info->selfloop_flag), 0, &(args_info->selfloop_given),
-              &(local_args_info.selfloop_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "selfloop", 's',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'K':	/* Number of clusters, K.  */
         
         
@@ -652,22 +625,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'u':	/* Use a Uniform prior for K.  */
-        
-        
-          if (update_arg((void *)&(args_info->uniformK_flag), 0, &(args_info->uniformK_given),
-              &(local_args_info.uniformK_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "uniformK", 'u',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'i':	/* How many iterations.  */
         
         
           if (update_arg( (void *)&(args_info->iterations_arg), 
                &(args_info->iterations_orig), &(args_info->iterations_given),
-              &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
+              &(local_args_info.iterations_given), optarg, 0, "10000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "iterations", 'i',
               additional_error))
@@ -754,58 +717,114 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* alpha. How uniform the cluster sizes.  */
-          else if (strcmp (long_options[option_index].name, "alpha") == 0)
+          /* Use the simple Metropolis move on K.  */
+          else if (strcmp (long_options[option_index].name, "metroK.algo") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->alpha_arg), 
-                 &(args_info->alpha_orig), &(args_info->alpha_given),
-                &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
+            if (update_arg( (void *)&(args_info->metroK_algo_arg), 
+                 &(args_info->metroK_algo_orig), &(args_info->metroK_algo_given),
+                &(local_args_info.metroK_algo_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "alpha", '-',
+                "metroK.algo", '-',
                 additional_error))
               goto failure;
           
           }
           /* Use the simple Metropolis move on K.  */
-          else if (strcmp (long_options[option_index].name, "algo.metroK") == 0)
+          else if (strcmp (long_options[option_index].name, "metro1Comm1Edge.algo") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->algo_metroK_arg), 
-                 &(args_info->algo_metroK_orig), &(args_info->algo_metroK_given),
-                &(local_args_info.algo_metroK_given), optarg, 0, "1", ARG_INT,
+            if (update_arg( (void *)&(args_info->metro1Comm1Edge_algo_arg), 
+                 &(args_info->metro1Comm1Edge_algo_orig), &(args_info->metro1Comm1Edge_algo_given),
+                &(local_args_info.metro1Comm1Edge_algo_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "algo.metroK", '-',
+                "metro1Comm1Edge.algo", '-',
                 additional_error))
               goto failure;
           
           }
-          /* Use the simple Gibbs in the algorithm.  */
-          else if (strcmp (long_options[option_index].name, "algo.gibbs") == 0)
+          /* Gibbs updated on All comms.  */
+          else if (strcmp (long_options[option_index].name, "NearbyGibbs.algo") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->algo_gibbs_arg), 
-                 &(args_info->algo_gibbs_orig), &(args_info->algo_gibbs_given),
-                &(local_args_info.algo_gibbs_given), optarg, 0, "1", ARG_INT,
+            if (update_arg( (void *)&(args_info->NearbyGibbs_algo_arg), 
+                 &(args_info->NearbyGibbs_algo_orig), &(args_info->NearbyGibbs_algo_given),
+                &(local_args_info.NearbyGibbs_algo_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "algo.gibbs", '-',
+                "NearbyGibbs.algo", '-',
                 additional_error))
               goto failure;
           
           }
-          /* Do label-unswitching, and a nice summary.  */
-          else if (strcmp (long_options[option_index].name, "labels") == 0)
+          /* Gibbs updated on Nearby comms.  */
+          else if (strcmp (long_options[option_index].name, "AllGibbs.algo") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->labels_arg), 
-                 &(args_info->labels_orig), &(args_info->labels_given),
-                &(local_args_info.labels_given), optarg, 0, "1", ARG_INT,
+            if (update_arg( (void *)&(args_info->AllGibbs_algo_arg), 
+                 &(args_info->AllGibbs_algo_orig), &(args_info->AllGibbs_algo_given),
+                &(local_args_info.AllGibbs_algo_given), optarg, 0, "0", ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "labels", '-',
+                "AllGibbs.algo", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* .  */
+          else if (strcmp (long_options[option_index].name, "Simplest1Node.algo") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->Simplest1Node_algo_arg), 
+                 &(args_info->Simplest1Node_algo_orig), &(args_info->Simplest1Node_algo_given),
+                &(local_args_info.Simplest1Node_algo_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "Simplest1Node.algo", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* .  */
+          else if (strcmp (long_options[option_index].name, "AnySM.algo") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->AnySM_algo_arg), 
+                 &(args_info->AnySM_algo_orig), &(args_info->AnySM_algo_given),
+                &(local_args_info.AnySM_algo_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "AnySM.algo", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* .  */
+          else if (strcmp (long_options[option_index].name, "SharedSM.algo") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->SharedSM_algo_arg), 
+                 &(args_info->SharedSM_algo_orig), &(args_info->SharedSM_algo_given),
+                &(local_args_info.SharedSM_algo_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "SharedSM.algo", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* .  */
+          else if (strcmp (long_options[option_index].name, "M3.algo") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->M3_algo_arg), 
+                 &(args_info->M3_algo_orig), &(args_info->M3_algo_given),
+                &(local_args_info.M3_algo_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "M3.algo", '-',
                 additional_error))
               goto failure;
           
