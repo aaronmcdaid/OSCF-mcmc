@@ -71,9 +71,8 @@ int main(int argc, char **argv) {
 }
 
 void dump_all(const State & st, const int64_t rep) {
-	cout << endl;
 	cout << " ===" << endl;
-	PP2(rep, st.get_K());
+	PP3(rep, st.get_K(), ELAPSED());
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;
@@ -199,9 +198,9 @@ void oscf(Net net) {
 		if(rep>0 && rep % 10 == 0) { // || rep < 100) {
 			dump_all(st, rep);
 			// dump_truncated_node_cover(st);
-			PP(rep);
 		}
 	}
+	PP2("fin", ELAPSED());
 	assert(st.every_edge_non_empty());
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
