@@ -26,9 +26,55 @@ void			seed_the_random_number_generator(int seed) {
 					srand(seed); // I *think* this will seed std::random_shuffle
 }
 
+static pair< pair<bool,bool>, long double>	bernoullis_not_all_failed_2(
+							const long double p_k_1
+							, const long double p_k_2
+							, std :: pair<int,int> possibly_force = std :: make_pair(-1,-1)
+							) {
+		if(possibly_force.first != -1) {
+			assert(possibly_force.first  >= 0 && possibly_force.first  < 2); // It's just zero or one
+			assert(possibly_force.second >= 0 && possibly_force.second < 2); // It's just zero or one
+		}
+		// Four possibilities:
+		//   *0 0 (but this isn't allowed!)
+		//    0 1
+		//    1 0
+		//    1 1
+
+		const long double prob_both_failing = (1.0L-p_k_1) * (1.0L-p_k_2);
+		const long double prob_at_least_one_success = 1.0L - prob_both_failing;
+
+		// First, calculate the conditional probability of cluster 1 being assigned
+		const long double cond_prob_A = p_k_1 / prob_at_least_one_success;
+		assert(isfinite(cond_prob_A));
+
+		long double log2_product_of_accepted_probabilities = 0.0L;
+
+		bool bA;
+		if(possibly_force.first == -1) {
+			bA = gsl_rng_uniform(r) < cond_prob_A;
+		} else {
+			bA = possibly_force.first;
+		}
+		log2_product_of_accepted_probabilities += bA ? log2l(cond_prob_A) : log2_one_plus_l(-cond_prob_A);
+		assert(isfinite(log2_product_of_accepted_probabilities));
+
+		const long double cond_prob_B = bA ? p_k_2 : 1.0L;
+		bool bB;
+		if(possibly_force.second == -1) {
+			bB = gsl_rng_uniform(r) < cond_prob_B;
+		} else {
+			bB = possibly_force.second;
+		}
+		log2_product_of_accepted_probabilities += bB ? log2l(cond_prob_B) : log2_one_plus_l(-cond_prob_B);
+		assert(isfinite(log2_product_of_accepted_probabilities));
+
+		assert(bA || bB);
+		return make_pair( make_pair(bA,bB), log2_product_of_accepted_probabilities);
+}
 
 static pair< vector<bool>, long double>	bernoullis_not_all_failed(
-							const vector<long double> p_k
+							const vector<long double> &p_k
 							, std :: pair<int,int> possibly_force = std :: make_pair(-1,-1)
 							) {
 					const int64_t K = p_k.size();
@@ -305,11 +351,12 @@ pair<long double,long double> 	gibbsUpdateJustTwoComms(
 	}
 
 	// Assign the new values
-	const pair< vector<bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed(p_k, possibly_force);
+
+	const pair< pair<bool,bool>,long double > new_values_for_this_edge = bernoullis_not_all_failed_2(p_k.at(0),p_k.at(1), possibly_force);
 	{
-		if(new_values_for_this_edge.first.at(0))
+		if(new_values_for_this_edge.first.first)
 				delta_in_gibbs += sc.add_edge(e, main_cluster);
-		if(new_values_for_this_edge.first.at(1))
+		if(new_values_for_this_edge.first.second)
 				delta_in_gibbs += sc.add_edge(e, secondary_cluster);
 	}
 	return make_pair(delta_in_gibbs, new_values_for_this_edge.second); // includes the proposal probability

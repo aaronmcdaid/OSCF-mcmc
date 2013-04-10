@@ -1,2 +1,4 @@
-"Start OSCFmcmc"
+"Optimize bernoullis_not_all_failed for the K==2 scenario."
+"\n"
+"Start OSCFmcmc."
 "\n"
