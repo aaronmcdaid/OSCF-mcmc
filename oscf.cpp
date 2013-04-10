@@ -86,7 +86,8 @@ static long double entropy_of_this_state(in< State > st) {
 void dump_all(const State & st, const int64_t rep, const bool cluster_sizes /*= false*/) {
 	cout << " ===" << endl;
 	const long double entropy = entropy_of_this_state(st);
-	PP4(rep, st.get_K(), ELAPSED(), entropy);
+	PP2(rep, ELAPSED());
+	PP3(rep, st.get_K(), entropy);
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;

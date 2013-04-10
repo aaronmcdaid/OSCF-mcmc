@@ -12,7 +12,7 @@ struct NodeSet {
 	// you random access to the sorted vector
 	//
 	// So yes, the interface is entirely string-based, as this is all that you will need
-	// most of the time.  But under the hood they may be stored, and sorted, as strings.
+	// most of the time.  But under the hood they may be stored, and sorted, as integers or string.
 	virtual void insert_string_version_of_name(std :: string) = 0;
 	virtual std :: string as_string(int) const = 0;
 	virtual void finish_me() = 0;
