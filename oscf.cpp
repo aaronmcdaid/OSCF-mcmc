@@ -132,6 +132,36 @@ void dump_truncated_node_cover(const State & st) {
 	cout << "=End Of Current Cover=" << endl;
 }
 
+static vector< vector<int64_t> > load_ground_truth(const NodeSet * const node_set, const char * gt_file_name) {
+	unordered_map<string, int> map_string_to_id;
+	for(int i=0; i<node_set->N(); ++i) {
+		map_string_to_id[ node_set->as_string(i) ] = i;
+	}
+	assert(node_set->N() == (int)map_string_to_id.size());
+
+	vector< vector<int64_t> > all_gt_comms;
+
+	ifstream gt(gt_file_name);
+	string line;
+	while(getline(gt, line)) {
+		vector<int64_t> this_comm;
+		istringstream fields(line);
+		string field;
+		while(getline(fields, field)) {
+			const int node_id = map_string_to_id[field];
+			this_comm.push_back(node_id);
+		}
+		assert(!this_comm.empty());
+		all_gt_comms.push_back(this_comm);
+
+	}
+
+	// Finally, ensure the map hasn't increased in size!  This would mean that the GT has invalid entries in it.
+	assert(node_set->N() == (int)map_string_to_id.size());
+	assert(!all_gt_comms.empty());
+	return all_gt_comms;
+}
+
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 void oscf(Net net) {
 	State st(net); // initialize with every edge in its own community
@@ -158,6 +188,12 @@ void oscf(Net net) {
 		}
 		assert(st.get_K() == args_info.K_arg);
 	}
+
+	vector< vector<int64_t> > ground_truth; // leave empty if no ground truth was specified
+	if(args_info.GT_arg) { //Load a ground Truth?
+		load_ground_truth(net->node_set, args_info.GT_arg);
+	}
+
 
 	// Next, we ensure that each edge is fully assigned.
 	// Do the test twice,

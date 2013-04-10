@@ -38,8 +38,7 @@ const char *gengetopt_args_info_help[] = {
   "      --assume_N_nodes=INT      Pre-create N nodes (0 to N-1), which may be \n                                  left with zero degree  (default=`0')",
   "      --stringIDs               string IDs in the input  (default=off)",
   "      --seed=INT                seed to drand48() and gsl_rng_set  \n                                  (default=`0')",
-  "      --GT.vector=STRING        The ground truth. a file with N lines. Starts \n                                  from ZERO.",
-  "      --initGT                  Initialize to the ground truth  (default=off)",
+  "      --GT=STRING               The ground truth, one line per community.",
   "  -K, --K=INT                   Number of clusters, K  (default=`-1')",
   "  -i, --iterations=INT          How many iterations  (default=`10000')",
   "      --metroK.algo=INT         Use the simple Metropolis move on K  \n                                  (default=`1')",
@@ -81,8 +80,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->assume_N_nodes_given = 0 ;
   args_info->stringIDs_given = 0 ;
   args_info->seed_given = 0 ;
-  args_info->GT_vector_given = 0 ;
-  args_info->initGT_given = 0 ;
+  args_info->GT_given = 0 ;
   args_info->K_given = 0 ;
   args_info->iterations_given = 0 ;
   args_info->metroK_algo_given = 0 ;
@@ -105,9 +103,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->stringIDs_flag = 0;
   args_info->seed_arg = 0;
   args_info->seed_orig = NULL;
-  args_info->GT_vector_arg = NULL;
-  args_info->GT_vector_orig = NULL;
-  args_info->initGT_flag = 0;
+  args_info->GT_arg = NULL;
+  args_info->GT_orig = NULL;
   args_info->K_arg = -1;
   args_info->K_orig = NULL;
   args_info->iterations_arg = 10000;
@@ -142,18 +139,17 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->assume_N_nodes_help = gengetopt_args_info_help[3] ;
   args_info->stringIDs_help = gengetopt_args_info_help[4] ;
   args_info->seed_help = gengetopt_args_info_help[5] ;
-  args_info->GT_vector_help = gengetopt_args_info_help[6] ;
-  args_info->initGT_help = gengetopt_args_info_help[7] ;
-  args_info->K_help = gengetopt_args_info_help[8] ;
-  args_info->iterations_help = gengetopt_args_info_help[9] ;
-  args_info->metroK_algo_help = gengetopt_args_info_help[10] ;
-  args_info->metro1Comm1Edge_algo_help = gengetopt_args_info_help[11] ;
-  args_info->NearbyGibbs_algo_help = gengetopt_args_info_help[12] ;
-  args_info->AllGibbs_algo_help = gengetopt_args_info_help[13] ;
-  args_info->Simplest1Node_algo_help = gengetopt_args_info_help[14] ;
-  args_info->AnySM_algo_help = gengetopt_args_info_help[15] ;
-  args_info->SharedSM_algo_help = gengetopt_args_info_help[16] ;
-  args_info->M3_algo_help = gengetopt_args_info_help[17] ;
+  args_info->GT_help = gengetopt_args_info_help[6] ;
+  args_info->K_help = gengetopt_args_info_help[7] ;
+  args_info->iterations_help = gengetopt_args_info_help[8] ;
+  args_info->metroK_algo_help = gengetopt_args_info_help[9] ;
+  args_info->metro1Comm1Edge_algo_help = gengetopt_args_info_help[10] ;
+  args_info->NearbyGibbs_algo_help = gengetopt_args_info_help[11] ;
+  args_info->AllGibbs_algo_help = gengetopt_args_info_help[12] ;
+  args_info->Simplest1Node_algo_help = gengetopt_args_info_help[13] ;
+  args_info->AnySM_algo_help = gengetopt_args_info_help[14] ;
+  args_info->SharedSM_algo_help = gengetopt_args_info_help[15] ;
+  args_info->M3_algo_help = gengetopt_args_info_help[16] ;
   
 }
 
@@ -239,8 +235,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->assume_N_nodes_orig));
   free_string_field (&(args_info->seed_orig));
-  free_string_field (&(args_info->GT_vector_arg));
-  free_string_field (&(args_info->GT_vector_orig));
+  free_string_field (&(args_info->GT_arg));
+  free_string_field (&(args_info->GT_orig));
   free_string_field (&(args_info->K_orig));
   free_string_field (&(args_info->iterations_orig));
   free_string_field (&(args_info->metroK_algo_orig));
@@ -298,10 +294,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "stringIDs", 0, 0 );
   if (args_info->seed_given)
     write_into_file(outfile, "seed", args_info->seed_orig, 0);
-  if (args_info->GT_vector_given)
-    write_into_file(outfile, "GT.vector", args_info->GT_vector_orig, 0);
-  if (args_info->initGT_given)
-    write_into_file(outfile, "initGT", 0, 0 );
+  if (args_info->GT_given)
+    write_into_file(outfile, "GT", args_info->GT_orig, 0);
   if (args_info->K_given)
     write_into_file(outfile, "K", args_info->K_orig, 0);
   if (args_info->iterations_given)
@@ -582,8 +576,7 @@ cmdline_parser_internal (
         { "assume_N_nodes",	1, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
         { "seed",	1, NULL, 0 },
-        { "GT.vector",	1, NULL, 0 },
-        { "initGT",	0, NULL, 0 },
+        { "GT",	1, NULL, 0 },
         { "K",	1, NULL, 'K' },
         { "iterations",	1, NULL, 'i' },
         { "metroK.algo",	1, NULL, 0 },
@@ -691,28 +684,16 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* The ground truth. a file with N lines. Starts from ZERO..  */
-          else if (strcmp (long_options[option_index].name, "GT.vector") == 0)
+          /* The ground truth, one line per community..  */
+          else if (strcmp (long_options[option_index].name, "GT") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->GT_vector_arg), 
-                 &(args_info->GT_vector_orig), &(args_info->GT_vector_given),
-                &(local_args_info.GT_vector_given), optarg, 0, 0, ARG_STRING,
+            if (update_arg( (void *)&(args_info->GT_arg), 
+                 &(args_info->GT_orig), &(args_info->GT_given),
+                &(local_args_info.GT_given), optarg, 0, 0, ARG_STRING,
                 check_ambiguity, override, 0, 0,
-                "GT.vector", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Initialize to the ground truth.  */
-          else if (strcmp (long_options[option_index].name, "initGT") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->initGT_flag), 0, &(args_info->initGT_given),
-                &(local_args_info.initGT_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "initGT", '-',
+                "GT", '-',
                 additional_error))
               goto failure;
           

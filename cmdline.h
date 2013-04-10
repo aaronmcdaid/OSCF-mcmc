@@ -49,11 +49,9 @@ struct gengetopt_args_info
   int seed_arg;	/**< @brief seed to drand48() and gsl_rng_set (default='0').  */
   char * seed_orig;	/**< @brief seed to drand48() and gsl_rng_set original value given at command line.  */
   const char *seed_help; /**< @brief seed to drand48() and gsl_rng_set help description.  */
-  char * GT_vector_arg;	/**< @brief The ground truth. a file with N lines. Starts from ZERO..  */
-  char * GT_vector_orig;	/**< @brief The ground truth. a file with N lines. Starts from ZERO. original value given at command line.  */
-  const char *GT_vector_help; /**< @brief The ground truth. a file with N lines. Starts from ZERO. help description.  */
-  int initGT_flag;	/**< @brief Initialize to the ground truth (default=off).  */
-  const char *initGT_help; /**< @brief Initialize to the ground truth help description.  */
+  char * GT_arg;	/**< @brief The ground truth, one line per community..  */
+  char * GT_orig;	/**< @brief The ground truth, one line per community. original value given at command line.  */
+  const char *GT_help; /**< @brief The ground truth, one line per community. help description.  */
   int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
   char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
   const char *K_help; /**< @brief Number of clusters, K help description.  */
@@ -91,8 +89,7 @@ struct gengetopt_args_info
   unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
-  unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
-  unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
+  unsigned int GT_given ;	/**< @brief Whether GT was given.  */
   unsigned int K_given ;	/**< @brief Whether K was given.  */
   unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
   unsigned int metroK_algo_given ;	/**< @brief Whether metroK.algo was given.  */

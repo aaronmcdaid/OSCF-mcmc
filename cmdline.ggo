@@ -12,8 +12,8 @@ option  "assume_N_nodes"     - "Pre-create N nodes (0 to N-1), which may be left
 option  "stringIDs"          - "string IDs in the input"             flag       off
 
 option  "seed"               - "seed to drand48() and gsl_rng_set"   int        default="0" no
-option  "GT.vector"          - "The ground truth. a file with N lines. Starts from ZERO." string  no
-option  "initGT"             - "Initialize to the ground truth"      flag       off
+option  "GT"          - "The ground truth, one line per community." string  no
+#option  "initGT"             - "Initialize to the ground truth"      flag       off
 
 option  "K"                  K "Number of clusters, K"               int        default="-1" no
 #option  "alpha"              - "alpha. How uniform the cluster sizes"        float        default="1" no
