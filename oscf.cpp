@@ -22,6 +22,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<sstream>
 
 //#include"format_flag_stack/format_flag_stack.hpp"
+#include"lvalue_input.hpp"
 
 #include"state.hpp"
 #include"score.hpp"
@@ -33,6 +34,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 using namespace std;
 using namespace std :: tr1;
 using namespace network;
+using namespace lvalue_input;
 
 
 // format_flag_stack :: FormatFlagStack stack;
@@ -70,9 +72,21 @@ int main(int argc, char **argv) {
 	oscf(net);
 }
 
+static long double entropy_of_this_state(in< State > st) {
+	long double entropy = 0.0;
+	For(comm, st->get_comms()) {
+		const int64_t num_u = comm->get_num_unique_nodes_in_this_community();
+		if(num_u > 0) {
+			const long double p_k = (long double) num_u / (long double) st->N;
+			entropy += -p_k * log2l(p_k);
+		}
+	}
+	return entropy;
+}
 void dump_all(const State & st, const int64_t rep) {
 	cout << " ===" << endl;
-	PP3(rep, st.get_K(), ELAPSED());
+	const long double entropy = entropy_of_this_state(st);
+	PP4(rep, st.get_K(), ELAPSED(), entropy);
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;
