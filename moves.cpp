@@ -14,6 +14,7 @@ using namespace lvalue_input;
 #include "macros.hpp"
 
 gsl_rng * r = NULL;
+#define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
 
 static long double probability_of_selecting_these_two_comms(const int main_cluster, const int secondary_cluster, const State &st);
 
@@ -39,8 +40,6 @@ static pair< vector<bool>, long double>	bernoullis_not_all_failed(
 		}
 	}
 					long double log2_product_of_accepted_probabilities = 0.0L;
-#define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
-
 					long double _p_rest_all_zeros = 0.0L;
 					vector<long double> p_rest_all_zeros_vector(K+1);
 					p_rest_all_zeros_vector.at(K) = 0.0L;

@@ -83,7 +83,7 @@ static long double entropy_of_this_state(in< State > st) {
 	}
 	return entropy;
 }
-void dump_all(const State & st, const int64_t rep) {
+void dump_all(const State & st, const int64_t rep, const bool cluster_sizes /*= false*/) {
 	cout << " ===" << endl;
 	const long double entropy = entropy_of_this_state(st);
 	PP4(rep, st.get_K(), ELAPSED(), entropy);
@@ -106,7 +106,7 @@ void dump_all(const State & st, const int64_t rep) {
 		}
 		cout << endl;
 	}
-	if(0) { // print sizes of all clusters?
+	if(cluster_sizes) { // print sizes of all clusters?
 		cout << st.get_K();
 		for(int k=0; k<st.get_K(); ++k) {
 			cout << ";   ";
