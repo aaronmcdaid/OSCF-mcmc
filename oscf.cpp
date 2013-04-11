@@ -148,9 +148,10 @@ static vector< vector<int64_t> > load_ground_truth(const NodeSet * const node_se
 		vector<int64_t> this_comm;
 		istringstream fields(line);
 		string field;
-		while(getline(fields, field)) {
+		while(fields >> field) {
 			const int node_id = map_string_to_id[field];
 			this_comm.push_back(node_id);
+			assert(node_set->N() == (int)map_string_to_id.size());
 		}
 		assert(!this_comm.empty());
 		all_gt_comms.push_back(this_comm);
