@@ -214,7 +214,7 @@ void oscf(Net net) {
 	for(int64_t n = 0; n<net->N(); ++n) { nodes_in_random_order.push_back(n); }
 	assert((int64_t)nodes_in_random_order.size() == net->N());
 
-	for (int rep = 1; rep <= 100; ++rep) {
+	for (int rep = 1; rep <= args_info.iterations_arg; ++rep) {
 		{ // check for the -K arg
 			if(!K_can_vary)
 				assert(st.get_K() == args_info.K_arg);
