@@ -22,10 +22,9 @@ void ignore(const T&) {
 using namespace std;
 
 long double h(const size_t w, const size_t n) {
-	assert(w <= n);
 	if(w==0)
 		return 0.0L;
-	return - w * (log2l(w) - log2l(n));
+	return - (w * (log2l(w) - log2l(n)));
 }
 
 long double H_star(const size_t a, const size_t b, const size_t c, const size_t d, const size_t n) {
