@@ -123,7 +123,7 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 			comms_this_node_is_in.at(*node).second.push_back(k);
 		}
 	}
-	PP2(ground_truth->size(), st->get_K());
+	//PP2(ground_truth->size(), st->get_K());
 	assert(ground_truth->size() == sizes_of_GT.size());
 	assert(st->get_K() == (int64_t)sizes_of_foundComms.size());
 
@@ -155,10 +155,13 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 	assert(H_GT >= H_GT_given_Fnd);
 	assert(H_Fnd >= H_Fnd_given_GT);
 
-	PP(intersections.size());
-	For(inter, intersections) {
-		cout << ' ' << inter->second;
-	}
-	cout << endl;
-	return 0;
+	const long double mutual_information = 0.5L * (H_GT + H_Fnd - H_GT_given_Fnd - H_Fnd_given_GT); // I_X_colon_Y
+	const long double normalization_constant = H_GT > H_Fnd ? H_GT : H_Fnd;
+	assert(mutual_information <= normalization_constant);
+
+	// PP(intersections.size());
+	// For(inter, intersections) { cout << ' ' << inter->second; }
+	// cout << endl;
+
+	return mutual_information / normalization_constant;
 }

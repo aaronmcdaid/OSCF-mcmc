@@ -87,12 +87,9 @@ static long double entropy_of_this_state(in< State > st) {
 void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<int64_t> > > ground_truth, const bool cluster_sizes /*= false*/) {
 	cout << " ===" << endl;
 	const long double entropy = entropy_of_this_state(st);
-	if(!ground_truth->empty()) {
-		const long double onmi = calculate_oNMI(ground_truth, st);
-		PP(onmi);
-	}
+	const long double onmi = ground_truth->empty() ? -1.0L : calculate_oNMI(ground_truth, st);
 	PP2(rep, ELAPSED());
-	PP3(rep, st.get_K(), entropy);
+	PP4(rep, st.get_K(), entropy, onmi);
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;
