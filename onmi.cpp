@@ -140,7 +140,8 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 	// At this stage, intersections.first means ground truth, and intersections.second means found.
 	// We'll swap them around later in the function
 
-	calculate_H_X_given_Y(intersections, sizes_of_GT, sizes_of_foundComms, N);
+	long double H_GT = H_X(sizes_of_GT,N);
+	long double H_GT_given_Fnd = calculate_H_X_given_Y(intersections, sizes_of_GT, sizes_of_foundComms, N);
 
 	// Now, to swap the other way
 	unordered_map< pair<size_t, size_t>, size_t > intersections_swapped;
@@ -148,7 +149,11 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 		intersections_swapped[ make_pair(inter->first.second, inter->first.first) ] = inter->second;
 	}
 
-	calculate_H_X_given_Y(intersections_swapped, sizes_of_foundComms, sizes_of_GT, N);
+	long double H_Fnd = H_X(sizes_of_foundComms,N);
+	long double H_Fnd_given_GT = calculate_H_X_given_Y(intersections_swapped, sizes_of_foundComms, sizes_of_GT, N);
+
+	assert(H_GT >= H_GT_given_Fnd);
+	assert(H_Fnd >= H_Fnd_given_GT);
 
 	PP(intersections.size());
 	For(inter, intersections) {
