@@ -33,6 +33,7 @@
 #include <gsl/gsl_sf.h>
 
 #include "network.hpp"
+#include "lvalue_input.hpp"
 
 struct State; // pre-declare in order that we can make it a friend of Community
 
@@ -120,7 +121,7 @@ public:
 
 struct State {
 	friend class Score; // Score is allowed to edit this
-	friend void dump_all(const State & st, const int64_t rep, const bool cluster_sizes = false);
+	friend void dump_all(const State & st, const int64_t rep, lvalue_input :: in< std::vector< std::vector<int64_t> > > ground_truth, const bool cluster_sizes = false);
 	Net net;
 	const int64_t N;
 	const int64_t E;

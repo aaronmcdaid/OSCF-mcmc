@@ -27,6 +27,7 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include"state.hpp"
 #include"score.hpp"
 #include"moves.hpp"
+#include"onmi.hpp"
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -83,9 +84,13 @@ static long double entropy_of_this_state(in< State > st) {
 	}
 	return entropy;
 }
-void dump_all(const State & st, const int64_t rep, const bool cluster_sizes /*= false*/) {
+void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<int64_t> > > ground_truth, const bool cluster_sizes /*= false*/) {
 	cout << " ===" << endl;
 	const long double entropy = entropy_of_this_state(st);
+	if(!ground_truth->empty()) {
+		const long double onmi = calculate_oNMI(ground_truth, st);
+		PP(onmi);
+	}
 	PP2(rep, ELAPSED());
 	PP3(rep, st.get_K(), entropy);
 	{
@@ -193,7 +198,7 @@ void oscf(Net net) {
 
 	vector< vector<int64_t> > ground_truth; // leave empty if no ground truth was specified
 	if(args_info.GT_arg) { //Load a ground Truth?
-		load_ground_truth(net->node_set, args_info.GT_arg);
+		ground_truth = load_ground_truth(net->node_set, args_info.GT_arg);
 	}
 
 
@@ -248,7 +253,7 @@ void oscf(Net net) {
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
 		if(rep>0 && rep % 10 == 0) { // || rep < 100) {
-			dump_all(st, rep);
+			dump_all(st, rep, ground_truth, true);
 			// dump_truncated_node_cover(st);
 		}
 	}
