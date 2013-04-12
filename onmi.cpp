@@ -8,6 +8,7 @@
 
 #include<tr1/unordered_map>
 #include<cmath>
+#include<limits>
 using namespace std :: tr1;
 
 #include"macros.hpp"
@@ -33,22 +34,36 @@ long double H_star(const size_t a, const size_t b, const size_t c, const size_t 
 	const long double hcn = h(c,n);
 	const long double hdn = h(d,n);
 	if(han + hdn >= hbn + hcn) { // This is a normal, positively-correlated, situation
-		return han+hbn+hcn+hdn -h(b+d,n) -h(a+c,n);
+		const long double H = han+hbn+hcn+hdn -h(b+d,n) -h(a+c,n);
+		assert(H>=0);
+		return H;
 	} else { // negatively-correlated, so we use the exception described in the paper.
-		return h(c+d,n)+h(a+b,n);
+		const long double H = h(c+d,n)+h(a+b,n);
+		assert(H>=0);
+		return H;
 	}
 }
 
+long double H_X(in< vector<size_t> > X_sizes, const size_t n) {
+	long double h_X = 0.0L;
+	For(sz, *X_sizes) {
+		h_X += h(*sz,n) + h(n-*sz,n);
+	}
+	return h_X;
+}
 long double calculate_H_X_given_Y( in< unordered_map< pair<size_t, size_t>, size_t > >intersections_, in< vector<size_t> > X_sizes, in< vector<size_t> > Y_sizes, const size_t N) {
 	unordered_map< size_t, unordered_map<size_t, size_t> > intersections;
 	For(inter, *intersections_) {
 		intersections[inter->first.first][inter->first.second] = inter->second;
 	}
 	// Now, we can take each X_i, and try to find the Y_j which has the best H*(X_i|Y_j)
+	long double H_X_Y = 0.0L;
 	For(X_i, intersections) {
 		const size_t i = X_i -> first;
 		const size_t xi_size = X_sizes->at(i);
 		in< unordered_map<size_t,size_t> > my_intersections = X_i->second;
+		long double best_h_star_i_j_found_so_far = numeric_limits<long double> :: max();
+		assert( best_h_star_i_j_found_so_far == numeric_limits<long double> :: max() );
 		For(Y_j, *my_intersections) {
 			const size_t j = Y_j -> first;
 			const size_t yj_size = Y_sizes->at(j);
@@ -62,10 +77,22 @@ long double calculate_H_X_given_Y( in< unordered_map< pair<size_t, size_t>, size
 			assert(yj_size >= d);
 			assert(N >= d+c+b);
 
-			ignore(a);
+			const long double h_star_i_j = H_star(a,b,c,d,N);
+			assert(isfinite(h_star_i_j));
+			assert(h_star_i_j >= 0);
+			if(best_h_star_i_j_found_so_far > h_star_i_j)
+				best_h_star_i_j_found_so_far = h_star_i_j;
 		}
+		// It's possible there were no intersections! In that case, define H(X_i|Y) = H(X_i)
+		if(best_h_star_i_j_found_so_far == numeric_limits<long double> :: max()) {
+			best_h_star_i_j_found_so_far = h(xi_size, N) + h(N-xi_size, N);
+		}
+		assert( best_h_star_i_j_found_so_far < numeric_limits<long double> :: max() );
+		
+		// OK, so that gets us H(X_i|Y), we need to add this into H(X|Y)
+		H_X_Y += best_h_star_i_j_found_so_far;
 	}
-	return 0.0L;
+	return H_X_Y;
 }
 long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t> > > ground_truth, lvalue_input :: in<State> st) {
 	// As described on arXiv http://arxiv.org/abs/1110.2515
