@@ -16,6 +16,7 @@
 
 #include"score.hpp"
 #include<utility>
+#include <gsl/gsl_rng.h>
 #include "lvalue_input.hpp"
 
 void			seed_the_random_number_generator(int seed);
@@ -34,5 +35,7 @@ long double one_node_simple_update(Score &sc);
 long double		one_node_SIMPLEST_update(Score &sc, int64_t n);
 long double		gibbs_one_comm_one_edge(Score & sc, const int64_t e);
 long double 		gibbsUpdateNearby(Score & sc, int64_t e);
+
+gsl_rng * rng();
 
 #endif

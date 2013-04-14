@@ -248,9 +248,9 @@ void oscf(Net net) {
 					node_offset = 0;
 			}
 
-			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
-			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
-			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
+			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
+			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
+			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
 		/*
 		for(int i=0; i<net->E(); ++i) {

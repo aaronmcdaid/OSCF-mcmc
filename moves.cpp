@@ -14,6 +14,7 @@ using namespace lvalue_input;
 #include "macros.hpp"
 
 gsl_rng * r = NULL;
+gsl_rng * rng() { return r; }
 #define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
 
 struct most_negative_ {

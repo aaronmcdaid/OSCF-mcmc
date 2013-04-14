@@ -1,4 +1,4 @@
-"Try the fancy moves just as often as the easy moves."
+"Try the fancy moves just every 20th edge."
 "\n"
 "min_K, which starts at net->N() and decreases to 1."
 "\n"
