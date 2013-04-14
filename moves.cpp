@@ -654,7 +654,12 @@ long double		M3(Score &sc) { // Does not change K
 	}
 }
 
-long double merge_these_two(Score &sc, const int main_cluster, const int secondary_cluster, const long double adjustment_to_acceptance = 0.0L) {
+static
+long double merge_these_two(Score &sc, const int main_cluster, const int secondary_cluster, const long double adjustment_to_acceptance, const int64_t min_K) {
+	assert(sc.state.get_K() >= min_K);
+	if(sc.state.get_K() == min_K) {
+		return 0.0L;  // we can't merge them if they're already at the minimum allowed value of K
+	}
 	assert(main_cluster >= 0);
 	assert(secondary_cluster >= 0);
 	assert(main_cluster != secondary_cluster);
@@ -726,10 +731,12 @@ long double merge_these_two(Score &sc, const int main_cluster, const int seconda
 			delta_score += sc.delete_empty_cluster_from_the_end();
 			assertVERYCLOSE(delta_score, this_is_the_merged_score);
 		}
+		assert(sc.state.get_K() >= min_K);
 		return delta_score;
 	} else {
 		// Leave them unmerged
 		assertVERYCLOSE(delta_score, 0.0L);
+		assert(sc.state.get_K() >= min_K);
 		return delta_score;
 	}
 }
@@ -840,9 +847,10 @@ long double		split(Score &sc, const bool adjust_for_shared_edge_proposal = false
 	}
 }
 
-long double		metroK(Score & sc) {
+long double		metroK(Score & sc, const int64_t min_K) {
 					// Either add or remove a cluster at random
 					// This will affect the prior on K obviously, but don't forget the f(0,0) term
+					assert(sc.state.get_K() >= min_K);
 					if(gsl_ran_bernoulli(r, 0.5)) {
 						// cout << "Attempt append" << endl;
 						// Attempt to Add an empty cluster
@@ -858,9 +866,11 @@ long double		metroK(Score & sc) {
 							// .. but let's move it to a random location
 							const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
 							sc.state.swap_cluster_to_the_end(target_cluster_id);
+							assert(sc.state.get_K() >= min_K);
 							return delta_score;
 						} else {
 							// Reject
+							assert(sc.state.get_K() >= min_K);
 							return 0.0L;
 						}
 					} else {
@@ -870,8 +880,15 @@ long double		metroK(Score & sc) {
 						// First, select a cluster at random to be our target.
 						// If it's empty, just bail out immediately
 						assert(sc.state.get_K() > 0);
+						assert(sc.state.get_K() >= min_K);
+						if(sc.state.get_K() == min_K) {
+							// Not allowed to remove, must Reject
+							assert(sc.state.get_K() >= min_K);
+							return 0.0L;
+						}
 						const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
 						if(!sc.state.get_comms().at(target_cluster_id).empty()) {
+							assert(sc.state.get_K() >= min_K);
 							return 0.0L;
 						}
 
@@ -883,10 +900,12 @@ long double		metroK(Score & sc) {
 							const long double delta_score = sc.delete_empty_cluster_from_the_end();
 							assert(delta_score > 0);
 							assertEQ(delta_score, hypothetical_delta_score);
+							assert(sc.state.get_K() >= min_K);
 							return delta_score;
 						} else {
 							// Reject
 							assert(1==2); // It should always Accept this proposal, due to the non-increasing prior on K
+							assert(sc.state.get_K() >= min_K);
 							return 0.0L;
 						}
 					}
@@ -933,9 +952,13 @@ static long double probability_of_selecting_these_two_comms(const int main_clust
 	return log2l(total_probability);
 }
 
-static long double		merge_two_random_clusters(Score &sc) {
+static long double		merge_two_random_clusters(Score &sc, const int64_t min_K) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;
+	assert(sc.state.get_K() >= min_K);
+	if(sc.state.get_K() == min_K) {
+		return 0.0L;
+	}
 	// - Select two clusters at random
 	// - Remember their current state
 	// - Randomize the order of the edges
@@ -947,15 +970,16 @@ static long double		merge_two_random_clusters(Score &sc) {
 	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
 	const int main_cluster = two_clusters.first;
 	const int secondary_cluster = two_clusters.second;
-	return merge_these_two(sc, main_cluster, secondary_cluster);
+	return merge_these_two(sc, main_cluster, secondary_cluster, 0.0L, min_K);
 }
-long double		split_or_merge(Score & sc) {
+long double		split_or_merge(Score & sc, const int64_t min_K) {
 	if(gsl_ran_bernoulli(r, 0.5))
-		return merge_two_random_clusters(sc);
+		return merge_two_random_clusters(sc, min_K);
 	else
 		return split(sc);
 }
-long double		split_or_merge_on_a_shared_edge(Score & sc) {
+long double		split_or_merge_on_a_shared_edge(Score & sc, const int64_t min_K) {
+	assert(sc.state.get_K() >= min_K);
 	// The differences are:
 	// - When calculating acceptance, we put (p_shared_edge * K * K') into the mix
 	// - We decide which two to merge based on a random edge
@@ -968,7 +992,7 @@ long double		split_or_merge_on_a_shared_edge(Score & sc) {
 			assert(p_shared_edge != most_negative());
 			const int K = sc.state.get_K();
 			const long double adjustment_to_acceptance = - p_shared_edge - log2l(K) - log2l(K-1);
-			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance);
+			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance, min_K);
 		}
 	} else {
 		return split(sc, true);

@@ -216,16 +216,26 @@ void oscf(Net net) {
 	for(int64_t n = 0; n<net->N(); ++n) { nodes_in_random_order.push_back(n); }
 	assert((int64_t)nodes_in_random_order.size() == net->N());
 
+	int64_t min_K = net->N();
+
 	for (int rep = 1; rep <= args_info.iterations_arg; ++rep) {
 		{ // check for the -K arg
 			if(!K_can_vary)
 				assert(st.get_K() == args_info.K_arg);
 		}
+		{
+			assert(min_K >= 1);
+			assert(st.get_K() >=  min_K);
+			if(min_K>1)
+				--min_K;
+		}
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
-			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
+			assert(st.get_K() >=  min_K);
+			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc, min_K);
+			assert(st.get_K() >=  min_K);
 			if(args_info.metro1Comm1Edge_algo_arg) cmf_track += gibbs_one_comm_one_edge(sc, *e);
 			//cmf_track += gibbsUpdate(*e, sc);
 			//cmf_track += one_node_simple_update(sc);
@@ -239,8 +249,8 @@ void oscf(Net net) {
 			}
 		}
 		for(int i=0; i<10; ++i) {
-			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc);
-			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
+			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
+			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
 			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
 
