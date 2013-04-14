@@ -35,6 +35,8 @@ long double H_star(const size_t a, const size_t b, const size_t c, const size_t 
 	const long double hdn = h(d,n);
 	if(han + hdn >= hbn + hcn) { // This is a normal, positively-correlated, situation
 		const long double H = han+hbn+hcn+hdn -h(b+d,n) -h(a+c,n);
+		if(H<0 && VERYCLOSE(H,0.0L))
+			return 0.0L;
 		assert(H>=0);
 		return H;
 	} else { // negatively-correlated, so we use the exception described in the paper.
