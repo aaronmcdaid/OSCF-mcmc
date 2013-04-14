@@ -106,6 +106,10 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 
 	const int64_t N = st->N;
 
+	if(st->get_K()==1) {
+		return 0.0L; // We have just one cluster, and maybe some empty ones.  No NMI
+	}
+
 	// For each node, store (for both sides), the comms it is in
 	vector< pair< vector<int>, vector<int> > > comms_this_node_is_in(N);
 	vector<size_t> sizes_of_GT;
@@ -150,9 +154,12 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 	}
 
 	long double H_Fnd = H_X(sizes_of_foundComms,N);
+	if(VERYCLOSE(H_Fnd, 0.0L)) {
+		return 0.0L; // We have just one cluster, and maybe some empty ones.  No NMI
+	}
 	long double H_Fnd_given_GT = calculate_H_X_given_Y(intersections_swapped, sizes_of_foundComms, sizes_of_GT, N);
 
-	assert(H_GT >= H_GT_given_Fnd);
+	assert(H_GT  >= H_GT_given_Fnd);
 	assert(H_Fnd >= H_Fnd_given_GT);
 
 	const long double mutual_information = 0.5L * (H_GT + H_Fnd - H_GT_given_Fnd - H_Fnd_given_GT); // I_X_colon_Y
