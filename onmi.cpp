@@ -161,8 +161,8 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 	}
 	long double H_Fnd_given_GT = calculate_H_X_given_Y(intersections_swapped, sizes_of_foundComms, sizes_of_GT, N);
 
-	assert(H_GT  >= H_GT_given_Fnd);
-	assert(H_Fnd >= H_Fnd_given_GT);
+	assert(H_GT  >= H_GT_given_Fnd || VERYCLOSE(H_GT , H_GT_given_Fnd));
+	assert(H_Fnd >= H_Fnd_given_GT || VERYCLOSE(H_Fnd, H_Fnd_given_GT));
 
 	const long double mutual_information = 0.5L * (H_GT + H_Fnd - H_GT_given_Fnd - H_Fnd_given_GT); // I_X_colon_Y
 	const long double normalization_constant = H_GT > H_Fnd ? H_GT : H_Fnd;
