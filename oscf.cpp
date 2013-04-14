@@ -247,12 +247,19 @@ void oscf(Net net) {
 				if(node_offset >= nodes_in_random_order.size())
 					node_offset = 0;
 			}
-		}
-		for(int i=0; i<10; ++i) {
+
 			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
 			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
 			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
+		/*
+		for(int i=0; i<net->E(); ++i) {
+			// if(i % 1000 == 0) cerr << i << ',' << st.get_K() << endl;
+			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
+			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
+			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
+		}
+		*/
 
 		if(rep>0 && rep % 100000 == 0) {
 			cerr << rep << endl;
