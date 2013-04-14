@@ -16,6 +16,13 @@ using namespace lvalue_input;
 gsl_rng * r = NULL;
 #define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
 
+struct most_negative_ {
+	operator long double() {
+		return - numeric_limits<long double> :: max();
+	}
+};
+most_negative_ most_negative() { return most_negative_(); }
+
 static long double probability_of_selecting_these_two_comms(const int main_cluster, const int secondary_cluster, const State &st);
 
 void			seed_the_random_number_generator(int seed) {
@@ -57,6 +64,12 @@ static pair< pair<bool,bool>, long double>	bernoullis_not_all_failed_2(
 			bA = possibly_force.first;
 		}
 		log2_product_of_accepted_probabilities += bA ? log2l(cond_prob_A) : log2_one_plus_l(-cond_prob_A);
+		unless(isfinite(log2_product_of_accepted_probabilities)) {
+			if(isinf(log2_product_of_accepted_probabilities) == 1) {
+				log2_product_of_accepted_probabilities = most_negative();
+				assert(cond_prob_A == 1);
+			}
+		}
 		assert(isfinite(log2_product_of_accepted_probabilities));
 
 		const long double cond_prob_B = bA ? p_k_2 : 1.0L;
@@ -67,6 +80,12 @@ static pair< pair<bool,bool>, long double>	bernoullis_not_all_failed_2(
 			bB = possibly_force.second;
 		}
 		log2_product_of_accepted_probabilities += bB ? log2l(cond_prob_B) : log2_one_plus_l(-cond_prob_B);
+		unless(isfinite(log2_product_of_accepted_probabilities)) {
+			if(isinf(log2_product_of_accepted_probabilities) == 1) {
+				log2_product_of_accepted_probabilities = most_negative();
+				assert(cond_prob_B == 1);
+			}
+		}
 		assert(isfinite(log2_product_of_accepted_probabilities));
 
 		assert(bA || bB);
@@ -890,13 +909,6 @@ pair<int, int> find_two_comms_that_share_an_edge(const State &st) {
 	} while(secondary_cluster_offset == main_cluster_offset);
 	return make_pair(comms_at_this_edge.at(main_cluster_offset), comms_at_this_edge.at(secondary_cluster_offset));
 }
-
-struct most_negative_ {
-	operator long double() {
-		return - numeric_limits<long double> :: max();
-	}
-};
-most_negative_ most_negative() { return most_negative_(); }
 
 static long double probability_of_selecting_these_two_comms(const int main_cluster, const int secondary_cluster, const State &st) {
 	// First, find out which edges are shared between these two clusters.
