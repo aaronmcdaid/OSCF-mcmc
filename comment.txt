@@ -1,6 +1,6 @@
-"Try the fancy moves just every 20th edge."
+"A more intelligent min_K, just for the first 100 iterations."
 "\n"
-"min_K, which starts at net->N() and decreases to 1."
+"Try the fancy moves just every 20th edge."
 "\n"
 "--GT and oNMI"
 "\n"
