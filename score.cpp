@@ -31,7 +31,7 @@ long double	Score :: score()			const {
 							return total_score;
 }
 long double	Score :: prior_on_K()		const { return -LOG2FACT(state.K); }
-//long double	Score :: prior_on_K()		const { return -state.K; }
+//long double	Score :: prior_on_K()		const { return -state.K; } // Geometric(0.5)
 //long double	Score :: prior_on_K()		const { return 0; }
 long double	Score :: product_on_fs()		const {
 							long double s = 0.0L;
@@ -51,7 +51,9 @@ long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_
 								const int64_t num_pairs = sz * (sz-1) / 2; // will change if self-loops allowed
 
 								// four factors
-								score_one_comm_one_sz += - log2l(N+1);
+
+								//score_one_comm_one_sz += - log2l(N+1); // This is UniformInteger(0,N)
+								score_one_comm_one_sz += -sz-1; // This is Geometric(0.5) prior on sz;
 
 								{
 									const int64_t s_prime = num_unique_nodes_in_this_community;

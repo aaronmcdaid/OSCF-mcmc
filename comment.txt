@@ -1,3 +1,5 @@
+"Prior on s is now Geometric(0.5), preferring smaller comms."
+"\n"
 "Scrap min_K!"
 "\n"
 "Try the fancy moves just every 20th edge."
