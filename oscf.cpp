@@ -89,7 +89,8 @@ void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<
 	const long double entropy = entropy_of_this_state(st);
 	const long double onmi = ground_truth->empty() ? -1.0L : calculate_oNMI(ground_truth, st);
 	PP2(rep, ELAPSED());
-	PP4(rep, st.get_K(), entropy, onmi);
+	const int64_t true_K = ground_truth->empty() ? -1 : ground_truth->size();
+	PP5(rep, entropy, st.get_K(), true_K, onmi);
 	{
 		cout << "average assignments per edge: " << double(st.total_count_of_edge_assignments) / st.E << '\t';
 		int64_t printed_so_far = 0;
