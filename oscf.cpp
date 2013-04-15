@@ -249,18 +249,19 @@ void oscf(Net net) {
 			if(min_K_double < 1 || rep >= 200)
 				min_K_double = 1;
 		}
-		const int64_t min_K = 1; // min_K_double;
-		if(min_K>1)
-			PP(min_K);
-		assert(min_K >= 1);
-		assert(min_K <= st.get_K());
+		GLOBAL_constraint_min_K = 1; // min_K_double;
+		if(GLOBAL_constraint_min_K>1)
+			PP(GLOBAL_constraint_min_K);
+		assert(GLOBAL_constraint_min_K >= 1);
+		assert(GLOBAL_constraint_min_K <= st.get_K());
+
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
-			assert(st.get_K() >=  min_K);
-			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc, min_K);
-			assert(st.get_K() >=  min_K);
+			assert(st.get_K() >=  GLOBAL_constraint_min_K);
+			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
+			assert(st.get_K() >=  GLOBAL_constraint_min_K);
 			if(args_info.metro1Comm1Edge_algo_arg) cmf_track += gibbs_one_comm_one_edge(sc, *e);
 			//cmf_track += gibbsUpdate(*e, sc);
 			//cmf_track += one_node_simple_update(sc);
@@ -273,15 +274,15 @@ void oscf(Net net) {
 					node_offset = 0;
 			}
 
-			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
-			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
+			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc);
+			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
 			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
 		/*
 		for(int i=0; i<net->E(); ++i) {
 			// if(i % 1000 == 0) cerr << i << ',' << st.get_K() << endl;
-			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc, min_K);
-			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc, min_K);
+			if(args_info.AnySM_algo_arg    && K_can_vary) cmf_track += split_or_merge(sc);
+			if(args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
 			if(args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
 		*/

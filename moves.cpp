@@ -16,6 +16,7 @@ using namespace lvalue_input;
 gsl_rng * r = NULL;
 gsl_rng * rng() { return r; }
 #define log2_one_plus_l(x) (M_LOG2E * log1pl(x))
+/*extern*/ int64_t GLOBAL_constraint_min_K;
 
 struct most_negative_ {
 	operator long double() {
@@ -656,9 +657,9 @@ long double		M3(Score &sc) { // Does not change K
 }
 
 static
-long double merge_these_two(Score &sc, const int main_cluster, const int secondary_cluster, const long double adjustment_to_acceptance, const int64_t min_K) {
-	assert(sc.state.get_K() >= min_K);
-	if(sc.state.get_K() == min_K) {
+long double merge_these_two(Score &sc, const int main_cluster, const int secondary_cluster, const long double adjustment_to_acceptance) {
+	assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
+	if(sc.state.get_K() == GLOBAL_constraint_min_K) {
 		return 0.0L;  // we can't merge them if they're already at the minimum allowed value of K
 	}
 	assert(main_cluster >= 0);
@@ -732,12 +733,12 @@ long double merge_these_two(Score &sc, const int main_cluster, const int seconda
 			delta_score += sc.delete_empty_cluster_from_the_end();
 			assertVERYCLOSE(delta_score, this_is_the_merged_score);
 		}
-		assert(sc.state.get_K() >= min_K);
+		assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 		return delta_score;
 	} else {
 		// Leave them unmerged
 		assertVERYCLOSE(delta_score, 0.0L);
-		assert(sc.state.get_K() >= min_K);
+		assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 		return delta_score;
 	}
 }
@@ -848,10 +849,10 @@ long double		split(Score &sc, const bool adjust_for_shared_edge_proposal = false
 	}
 }
 
-long double		metroK(Score & sc, const int64_t min_K) {
+long double		metroK(Score & sc) {
 					// Either add or remove a cluster at random
 					// This will affect the prior on K obviously, but don't forget the f(0,0) term
-					assert(sc.state.get_K() >= min_K);
+					assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 					if(gsl_ran_bernoulli(r, 0.5)) {
 						// cout << "Attempt append" << endl;
 						// Attempt to Add an empty cluster
@@ -867,11 +868,11 @@ long double		metroK(Score & sc, const int64_t min_K) {
 							// .. but let's move it to a random location
 							const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
 							sc.state.swap_cluster_to_the_end(target_cluster_id);
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return delta_score;
 						} else {
 							// Reject
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return 0.0L;
 						}
 					} else {
@@ -881,15 +882,15 @@ long double		metroK(Score & sc, const int64_t min_K) {
 						// First, select a cluster at random to be our target.
 						// If it's empty, just bail out immediately
 						assert(sc.state.get_K() > 0);
-						assert(sc.state.get_K() >= min_K);
-						if(sc.state.get_K() == min_K) {
+						assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
+						if(sc.state.get_K() == GLOBAL_constraint_min_K) {
 							// Not allowed to remove, must Reject
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return 0.0L;
 						}
 						const int64_t target_cluster_id = sc.state.get_K() * gsl_rng_uniform(r);
 						if(!sc.state.get_comms().at(target_cluster_id).empty()) {
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return 0.0L;
 						}
 
@@ -901,12 +902,12 @@ long double		metroK(Score & sc, const int64_t min_K) {
 							const long double delta_score = sc.delete_empty_cluster_from_the_end();
 							assert(delta_score > 0);
 							assertEQ(delta_score, hypothetical_delta_score);
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return delta_score;
 						} else {
 							// Reject
 							assert(1==2); // It should always Accept this proposal, due to the non-increasing prior on K
-							assert(sc.state.get_K() >= min_K);
+							assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 							return 0.0L;
 						}
 					}
@@ -953,11 +954,11 @@ static long double probability_of_selecting_these_two_comms(const int main_clust
 	return log2l(total_probability);
 }
 
-static long double		merge_two_random_clusters(Score &sc, const int64_t min_K) {
+static long double		merge_two_random_clusters(Score &sc) {
 	if(sc.state.get_K() < 2)
 		return 0.0L;
-	assert(sc.state.get_K() >= min_K);
-	if(sc.state.get_K() == min_K) {
+	assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
+	if(sc.state.get_K() == GLOBAL_constraint_min_K) {
 		return 0.0L;
 	}
 	// - Select two clusters at random
@@ -971,16 +972,16 @@ static long double		merge_two_random_clusters(Score &sc, const int64_t min_K) {
 	pair<int, int> two_clusters = two_distinct_clusters(sc.state.get_K());
 	const int main_cluster = two_clusters.first;
 	const int secondary_cluster = two_clusters.second;
-	return merge_these_two(sc, main_cluster, secondary_cluster, 0.0L, min_K);
+	return merge_these_two(sc, main_cluster, secondary_cluster, 0.0L);
 }
-long double		split_or_merge(Score & sc, const int64_t min_K) {
+long double		split_or_merge(Score & sc) {
 	if(gsl_ran_bernoulli(r, 0.5))
-		return merge_two_random_clusters(sc, min_K);
+		return merge_two_random_clusters(sc);
 	else
 		return split(sc);
 }
-long double		split_or_merge_on_a_shared_edge(Score & sc, const int64_t min_K) {
-	assert(sc.state.get_K() >= min_K);
+long double		split_or_merge_on_a_shared_edge(Score & sc) {
+	assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
 	// The differences are:
 	// - When calculating acceptance, we put (p_shared_edge * K * K') into the mix
 	// - We decide which two to merge based on a random edge
@@ -993,7 +994,7 @@ long double		split_or_merge_on_a_shared_edge(Score & sc, const int64_t min_K) {
 			assert(p_shared_edge != most_negative());
 			const int K = sc.state.get_K();
 			const long double adjustment_to_acceptance = - p_shared_edge - log2l(K) - log2l(K-1);
-			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance, min_K);
+			return merge_these_two(sc, two_comms.first, two_comms.second, adjustment_to_acceptance);
 		}
 	} else {
 		return split(sc, true);
