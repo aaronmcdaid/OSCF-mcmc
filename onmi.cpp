@@ -166,7 +166,7 @@ long double calculate_oNMI(lvalue_input :: in< std::vector< std::vector<int64_t>
 
 	const long double mutual_information = 0.5L * (H_GT + H_Fnd - H_GT_given_Fnd - H_Fnd_given_GT); // I_X_colon_Y
 	const long double normalization_constant = H_GT > H_Fnd ? H_GT : H_Fnd;
-	assert(mutual_information <= normalization_constant);
+	// assert(mutual_information <= normalization_constant);
 
 	// PP(intersections.size());
 	// For(inter, intersections) { cout << ' ' << inter->second; }

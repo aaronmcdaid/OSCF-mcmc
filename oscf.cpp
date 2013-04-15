@@ -84,7 +84,12 @@ static long double entropy_of_this_state(in< State > st) {
 	}
 	return entropy;
 }
-void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<int64_t> > > ground_truth, const bool cluster_sizes /*= false*/) {
+static	bool	biggest_cluster_first(const OneCommunitySummary &l, const OneCommunitySummary &r) {
+			if(l.num_unique_nodes_in_this_community == r.num_unique_nodes_in_this_community)
+				return l.num_edges > r.num_edges;
+			return l.num_unique_nodes_in_this_community > r.num_unique_nodes_in_this_community;
+}
+void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<int64_t> > > ground_truth, const bool /*cluster_sizes*/ /*= false*/) {
 	cout << " ===" << endl;
 	const long double entropy = entropy_of_this_state(st);
 	const long double onmi = ground_truth->empty() ? -1.0L : calculate_oNMI(ground_truth, st);
@@ -110,11 +115,25 @@ void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<
 		}
 		cout << endl;
 	}
-	if(cluster_sizes) { // print sizes of all clusters?
+	//if(cluster_sizes)
+	{ // print sizes of all clusters?
 		cout << st.get_K();
+		vector< OneCommunitySummary > summaries; // we'll reorder them by size later
 		for(int k=0; k<st.get_K(); ++k) {
+			summaries.push_back( st.get_comms().at(k).get_one_community_summary());
+		}
+		sort(summaries.begin(), summaries.end(), biggest_cluster_first );
+		for(int k=0; k<st.get_K(); ++k) {
+			if(k>=10) {
+				cout << "  ... too many ...";
+				break;
+			}
 			cout << ";   ";
-			st.get_comms().at(k).dump_me();
+			in< OneCommunitySummary > comm_k = summaries.at(k);
+			cout
+				<< "  " << comm_k->num_unique_nodes_in_this_community
+				<< ' ' << comm_k->density()
+				;
 		}
 		cout << endl;
 	}
@@ -270,7 +289,7 @@ void oscf(Net net) {
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
 		if(rep>0 && rep % 1 == 0) { // || rep < 100) {
-			dump_all(st, rep, ground_truth, true);
+			dump_all(st, rep, ground_truth);
 			// dump_truncated_node_cover(st);
 		}
 	}

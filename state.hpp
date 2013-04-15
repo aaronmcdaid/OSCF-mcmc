@@ -38,8 +38,9 @@
 struct State; // pre-declare in order that we can make it a friend of Community
 
 struct OneCommunitySummary {
-	int64_t num_edges;
-	int64_t num_unique_nodes_in_this_community;
+	int64_t 	num_edges;
+	int64_t 	num_unique_nodes_in_this_community;
+	long double	density()			const;
 };
 
 struct Community {

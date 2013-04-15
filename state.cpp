@@ -37,6 +37,12 @@ void		Community :: dump_me()			const	{
 								cout << ' ';
 						}
 }
+long double	OneCommunitySummary :: density()			const {
+			const int64_t possible_pairs = this->num_unique_nodes_in_this_community * (this->num_unique_nodes_in_this_community-1) / 2;
+			if(possible_pairs == 0)
+				return -1;
+			return double(this->num_edges) / double(possible_pairs);
+}
 std :: vector<int64_t>	Community :: get_my_nodes_NO_COUNT() const {
 		vector<int64_t> the_nodes;
 		For(node_and_count, this->my_nodes) {
