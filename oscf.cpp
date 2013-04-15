@@ -287,8 +287,8 @@ void oscf(Net net) {
 		}
 		*/
 
-		if(rep>0 && rep % 100000 == 0) {
-			cerr << rep << endl;
+		if(rep>0 && rep % 10 == 0) {
+			//cerr << rep << endl;
 			assert(st.every_edge_non_empty());
 			CHECK_PMF_TRACKER(cmf_track, sc.score());
 		}
