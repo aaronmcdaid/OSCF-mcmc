@@ -63,7 +63,7 @@ private:
 	void add_edge(int64_t e, Net net) {
 		const bool inserted = this->my_edges.insert(e).second;
 		assert(inserted);
-		const network :: EdgeSet :: Edge & edge = net->edge_set->edges.at(e);
+		const network :: EdgeSet :: Edge edge = net->edge_set->edges.at(e);
 		this->add_node(edge.left);
 		assert(edge.left!=edge.right);
 		// if there are self loops, don't forget to consider the final *two* factors in the four factors of f(m_k, s'_k)
@@ -73,7 +73,7 @@ private:
 	void remove_edge(int64_t e, Net net) {
 		const size_t wasErased = this->my_edges.erase(e);
 		assert(wasErased == 1);
-		const network :: EdgeSet :: Edge & edge = net->edge_set->edges.at(e);
+		const network :: EdgeSet :: Edge edge = net->edge_set->edges.at(e);
 		this->remove_node(edge.left);
 		assert(edge.left!=edge.right);
 		// if there are self loops, don't forget to consider the final *two* factors in the four factors of f(m_k, s'_k)
