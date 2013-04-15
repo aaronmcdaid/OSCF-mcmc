@@ -236,7 +236,8 @@ void oscf(Net net) {
 	for(int64_t n = 0; n<net->N(); ++n) { nodes_in_random_order.push_back(n); }
 	assert((int64_t)nodes_in_random_order.size() == net->N());
 
-	long double min_K_double = net->N() < net->E() ? net->N() : net->E();
+	//long double min_K_double = net->N() < net->E() ? net->N() : net->E();
+	long double min_K_double = net->E();
 
 	for (int rep = 1; rep <= args_info.iterations_arg; ++rep) {
 		{ // check for the -K arg
@@ -244,11 +245,13 @@ void oscf(Net net) {
 				assert(st.get_K() == args_info.K_arg);
 		}
 		{
-			min_K_double *= 0.95;
-			if(min_K_double < 1 || rep >= 100)
+			min_K_double *= 0.97;
+			if(min_K_double < 1 || rep >= 200)
 				min_K_double = 1;
 		}
 		const int64_t min_K = min_K_double;
+		if(min_K>1)
+			PP(min_K);
 		assert(min_K >= 1);
 		assert(min_K <= st.get_K());
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
