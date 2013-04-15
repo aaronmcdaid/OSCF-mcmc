@@ -1,4 +1,4 @@
-"A more intelligent min_K, just for the first 100 iterations."
+"Scrap min_K!"
 "\n"
 "Try the fancy moves just every 20th edge."
 "\n"

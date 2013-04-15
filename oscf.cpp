@@ -249,7 +249,7 @@ void oscf(Net net) {
 			if(min_K_double < 1 || rep >= 200)
 				min_K_double = 1;
 		}
-		const int64_t min_K = min_K_double;
+		const int64_t min_K = 1; // min_K_double;
 		if(min_K>1)
 			PP(min_K);
 		assert(min_K >= 1);
