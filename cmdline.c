@@ -43,8 +43,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --iterations=INT          How many iterations  (default=`10000')",
   "      --metroK.algo=INT         Use the simple Metropolis move on K  \n                                  (default=`1')",
   "      --metro1Comm1Edge.algo=INT\n                                Use the simple Metropolis move on K  \n                                  (default=`1')",
-  "      --NearbyGibbs.algo=INT    Gibbs updated on All comms  (default=`1')",
-  "      --AllGibbs.algo=INT       Gibbs updated on Nearby comms  (default=`0')",
+  "      --NearbyGibbs.algo=INT    Gibbs updated on Nearby comms  (default=`1')",
   "      --Simplest1Node.algo=INT    (default=`0')",
   "      --AnySM.algo=INT            (default=`1')",
   "      --SharedSM.algo=INT         (default=`1')",
@@ -86,7 +85,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->metroK_algo_given = 0 ;
   args_info->metro1Comm1Edge_algo_given = 0 ;
   args_info->NearbyGibbs_algo_given = 0 ;
-  args_info->AllGibbs_algo_given = 0 ;
   args_info->Simplest1Node_algo_given = 0 ;
   args_info->AnySM_algo_given = 0 ;
   args_info->SharedSM_algo_given = 0 ;
@@ -115,8 +113,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->metro1Comm1Edge_algo_orig = NULL;
   args_info->NearbyGibbs_algo_arg = 1;
   args_info->NearbyGibbs_algo_orig = NULL;
-  args_info->AllGibbs_algo_arg = 0;
-  args_info->AllGibbs_algo_orig = NULL;
   args_info->Simplest1Node_algo_arg = 0;
   args_info->Simplest1Node_algo_orig = NULL;
   args_info->AnySM_algo_arg = 1;
@@ -145,11 +141,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->metroK_algo_help = gengetopt_args_info_help[9] ;
   args_info->metro1Comm1Edge_algo_help = gengetopt_args_info_help[10] ;
   args_info->NearbyGibbs_algo_help = gengetopt_args_info_help[11] ;
-  args_info->AllGibbs_algo_help = gengetopt_args_info_help[12] ;
-  args_info->Simplest1Node_algo_help = gengetopt_args_info_help[13] ;
-  args_info->AnySM_algo_help = gengetopt_args_info_help[14] ;
-  args_info->SharedSM_algo_help = gengetopt_args_info_help[15] ;
-  args_info->M3_algo_help = gengetopt_args_info_help[16] ;
+  args_info->Simplest1Node_algo_help = gengetopt_args_info_help[12] ;
+  args_info->AnySM_algo_help = gengetopt_args_info_help[13] ;
+  args_info->SharedSM_algo_help = gengetopt_args_info_help[14] ;
+  args_info->M3_algo_help = gengetopt_args_info_help[15] ;
   
 }
 
@@ -242,7 +237,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->metroK_algo_orig));
   free_string_field (&(args_info->metro1Comm1Edge_algo_orig));
   free_string_field (&(args_info->NearbyGibbs_algo_orig));
-  free_string_field (&(args_info->AllGibbs_algo_orig));
   free_string_field (&(args_info->Simplest1Node_algo_orig));
   free_string_field (&(args_info->AnySM_algo_orig));
   free_string_field (&(args_info->SharedSM_algo_orig));
@@ -306,8 +300,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "metro1Comm1Edge.algo", args_info->metro1Comm1Edge_algo_orig, 0);
   if (args_info->NearbyGibbs_algo_given)
     write_into_file(outfile, "NearbyGibbs.algo", args_info->NearbyGibbs_algo_orig, 0);
-  if (args_info->AllGibbs_algo_given)
-    write_into_file(outfile, "AllGibbs.algo", args_info->AllGibbs_algo_orig, 0);
   if (args_info->Simplest1Node_algo_given)
     write_into_file(outfile, "Simplest1Node.algo", args_info->Simplest1Node_algo_orig, 0);
   if (args_info->AnySM_algo_given)
@@ -582,7 +574,6 @@ cmdline_parser_internal (
         { "metroK.algo",	1, NULL, 0 },
         { "metro1Comm1Edge.algo",	1, NULL, 0 },
         { "NearbyGibbs.algo",	1, NULL, 0 },
-        { "AllGibbs.algo",	1, NULL, 0 },
         { "Simplest1Node.algo",	1, NULL, 0 },
         { "AnySM.algo",	1, NULL, 0 },
         { "SharedSM.algo",	1, NULL, 0 },
@@ -726,7 +717,7 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* Gibbs updated on All comms.  */
+          /* Gibbs updated on Nearby comms.  */
           else if (strcmp (long_options[option_index].name, "NearbyGibbs.algo") == 0)
           {
           
@@ -736,20 +727,6 @@ cmdline_parser_internal (
                 &(local_args_info.NearbyGibbs_algo_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "NearbyGibbs.algo", '-',
-                additional_error))
-              goto failure;
-          
-          }
-          /* Gibbs updated on Nearby comms.  */
-          else if (strcmp (long_options[option_index].name, "AllGibbs.algo") == 0)
-          {
-          
-          
-            if (update_arg( (void *)&(args_info->AllGibbs_algo_arg), 
-                 &(args_info->AllGibbs_algo_orig), &(args_info->AllGibbs_algo_given),
-                &(local_args_info.AllGibbs_algo_given), optarg, 0, "0", ARG_INT,
-                check_ambiguity, override, 0, 0,
-                "AllGibbs.algo", '-',
                 additional_error))
               goto failure;
           

@@ -64,12 +64,9 @@ struct gengetopt_args_info
   int metro1Comm1Edge_algo_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
   char * metro1Comm1Edge_algo_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
   const char *metro1Comm1Edge_algo_help; /**< @brief Use the simple Metropolis move on K help description.  */
-  int NearbyGibbs_algo_arg;	/**< @brief Gibbs updated on All comms (default='1').  */
-  char * NearbyGibbs_algo_orig;	/**< @brief Gibbs updated on All comms original value given at command line.  */
-  const char *NearbyGibbs_algo_help; /**< @brief Gibbs updated on All comms help description.  */
-  int AllGibbs_algo_arg;	/**< @brief Gibbs updated on Nearby comms (default='0').  */
-  char * AllGibbs_algo_orig;	/**< @brief Gibbs updated on Nearby comms original value given at command line.  */
-  const char *AllGibbs_algo_help; /**< @brief Gibbs updated on Nearby comms help description.  */
+  int NearbyGibbs_algo_arg;	/**< @brief Gibbs updated on Nearby comms (default='1').  */
+  char * NearbyGibbs_algo_orig;	/**< @brief Gibbs updated on Nearby comms original value given at command line.  */
+  const char *NearbyGibbs_algo_help; /**< @brief Gibbs updated on Nearby comms help description.  */
   int Simplest1Node_algo_arg;	/**< @brief  (default='0').  */
   char * Simplest1Node_algo_orig;	/**< @brief  original value given at command line.  */
   const char *Simplest1Node_algo_help; /**< @brief  help description.  */
@@ -95,7 +92,6 @@ struct gengetopt_args_info
   unsigned int metroK_algo_given ;	/**< @brief Whether metroK.algo was given.  */
   unsigned int metro1Comm1Edge_algo_given ;	/**< @brief Whether metro1Comm1Edge.algo was given.  */
   unsigned int NearbyGibbs_algo_given ;	/**< @brief Whether NearbyGibbs.algo was given.  */
-  unsigned int AllGibbs_algo_given ;	/**< @brief Whether AllGibbs.algo was given.  */
   unsigned int Simplest1Node_algo_given ;	/**< @brief Whether Simplest1Node.algo was given.  */
   unsigned int AnySM_algo_given ;	/**< @brief Whether AnySM.algo was given.  */
   unsigned int SharedSM_algo_given ;	/**< @brief Whether SharedSM.algo was given.  */

@@ -22,8 +22,8 @@ option  "K"                  K "Number of clusters, K"               int        
 option  "iterations"         i "How many iterations"                 int       default="10000" no
 option  "metroK.algo"           - "Use the simple Metropolis move on K"            int       default="1" no
 option  "metro1Comm1Edge.algo"  - "Use the simple Metropolis move on K"            int       default="1" no
-option  "NearbyGibbs.algo"      - "Gibbs updated on All comms"                     int       default="1" no
-option  "AllGibbs.algo"         - "Gibbs updated on Nearby comms"                  int       default="0" no
+option  "NearbyGibbs.algo"      - "Gibbs updated on Nearby comms"                     int       default="1" no
+#option  "AllGibbs.algo"         - "Gibbs updated on All comms"                  int       default="0" no
 option  "Simplest1Node.algo"    - ""                                               int       default="0" no
 option  "AnySM.algo"    - ""                                               int       default="1" no
 option  "SharedSM.algo"    - ""                                               int       default="1" no
