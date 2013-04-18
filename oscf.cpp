@@ -9,7 +9,6 @@
 #include<gsl/gsl_sf_gamma.h>
 #include<gsl/gsl_cdf.h>
 #include<gsl/gsl_statistics_double.h>
-#include<algorithm>
 #include<iomanip>
 #include<limits>
 #include<algorithm>
@@ -121,9 +120,13 @@ void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<
 		for(int k=0; k<st.get_K(); ++k) {
 			summaries.push_back( st.get_comms().at(k).get_one_community_summary());
 		}
-		sort(summaries.begin(), summaries.end(), biggest_cluster_first );
-		for(int k=0; k<st.get_K(); ++k) {
-			if(k>=15) {
+		const size_t how_many_to_print = 15;
+		if (summaries.size() >= how_many_to_print)
+			partial_sort(summaries.begin(), summaries.begin()+how_many_to_print, summaries.end(), biggest_cluster_first );
+		else
+			sort(summaries.begin(), summaries.end(), biggest_cluster_first );
+		for(size_t k=0; (int)k<st.get_K(); ++k) {
+			if(k>=how_many_to_print) {
 				cout << "  ... too many ...";
 				break;
 			}
