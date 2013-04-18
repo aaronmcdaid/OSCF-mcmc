@@ -1,9 +1,4 @@
 #include "gitstatus.hpp"
-#include "cmdline.h"
-gengetopt_args_info args_info; // a global variable! Sorry.
-#include "macros.hpp"
-
-#include "network.hpp"
 
 #include<cassert>
 #include<stdexcept>
@@ -21,13 +16,17 @@ gengetopt_args_info args_info; // a global variable! Sorry.
 #include<fstream>
 #include<sstream>
 
-//#include"format_flag_stack/format_flag_stack.hpp"
 #include"lvalue_input.hpp"
-
 #include"state.hpp"
 #include"score.hpp"
 #include"moves.hpp"
 #include"onmi.hpp"
+#include "cmdline.h"
+gengetopt_args_info args_info; // a global variable! Sorry.
+#include "macros.hpp"
+#include "network.hpp"
+#include "format_flag_stack/format_flag_stack.hpp"
+static format_flag_stack :: FormatFlagStack stack;
 
 
 #define assert_0_to_1(x) do { assert((x)>=0.0L); assert((x)<=1.0L); } while(0)
@@ -124,15 +123,18 @@ void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<
 		}
 		sort(summaries.begin(), summaries.end(), biggest_cluster_first );
 		for(int k=0; k<st.get_K(); ++k) {
-			if(k>=10) {
+			if(k>=15) {
 				cout << "  ... too many ...";
 				break;
 			}
-			cout << ";   ";
+			cout << ";  ";
 			in< OneCommunitySummary > comm_k = summaries.at(k);
 			cout
 				<< "  " << comm_k->num_unique_nodes_in_this_community
-				<< ' ' << comm_k->density()
+				<< stack.push << fixed <<  setprecision(2)
+				<< ' '
+				<< comm_k->density()
+				<< stack.pop;
 				;
 		}
 		cout << endl;
