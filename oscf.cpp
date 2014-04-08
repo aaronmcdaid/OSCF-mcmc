@@ -39,7 +39,7 @@ using namespace lvalue_input;
 // format_flag_stack :: FormatFlagStack stack;
 
 
-void oscf(Net net);
+void oscf(Net net, const gengetopt_args_info &args_info);
 
 int main(int argc, char **argv) {
 	// Parse the args - there should be exactly one arg, the edge list
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 	
 	seed_the_random_number_generator(args_info.seed_arg);
 
-	oscf(net);
+	oscf(net, args_info);
 }
 
 static long double entropy_of_this_state(in< State > st) {
@@ -192,9 +192,10 @@ static vector< vector<int64_t> > load_ground_truth(const NodeSet * const node_se
 }
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
-void oscf(Net net) {
+void oscf(Net net, const gengetopt_args_info &args_info) {
 	State st(net); // initialize with every edge in its own community
 	Score sc(st);
+	sc.m_iidBernoulli_arg = args_info.m_iidBernoulli_arg;
 	assert(st.get_K() == 0);
 	if(1) { // every edge in its own cluster
 		for(int64_t e = 0; e < st.E; ++e) {

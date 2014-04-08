@@ -11,6 +11,7 @@
 struct Score { // every modification *should* go through here eventually, so as to track the score.
 	// But for now, this is just a passive object that recalculates all the scores from scratch each time
 	State &		state;
+	float m_iidBernoulli_arg;
 	typedef std :: tr1 :: unordered_map < int64_t , std :: pair<long double, int64_t> > Cache_T;
 	mutable std :: vector<Cache_T> cache; // One  cache for each number between 0 and N (inclusive). i.e. N+1 entries
 	explicit	Score(State & state_)	;

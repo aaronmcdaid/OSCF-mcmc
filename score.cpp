@@ -41,7 +41,7 @@ long double	Score :: product_on_fs()		const {
 							}
 							return s;
 }
-long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community, const int64_t N) {
+static long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_this_community, const int64_t N, float iidBernoulli_arg) {
 							long double s_one_comm_sans_baseline = 0.0L;
 							long double baseline = NAN; // this 'baseline' technique should improve accuracy
 							assert(!isfinite(baseline));
@@ -63,10 +63,18 @@ long double	f_full		(const int64_t num_edges, const int64_t num_unique_nodes_in_
 									                          - LOG2BINOM(N          , s          );
 								}
 
-								score_one_comm_one_sz += - log2l(1+num_pairs);
-
-
-								score_one_comm_one_sz -= LOG2BINOM(num_pairs, num_edges);
+								assert(isfinite(score_one_comm_one_sz));
+								if(iidBernoulli_arg == -1) {
+									// The original model
+									score_one_comm_one_sz += - log2l(1+num_pairs);
+									score_one_comm_one_sz -= LOG2BINOM(num_pairs, num_edges);
+								} else {
+									assert(iidBernoulli_arg > 0.0L);
+									assert(iidBernoulli_arg < 1.0L);
+									score_one_comm_one_sz += log2l(iidBernoulli_arg)     * num_edges;
+									score_one_comm_one_sz += log2l(1.0-iidBernoulli_arg) * (num_pairs-num_edges);
+								}
+								assert(isfinite(score_one_comm_one_sz));
 
 								assert(num_edges >= 0);
 								assert(num_edges <= num_pairs);
@@ -107,7 +115,7 @@ long double	Score :: f	(const int64_t num_edges, const int64_t num_unique_nodes_
 									return it->second.first;
 								}
 							}
-							long double total = f_full(num_edges, num_unique_nodes_in_this_community, state.N);
+							long double total = f_full(num_edges, num_unique_nodes_in_this_community, state.N, this->m_iidBernoulli_arg);
 							cache_for_this_value_of_num_unique_nodes_in_this_community.insert( make_pair(key, make_pair(total,0) ) );
 							return total;
 }

@@ -79,6 +79,9 @@ struct gengetopt_args_info
   int M3_algo_arg;	/**< @brief  (default='1').  */
   char * M3_algo_orig;	/**< @brief  original value given at command line.  */
   const char *M3_algo_help; /**< @brief  help description.  */
+  float m_iidBernoulli_arg;	/**< @brief A simpler model for the edges. Default is off (-1) (default='-1').  */
+  char * m_iidBernoulli_orig;	/**< @brief A simpler model for the edges. Default is off (-1) original value given at command line.  */
+  const char *m_iidBernoulli_help; /**< @brief A simpler model for the edges. Default is off (-1) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -96,6 +99,7 @@ struct gengetopt_args_info
   unsigned int AnySM_algo_given ;	/**< @brief Whether AnySM.algo was given.  */
   unsigned int SharedSM_algo_given ;	/**< @brief Whether SharedSM.algo was given.  */
   unsigned int M3_algo_given ;	/**< @brief Whether M3.algo was given.  */
+  unsigned int m_iidBernoulli_given ;	/**< @brief Whether m.iidBernoulli was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

@@ -48,6 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "      --AnySM.algo=INT            (default=`1')",
   "      --SharedSM.algo=INT         (default=`1')",
   "      --M3.algo=INT               (default=`1')",
+  "      --m.iidBernoulli=FLOAT    A simpler model for the edges. Default is off \n                                  (-1)  (default=`-1')",
     0
 };
 
@@ -55,6 +56,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -89,6 +91,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->AnySM_algo_given = 0 ;
   args_info->SharedSM_algo_given = 0 ;
   args_info->M3_algo_given = 0 ;
+  args_info->m_iidBernoulli_given = 0 ;
 }
 
 static
@@ -121,6 +124,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->SharedSM_algo_orig = NULL;
   args_info->M3_algo_arg = 1;
   args_info->M3_algo_orig = NULL;
+  args_info->m_iidBernoulli_arg = -1;
+  args_info->m_iidBernoulli_orig = NULL;
   
 }
 
@@ -145,6 +150,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->AnySM_algo_help = gengetopt_args_info_help[13] ;
   args_info->SharedSM_algo_help = gengetopt_args_info_help[14] ;
   args_info->M3_algo_help = gengetopt_args_info_help[15] ;
+  args_info->m_iidBernoulli_help = gengetopt_args_info_help[16] ;
   
 }
 
@@ -241,6 +247,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->AnySM_algo_orig));
   free_string_field (&(args_info->SharedSM_algo_orig));
   free_string_field (&(args_info->M3_algo_orig));
+  free_string_field (&(args_info->m_iidBernoulli_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -308,6 +315,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "SharedSM.algo", args_info->SharedSM_algo_orig, 0);
   if (args_info->M3_algo_given)
     write_into_file(outfile, "M3.algo", args_info->M3_algo_orig, 0);
+  if (args_info->m_iidBernoulli_given)
+    write_into_file(outfile, "m.iidBernoulli", args_info->m_iidBernoulli_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -480,6 +489,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -495,6 +507,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -578,6 +591,7 @@ cmdline_parser_internal (
         { "AnySM.algo",	1, NULL, 0 },
         { "SharedSM.algo",	1, NULL, 0 },
         { "M3.algo",	1, NULL, 0 },
+        { "m.iidBernoulli",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -783,6 +797,20 @@ cmdline_parser_internal (
                 &(local_args_info.M3_algo_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "M3.algo", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* A simpler model for the edges. Default is off (-1).  */
+          else if (strcmp (long_options[option_index].name, "m.iidBernoulli") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->m_iidBernoulli_arg), 
+                 &(args_info->m_iidBernoulli_orig), &(args_info->m_iidBernoulli_given),
+                &(local_args_info.m_iidBernoulli_given), optarg, 0, "-1", ARG_FLOAT,
+                check_ambiguity, override, 0, 0,
+                "m.iidBernoulli", '-',
                 additional_error))
               goto failure;
           
