@@ -197,20 +197,21 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 	Score sc(st);
 	sc.m_iidBernoulli_arg = args_info.m_iidBernoulli_arg;
 	assert(st.get_K() == 0);
-	if(1) { // every edge in its own cluster
+	if(0) { // every edge in its own cluster
 		for(int64_t e = 0; e < st.E; ++e) {
 			const int64_t new_cluster_id = st.append_empty_cluster();
 			assert(new_cluster_id == e);
 			sc.add_edge(e, e);
 		}
 	}
-	for(int identical_clusters=0; identical_clusters<0; ++identical_clusters) {
+	for(int identical_clusters=0; identical_clusters<1; ++identical_clusters) {
 		const int64_t new_cluster_id = st.append_empty_cluster();
-		//assert(0 == new_cluster_id);
+		assert(0 == new_cluster_id);
 		for(int64_t e = 0; e < st.E; ++e) {
 			st.add_edge(e, new_cluster_id);
 		}
 	}
+	PP(st.get_K());
 	const bool K_can_vary = args_info.K_arg == -1;
 	if( !K_can_vary ) {
 		while(st.get_K() < args_info.K_arg) {
