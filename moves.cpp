@@ -1006,6 +1006,7 @@ void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
 	//
 	const set<int> E_set( E.begin(), E.end() );
 	assert(E_set.size() == E.size());
+	PP(E_set.size());
 
 	map<int, size_t> how_many_frontier_edges_I_have;
 	priority_queue< pair<long double, int> > noisy_queue; // with some randomness to tie break
@@ -1048,6 +1049,28 @@ void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
 	move_node_into_growing_comm(seed_Edge.right);
 
 	PP2(nodes_in_growing_comm.size(), edges_in_growing_comm.size());
+
+	auto identify_next_node_to_add = [&]() -> int {
+		PP(noisy_queue.size());
+		while(true) {
+			assert( !noisy_queue.empty() ); // BROKEN - really should be prepared for an empty queue
+			auto const x = noisy_queue.top();
+			noisy_queue.pop();
+			if(how_many_frontier_edges_I_have.count(x.second)) {
+				PP2(how_many_frontier_edges_I_have[x.second], x.first);
+				assert(how_many_frontier_edges_I_have[x.second] == floor(x.first));
+				return x.second;
+			}
+		}
+	};
+
+	while(1) {
+		int const top_candidate = identify_next_node_to_add();
+		move_node_into_growing_comm(top_candidate);
+		const int current_size = nodes_in_growing_comm.size();
+		PP(current_size, edges_in_growing_comm.size(), current_size*(current_size-1)/2);
+	}
+
 	exit(1);
 }
 long double             split_or_merge_by_seed_expansion(Score &sc) {
@@ -1071,9 +1094,9 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		assert(!E.empty());
 		const size_t seed_edge = E.front();
 		expand_seed(seed_edge, E, sc.state.net);
-		return 0.0L; // merge unimplemented
+		return 0.0L; // not complete yet // BROKEN
 	}  else {
-		return 0.0L; // merge unimplemented
+		return 0.0L; // merge unimplemented // BROKEN
 	}
 }
 long double		split_or_merge_on_a_shared_edge(Score & sc) {
