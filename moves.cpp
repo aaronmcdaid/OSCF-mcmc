@@ -1119,6 +1119,37 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		assert(!E.empty());
 		const size_t seed_edge = E.front();
 		expand_seed(k, qplus1, seed_edge, E, sc.state.net, delta_score, sc);
+		// Every edge is now in k or qplus1, but not both
+		// This is the launch state, which we must now record
+		const auto &    launch_state_qplus1_ = sc.state.get_comms().at(qplus1).get_my_edges();
+		vector<int64_t> launch_state_qplus1  (launch_state_qplus1_.begin(), launch_state_qplus1_.end() );
+		const auto &    launch_state_k_      = sc.state.get_comms().at(k).get_my_edges();
+		vector<int64_t> launch_state_k       (launch_state_k_.begin(), launch_state_k_.end() );
+		assert(launch_state_k.size() + launch_state_qplus1.size() == E.size());
+		// Next, assign to one of the THREE possible states
+		// first, remove them
+		assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
+		for(auto const e : launch_state_qplus1) delta_score += sc.remove_edge(e, qplus1);
+		for(auto const e : launch_state_k     ) delta_score += sc.remove_edge(e, k     );
+		assert(0 == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
+
+		const double alpha[3] = {1.0, 1.0, 1.0}; // as-is, other, both
+		double theta[3];
+		gsl_ran_dirichlet(r, 3, alpha, theta);
+		auto assign_one_edge_randomly = [&](const int edge_id, const int asIs, const int other, Score &sc) -> void {
+			unsigned int n[3];
+			gsl_ran_multinomial(r, 3, 1, theta, n);
+			assert( n[0] + n[1] + n[2] == 1);
+			if(n[0]) { sc.add_edge( edge_id, asIs ); }  // as-is
+			if(n[1]) { sc.add_edge( edge_id, other ); } // other
+			if(n[2]) {                                  // both
+				sc.add_edge( edge_id, other );
+				sc.add_edge( edge_id, asIs );
+			}
+		};
+		for(auto const e : launch_state_k      )  assign_one_edge_randomly(e, k, qplus1, sc);
+		for(auto const e : launch_state_qplus1 )  assign_one_edge_randomly(e, qplus1, k, sc);
+		assert(int(E.size()) <= sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
 		exit(1);
 		return 0.0L; // not complete yet // BROKEN
 	}  else {
