@@ -265,6 +265,8 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
+			if(args_info.algo_seedSplit_flag)
+				cmf_track += split_or_merge_by_seed_expansion(sc);
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
 			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
