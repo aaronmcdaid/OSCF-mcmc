@@ -8,6 +8,9 @@
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+#include <map>
+#include <set>
+#include <queue>
 using namespace std;
 using namespace lvalue_input;
 
@@ -979,6 +982,99 @@ long double		split_or_merge(Score & sc) {
 		return merge_two_random_clusters(sc);
 	else
 		return split(sc);
+}
+vector<int> my_edges_in_a_random_order(State &st, const int k) {
+	vector<int> edges_in_a_random_order; // each edge to appear just once
+	For(main_edge, st.get_comms().at(k     ).get_my_edges()) {
+		edges_in_a_random_order.push_back(*main_edge);
+	}
+	assert(st.get_comms().at(k).get_my_edges().size() == edges_in_a_random_order.size());
+	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
+	return edges_in_a_random_order;
+}
+void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
+	// For the purposes of this, we *only* consider the edges in E. Only
+	// those edges contribute towards the 'score' associated with a given frontier node
+	//
+	// Add nodes to the pair of nodes in {seed_edge}
+	//
+	// Maintain a frontier, a set of nodes that are connected to the growing community
+	// This means a mapping from the frontier-node-id to the number of connections it has
+	// .. and a priority_queue to find the most connected one each time
+	//
+	//
+	//
+	const set<int> E_set( E.begin(), E.end() );
+	assert(E_set.size() == E.size());
+
+	map<int, size_t> how_many_frontier_edges_I_have;
+	priority_queue< pair<long double, int> > noisy_queue; // with some randomness to tie break
+	set<int> nodes_in_growing_comm;
+	set<int> edges_in_growing_comm; // Not sure how I'll use this
+
+	auto move_node_into_growing_comm = [&](int node) -> void {
+		bool was_inserted = nodes_in_growing_comm.insert(node).second;
+		assert(was_inserted);
+		bool was_erased = how_many_frontier_edges_I_have.erase(node);
+		assert(was_erased);
+		// Iterate over the edges coming out of 'node'
+		in< vector<int> > my_juncs = net->i.at(node).my_junctions;
+		for(auto const junc_id : *my_juncs) {
+			const network :: Junction junc = net->junctions->all_junctions_sorted.at(junc_id);
+			assert(junc.this_node_id == node);
+			auto const neigh_edge = junc.edge_id;
+			if(E_set.count(neigh_edge)) {
+				// OK, the far node's score can be increased ...
+				// ... unless of course it is already fully in the expanding community
+				const int far_node = junc.far_node_id;
+				if(nodes_in_growing_comm.count(far_node) == 1) {
+					const bool was_inserted = edges_in_growing_comm.insert(neigh_edge).second;
+					assert(was_inserted);
+				} else {
+					how_many_frontier_edges_I_have[far_node] ++;
+					noisy_queue.push( { how_many_frontier_edges_I_have[far_node] + gsl_rng_uniform(r) * 0.001 , far_node });
+				}
+			}
+		}
+	};
+
+	const network:: EdgeSet:: Edge & seed_Edge = net->edge_set->edges.at(seed_edge);
+	cout << "seed.left" << endl;
+	how_many_frontier_edges_I_have[seed_Edge.left] = 0;
+	move_node_into_growing_comm(seed_Edge.left);
+
+	cout << "seed.right" << endl;
+	how_many_frontier_edges_I_have[seed_Edge.right] = 1;
+	move_node_into_growing_comm(seed_Edge.right);
+
+	PP2(nodes_in_growing_comm.size(), edges_in_growing_comm.size());
+	exit(1);
+}
+long double             split_or_merge_by_seed_expansion(Score &sc) {
+	// Attempt a merge or split
+	// Record current state (very simple if we're just proposing to split)
+	// Empty the community(ies)
+	// Prepare launch state, via seed expansion
+	// Either:
+	//    Do proposal randomly (if splitting)
+	//    Calculate reverse proposal probability (if merging)
+	//
+	const long double p_attempt_split = 0.5L;
+	if(gsl_ran_bernoulli(r, p_attempt_split)) {
+		const int k = gsl_rng_uniform_int(r, sc.state.get_K());
+		//const int qplus1 = sc.state.get_K();
+		long double delta_score = 0.0L;
+		vector<int> E = my_edges_in_a_random_order(sc.state, k); // I don't really need them to be random, but what the hell
+		if(E.size() < 2)
+			return 0.0L;
+		delta_score += sc.append_empty_cluster(); // initially, this is on the end.  We'll only swap it in if the split it accepted.
+		assert(!E.empty());
+		const size_t seed_edge = E.front();
+		expand_seed(seed_edge, E, sc.state.net);
+		return 0.0L; // merge unimplemented
+	}  else {
+		return 0.0L; // merge unimplemented
+	}
 }
 long double		split_or_merge_on_a_shared_edge(Score & sc) {
 	assert(sc.state.get_K() >= GLOBAL_constraint_min_K);
