@@ -992,7 +992,7 @@ vector<int> my_edges_in_a_random_order(State &st, const int k) {
 	random_shuffle(edges_in_a_random_order.begin(), edges_in_a_random_order.end());
 	return edges_in_a_random_order;
 }
-void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
+void expand_seed(const int comm_source, const int comm_new, const int seed_edge, const vector<int> &E, Net net, long double &delta_score, Score &sc) {
 	// For the purposes of this, we *only* consider the edges in E. Only
 	// those edges contribute towards the 'score' associated with a given frontier node
 	//
@@ -1013,13 +1013,16 @@ void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
 	set<int> nodes_in_growing_comm;
 	set<int> edges_in_growing_comm; // Not sure how I'll use this
 
-	auto move_node_into_growing_comm = [&](int node) -> void {
+	auto move_node_into_growing_comm = [&](int node) -> vector<int> {
 		bool was_inserted = nodes_in_growing_comm.insert(node).second;
 		assert(was_inserted);
 		bool was_erased = how_many_frontier_edges_I_have.erase(node);
 		assert(was_erased);
 		// Iterate over the edges coming out of 'node'
 		in< vector<int> > my_juncs = net->i.at(node).my_junctions;
+
+		vector<int> edges_I_moved_into_the_comm;
+
 		for(auto const junc_id : *my_juncs) {
 			const network :: Junction junc = net->junctions->all_junctions_sorted.at(junc_id);
 			assert(junc.this_node_id == node);
@@ -1031,12 +1034,16 @@ void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
 				if(nodes_in_growing_comm.count(far_node) == 1) {
 					const bool was_inserted = edges_in_growing_comm.insert(neigh_edge).second;
 					assert(was_inserted);
+					delta_score += sc.add_edge(neigh_edge, comm_new);
+					delta_score += sc.remove_edge(neigh_edge, comm_source);
+					edges_I_moved_into_the_comm.push_back(neigh_edge);
 				} else {
 					how_many_frontier_edges_I_have[far_node] ++;
 					noisy_queue.push( { how_many_frontier_edges_I_have[far_node] + gsl_rng_uniform(r) * 0.001 , far_node });
 				}
 			}
 		}
+		return edges_I_moved_into_the_comm;
 	};
 
 	const network:: EdgeSet:: Edge & seed_Edge = net->edge_set->edges.at(seed_edge);
@@ -1066,15 +1073,30 @@ void expand_seed(const int seed_edge, const vector<int> &E, Net net) {
 	};
 
 	while(1) {
+		const long double delta_score_before_this_node = delta_score;
 		int const top_candidate = identify_next_node_to_add();
 		if(top_candidate == -1)
 			break;
-		move_node_into_growing_comm(top_candidate);
+		auto const edges_I_moved_into_the_comm = move_node_into_growing_comm(top_candidate);
 		const int current_size = nodes_in_growing_comm.size();
-		PP(current_size, edges_in_growing_comm.size(), current_size*(current_size-1)/2);
-	}
+		PP(current_size, edges_in_growing_comm.size(), current_size*(current_size-1)/2, delta_score);
 
-	exit(1);
+		if(delta_score_before_this_node > 0 && delta_score < delta_score_before_this_node) {
+			// should undo this addition and get out
+			// BROKEN - not undone
+			for(auto const edge_to_undo : edges_I_moved_into_the_comm) {
+				delta_score += sc.add_edge(edge_to_undo, comm_source);
+				delta_score += sc.remove_edge(edge_to_undo, comm_new);
+			}
+			PP(delta_score_before_this_node, delta_score);
+			assertVERYCLOSE(delta_score_before_this_node, delta_score);
+			assertEQ(delta_score_before_this_node, delta_score); // BROKEN - too strict?
+			break;
+		}
+		if(delta_score < 0 && delta_score < delta_score_before_this_node && nodes_in_growing_comm.size() > 5)
+			break;
+
+	}
 }
 long double             split_or_merge_by_seed_expansion(Score &sc) {
 	// Attempt a merge or split
@@ -1088,7 +1110,7 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 	const long double p_attempt_split = 0.5L;
 	if(gsl_ran_bernoulli(r, p_attempt_split)) {
 		const int k = gsl_rng_uniform_int(r, sc.state.get_K());
-		//const int qplus1 = sc.state.get_K();
+		const int qplus1 = sc.state.get_K();
 		long double delta_score = 0.0L;
 		vector<int> E = my_edges_in_a_random_order(sc.state, k); // I don't really need them to be random, but what the hell
 		if(E.size() < 2)
@@ -1096,7 +1118,8 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		delta_score += sc.append_empty_cluster(); // initially, this is on the end.  We'll only swap it in if the split it accepted.
 		assert(!E.empty());
 		const size_t seed_edge = E.front();
-		expand_seed(seed_edge, E, sc.state.net);
+		expand_seed(k, qplus1, seed_edge, E, sc.state.net, delta_score, sc);
+		exit(1);
 		return 0.0L; // not complete yet // BROKEN
 	}  else {
 		return 0.0L; // merge unimplemented // BROKEN
