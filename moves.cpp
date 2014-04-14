@@ -403,8 +403,8 @@ long double		empty_one_cluster(
 				) {
 	long double delta_score = 0.0L;
 	const std :: tr1 :: unordered_set<int64_t> the_edges = sc.state.get_comms().at(cluster_to_empty).get_my_edges();
-	For(edge, the_edges) {
-		delta_score += sc.remove_edge(*edge, cluster_to_empty);
+	while(!sc.state.get_comms().at(cluster_to_empty).get_my_edges().empty()) {
+		delta_score += sc.remove_edge(*sc.state.get_comms().at(cluster_to_empty).get_my_edges().begin(), cluster_to_empty);
 	}
 	return delta_score;
 
@@ -1129,11 +1129,14 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		// Next, assign to one of the THREE possible states
 		// first, remove them
 		assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
-		for(auto const e : launch_state_qplus1) delta_score += sc.remove_edge(e, qplus1);
-		for(auto const e : launch_state_k     ) delta_score += sc.remove_edge(e, k     );
+		//auto empty_one_cluster = [&](const int one_cluster) -> void {
+			//while(!sc.state.get_comms().at(qplus1).get_my_edges().empty()) { delta_score += sc.remove_edge( *sc.state.get_comms().at(qplus1).get_my_edges().begin(), qplus1); }
+		//};
+		delta_score += empty_one_cluster(k, sc);
+		delta_score += empty_one_cluster(qplus1, sc);
 		assert(0 == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
 
-		const double alpha[3] = {1.0, 0.2, 0.04}; // as-is, other, both
+		const double alpha[3] = { staticcast(double,E.size()), 0.9, 0.1}; // as-is, other, both
 		double theta[3];
 		gsl_ran_dirichlet(r, 3, alpha, theta);
 		PP(theta[0], theta[1], theta[2]);
@@ -1144,17 +1147,17 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 			unsigned int n[3];
 			gsl_ran_multinomial(r, 3, 1, theta, n);
 			assert( n[0] + n[1] + n[2] == 1);
-			if(n[0]) { sc.add_edge( edge_id, asIs ); ++verify_asis; }  // as-is
-			if(n[1]) { sc.add_edge( edge_id, other ); ++verify_other; } // other
+			if(n[0]) { delta_score += sc.add_edge( edge_id, asIs ); ++verify_asis; }  // as-is
+			if(n[1]) { delta_score += sc.add_edge( edge_id, other ); ++verify_other; } // other
 			if(n[2]) {                                  // both
-				sc.add_edge( edge_id, other );
-				sc.add_edge( edge_id, asIs );
+				delta_score += sc.add_edge( edge_id, other );
+				delta_score += sc.add_edge( edge_id, asIs );
 				++verify_both;
 			}
 		};
 		for(auto const e : launch_state_k      )  assign_one_edge_randomly(e, k, qplus1, sc);
 		for(auto const e : launch_state_qplus1 )  assign_one_edge_randomly(e, qplus1, k, sc);
-		PP(verify_asis, verify_other, verify_both);
+		//PP(verify_asis, verify_other, verify_both);
 		assert(int(E.size()) <= sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
 
 		auto calculate_prop_prob_from_seed = [&](
@@ -1162,7 +1165,7 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 				, const int k
 				, const vector<int64_t> & launch_l
 				, const int l
-				) -> void {
+				) -> long double {
 			size_t count_asis = 0;
 			size_t count_other= 0;
 			size_t count_both = 0;
@@ -1207,11 +1210,29 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 				-LOG2GAMMA( alpha[2] )
 				;
 			PP(l2_pp);
+			return l2_pp;
 		};
-		calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
+		const long double pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
+		PP(pp_post_launch, delta_score);
 
-		exit(1);
-		return 0.0L; // not complete yet // BROKEN
+		// BROKEN should reject sometimes
+
+		// OK, but everything back the way it was
+		PP(__LINE__, delta_score);
+		for(const auto e : E) {
+			if(!sc.state.test_edge(e, k))
+				delta_score += sc.add_edge(e, k);
+			if( sc.state.test_edge(e, qplus1))
+				delta_score += sc.remove_edge(e, qplus1);
+		}
+		PP(__LINE__, delta_score);
+		assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges);
+		assert(  0           == sc.state.get_one_community_summary(qplus1).num_edges);
+		PP(delta_score);
+		delta_score += sc.delete_empty_cluster_from_the_end();
+		PP(delta_score);
+		assertVERYCLOSE(delta_score, 0);
+		return delta_score;
 	}  else {
 		return 0.0L; // merge unimplemented // BROKEN
 	}
