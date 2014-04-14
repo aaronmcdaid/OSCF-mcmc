@@ -36,6 +36,8 @@ long double one_node_simple_update(Score &sc);
 long double		one_node_SIMPLEST_update(Score &sc, int64_t n);
 long double		gibbs_one_comm_one_edge(Score & sc, const int64_t e);
 long double 		gibbsUpdateNearby(Score & sc, int64_t e);
+void                    expand_seed(const int comm_source, const int comm_new, const int seed_edge, const std:: vector<int> &E, Net net, long double &delta_score, Score &sc);
+std:: vector<int>             my_edges_in_a_random_order(State &st, const int k);
 
 gsl_rng * rng();
 
