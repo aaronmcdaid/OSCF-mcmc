@@ -265,15 +265,8 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 		random_shuffle(edges_in_random_order.begin(), edges_in_random_order.end());
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
+		//if(!args_info.algo_seedSplit_flag)
 		For(e, edges_in_random_order) {
-			if(args_info.algo_seedSplit_flag) {
-				for(size_t i=0; i<10000; ++i) {
-					cmf_track += split_or_merge_by_seed_expansion(sc);
-					CHECK_PMF_TRACKER(cmf_track, sc.score());
-				}
-				cout << "exiting early" << endl;
-				exit(1);
-			}
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
 			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
@@ -293,6 +286,23 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.SharedSM_algo_arg && K_can_vary) cmf_track += split_or_merge_on_a_shared_edge(sc);
 			if(gsl_ran_bernoulli(rng(), 0.05) && args_info.M3_algo_arg)                     cmf_track += M3(sc);
 		}
+		if(  //gsl_ran_bernoulli(rng(), 0.05) &&
+				args_info.algo_seedSplit_flag && K_can_vary) cmf_track += split_or_merge_by_seed_expansion(sc);
+			/*
+		if(args_info.algo_seedSplit_flag) {
+			//for(size_t i=0; i<10000; ++i) {
+				cmf_track += split_or_merge_by_seed_expansion(sc);
+				//CHECK_PMF_TRACKER(cmf_track, sc.score());
+			//}
+			//cout << "exiting early" << endl;
+			//exit(1);
+			For(e, edges_in_random_order) {
+				assert(st.get_K() >=  GLOBAL_constraint_min_K);
+				if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
+				if(args_info.NearbyGibbs_algo_arg) cmf_track += gibbsUpdateNearby(sc, *e);
+			}
+		}
+		*/
 		/*
 		for(int i=0; i<net->E(); ++i) {
 			// if(i % 1000 == 0) cerr << i << ',' << st.get_K() << endl;
