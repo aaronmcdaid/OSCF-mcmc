@@ -204,7 +204,7 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 			sc.add_edge(e, e);
 		}
 	}
-	for(int identical_clusters=0; identical_clusters<2; ++identical_clusters) {
+	for(int identical_clusters=0; identical_clusters<1; ++identical_clusters) {
 		const int64_t new_cluster_id = st.append_empty_cluster();
 		//assert(0 == new_cluster_id);
 		for(int64_t e = 0; e < st.E; ++e) {
