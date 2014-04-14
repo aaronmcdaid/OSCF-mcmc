@@ -198,6 +198,9 @@ public: // swap is public because it doesn't affect the score
 	const std :: vector<size_t> & get_frequencies_of_edge_occupancy() const {
 		return this->frequencies_of_edge_occupancy;
 	}
+	bool  test_edge(const int edge, const int k) const {
+		return this->edge_to_set_of_comms.at( edge ).count(k);
+	}
 };
 
 
