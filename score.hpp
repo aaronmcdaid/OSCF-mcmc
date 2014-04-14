@@ -7,6 +7,7 @@
 #include<utility>
 #include<tr1/unordered_map>
 #include"hash_a_pair.hpp"
+#include<cmath>
 
 struct Score { // every modification *should* go through here eventually, so as to track the score.
 	// But for now, this is just a passive object that recalculates all the scores from scratch each time
@@ -54,5 +55,22 @@ struct Score { // every modification *should* go through here eventually, so as 
 			return expected_delta_score;
 	}
 };
+
+static inline double LOG2GAMMA(const double x) {
+        assert(x>0);
+        return M_LOG2E * gsl_sf_lngamma(x);
+}
+static inline double LOG2GAMMA(const long double x) {
+        return LOG2GAMMA(static_cast<double>(x));
+}
+static inline double LOG2FACT(const int x) {
+        assert(x>=0);
+        return M_LOG2E * gsl_sf_lnfact(x);
+}
+static inline double LOG2BINOM(const int n, const int m) {
+	assert(m<=n);
+	assert(m>=0);
+	return LOG2FACT(n) - LOG2FACT(m) - LOG2FACT(n-m);
+}
 
 #endif
