@@ -50,6 +50,7 @@ const char *gengetopt_args_info_help[] = {
   "      --M3.algo=INT               (default=`1')",
   "      --m.iidBernoulli=FLOAT    A simpler model for the edges. Default is off \n                                  (-1)  (default=`-1')",
   "      --algo.seedSplit          Algo: split-merge, via seed expansion  \n                                  (default=off)",
+  "      --init.seedExpand         Initialize via seed expansion  (default=off)",
     0
 };
 
@@ -94,6 +95,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->M3_algo_given = 0 ;
   args_info->m_iidBernoulli_given = 0 ;
   args_info->algo_seedSplit_given = 0 ;
+  args_info->init_seedExpand_given = 0 ;
 }
 
 static
@@ -129,6 +131,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->m_iidBernoulli_arg = -1;
   args_info->m_iidBernoulli_orig = NULL;
   args_info->algo_seedSplit_flag = 0;
+  args_info->init_seedExpand_flag = 0;
   
 }
 
@@ -155,6 +158,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->M3_algo_help = gengetopt_args_info_help[15] ;
   args_info->m_iidBernoulli_help = gengetopt_args_info_help[16] ;
   args_info->algo_seedSplit_help = gengetopt_args_info_help[17] ;
+  args_info->init_seedExpand_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -323,6 +327,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "m.iidBernoulli", args_info->m_iidBernoulli_orig, 0);
   if (args_info->algo_seedSplit_given)
     write_into_file(outfile, "algo.seedSplit", 0, 0 );
+  if (args_info->init_seedExpand_given)
+    write_into_file(outfile, "init.seedExpand", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -599,6 +605,7 @@ cmdline_parser_internal (
         { "M3.algo",	1, NULL, 0 },
         { "m.iidBernoulli",	1, NULL, 0 },
         { "algo.seedSplit",	0, NULL, 0 },
+        { "init.seedExpand",	0, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -830,6 +837,18 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->algo_seedSplit_flag), 0, &(args_info->algo_seedSplit_given),
                 &(local_args_info.algo_seedSplit_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "algo.seedSplit", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Initialize via seed expansion.  */
+          else if (strcmp (long_options[option_index].name, "init.seedExpand") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->init_seedExpand_flag), 0, &(args_info->init_seedExpand_given),
+                &(local_args_info.init_seedExpand_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "init.seedExpand", '-',
                 additional_error))
               goto failure;
           

@@ -84,6 +84,8 @@ struct gengetopt_args_info
   const char *m_iidBernoulli_help; /**< @brief A simpler model for the edges. Default is off (-1) help description.  */
   int algo_seedSplit_flag;	/**< @brief Algo: split-merge, via seed expansion (default=off).  */
   const char *algo_seedSplit_help; /**< @brief Algo: split-merge, via seed expansion help description.  */
+  int init_seedExpand_flag;	/**< @brief Initialize via seed expansion (default=off).  */
+  const char *init_seedExpand_help; /**< @brief Initialize via seed expansion help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -103,6 +105,7 @@ struct gengetopt_args_info
   unsigned int M3_algo_given ;	/**< @brief Whether M3.algo was given.  */
   unsigned int m_iidBernoulli_given ;	/**< @brief Whether m.iidBernoulli was given.  */
   unsigned int algo_seedSplit_given ;	/**< @brief Whether algo.seedSplit was given.  */
+  unsigned int init_seedExpand_given ;	/**< @brief Whether init.seedExpand was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

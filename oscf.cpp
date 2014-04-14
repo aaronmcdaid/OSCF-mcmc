@@ -211,11 +211,34 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 			st.add_edge(e, new_cluster_id);
 		}
 	}
+	long double cmf_track = sc.score();
+	PP(cmf_track);
+	if(args_info.init_seedExpand_flag) { // initialize with many runs of expand_seed
+		for(int i = 0; i < 10000; ++i) {
+			const int k = 0; // always expand from the initial "big" cluster
+			if(sc.state.get_one_community_summary(k).num_edges == 0)
+				break;
+			const int qplus1 = sc.state.get_K();
+			cmf_track += sc.append_empty_cluster();
+			assert(k!=qplus1);
+			vector<int> E = my_edges_in_a_random_order(sc.state, k); // I don't really need them to be random, but what the hell
+			PP(i, E.size());
+			const size_t seed_edge = E.front();
+			expand_seed(k, qplus1, seed_edge, E, sc.state.net, cmf_track, sc);
+			PP(sc.state.get_one_community_summary(qplus1).num_edges);
+			if(
+				sc.state.get_one_community_summary(qplus1).num_edges > sc.state.get_one_community_summary(0).num_edges
+				||
+				sc.state.get_one_community_summary(qplus1).num_edges == 0
+			)
+				break;
+		}
+	}
 	PP(st.get_K());
 	const bool K_can_vary = args_info.K_arg == -1;
 	if( !K_can_vary ) {
 		while(st.get_K() < args_info.K_arg) {
-			st.append_empty_cluster();
+			cmf_track += sc.append_empty_cluster();
 		}
 		assert(st.get_K() == args_info.K_arg);
 	}
@@ -231,7 +254,6 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 	assert(0 == st.get_frequencies_of_edge_occupancy().at(0));
 	assert(st.every_edge_non_empty());
 
-	long double cmf_track = sc.score();
 	PP(cmf_track);
 	CHECK_PMF_TRACKER(cmf_track, sc.score());
 
