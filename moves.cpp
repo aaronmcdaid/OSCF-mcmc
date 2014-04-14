@@ -1133,23 +1133,83 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		for(auto const e : launch_state_k     ) delta_score += sc.remove_edge(e, k     );
 		assert(0 == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
 
-		const double alpha[3] = {1.0, 1.0, 1.0}; // as-is, other, both
+		const double alpha[3] = {1.0, 0.2, 0.04}; // as-is, other, both
 		double theta[3];
 		gsl_ran_dirichlet(r, 3, alpha, theta);
+		PP(theta[0], theta[1], theta[2]);
+		size_t verify_asis = 0;
+		size_t verify_other= 0;
+		size_t verify_both = 0;
 		auto assign_one_edge_randomly = [&](const int edge_id, const int asIs, const int other, Score &sc) -> void {
 			unsigned int n[3];
 			gsl_ran_multinomial(r, 3, 1, theta, n);
 			assert( n[0] + n[1] + n[2] == 1);
-			if(n[0]) { sc.add_edge( edge_id, asIs ); }  // as-is
-			if(n[1]) { sc.add_edge( edge_id, other ); } // other
+			if(n[0]) { sc.add_edge( edge_id, asIs ); ++verify_asis; }  // as-is
+			if(n[1]) { sc.add_edge( edge_id, other ); ++verify_other; } // other
 			if(n[2]) {                                  // both
 				sc.add_edge( edge_id, other );
 				sc.add_edge( edge_id, asIs );
+				++verify_both;
 			}
 		};
 		for(auto const e : launch_state_k      )  assign_one_edge_randomly(e, k, qplus1, sc);
 		for(auto const e : launch_state_qplus1 )  assign_one_edge_randomly(e, qplus1, k, sc);
+		PP(verify_asis, verify_other, verify_both);
 		assert(int(E.size()) <= sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
+
+		auto calculate_prop_prob_from_seed = [&](
+				const vector<int64_t> & launch_k
+				, const int k
+				, const vector<int64_t> & launch_l
+				, const int l
+				) -> void {
+			size_t count_asis = 0;
+			size_t count_other= 0;
+			size_t count_both = 0;
+			auto do_one_edge_here = [&](int64_t const e, const int comm_asis, const int comm_other) {
+				bool const still_in_asis = sc.state.get_comms().at(comm_asis).get_my_edges().count(e);
+				bool const also_in_other = sc.state.get_comms().at(comm_other).get_my_edges().count(e);
+				assert(still_in_asis || also_in_other); // must now be in one or the other, or both.
+				if(still_in_asis && also_in_other)
+					++ count_both;
+				else
+				if(still_in_asis)
+					++ count_asis;
+				else
+				if(also_in_other)
+					++ count_other;
+				else
+					assert(1==2); // shouldn't get here
+			};
+			assert(k < sc.state.get_K());
+			assert(l < sc.state.get_K());
+			for(auto const e : launch_k) {
+				do_one_edge_here(e, k, l);
+			}
+			for(auto const e : launch_l) {
+				do_one_edge_here(e, l, k);
+			}
+			PP(count_asis, count_other, count_both);
+			assert(verify_asis == count_asis);
+			assert(verify_other== count_other);
+			assert(verify_both == count_both);
+			// Now everything is in one of three 'clusters', and we can use the collapsed formula
+			//
+			const long double l2_pp =
+				LOG2GAMMA( alpha[0]+alpha[1]+alpha[2] )
+				-LOG2GAMMA( alpha[0]+alpha[1]+alpha[2]
+						+count_asis+count_other+count_both )
+				+LOG2GAMMA( count_asis  + alpha[0] )
+				+LOG2GAMMA( count_other + alpha[1] )
+				+LOG2GAMMA( count_both  + alpha[2] )
+				-LOG2GAMMA( alpha[0] )
+				-LOG2GAMMA( alpha[1] )
+				-LOG2GAMMA( alpha[2] )
+				;
+			PP(l2_pp);
+		};
+		calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
+
 		exit(1);
 		return 0.0L; // not complete yet // BROKEN
 	}  else {
