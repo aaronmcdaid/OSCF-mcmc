@@ -193,7 +193,7 @@ static vector< vector<int64_t> > load_ground_truth(const NodeSet * const node_se
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 void oscf(Net net, const gengetopt_args_info &args_info) {
-	State st(net); // initialize with every edge in its own community
+	State st(net);
 	Score sc(st);
 	sc.m_iidBernoulli_arg = args_info.m_iidBernoulli_arg;
 	assert(st.get_K() == 0);
@@ -204,9 +204,9 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 			sc.add_edge(e, e);
 		}
 	}
-	for(int identical_clusters=0; identical_clusters<1; ++identical_clusters) {
+	for(int identical_clusters=0; identical_clusters<2; ++identical_clusters) {
 		const int64_t new_cluster_id = st.append_empty_cluster();
-		assert(0 == new_cluster_id);
+		//assert(0 == new_cluster_id);
 		for(int64_t e = 0; e < st.E; ++e) {
 			st.add_edge(e, new_cluster_id);
 		}
@@ -266,8 +266,14 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 		random_shuffle(nodes_in_random_order.begin(), nodes_in_random_order.end());
 		size_t node_offset = 0;
 		For(e, edges_in_random_order) {
-			if(args_info.algo_seedSplit_flag)
-				cmf_track += split_or_merge_by_seed_expansion(sc);
+			if(args_info.algo_seedSplit_flag) {
+				for(size_t i=0; i<10000; ++i) {
+					cmf_track += split_or_merge_by_seed_expansion(sc);
+					CHECK_PMF_TRACKER(cmf_track, sc.score());
+				}
+				cout << "exiting early" << endl;
+				exit(1);
+			}
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
 			if(args_info.metroK_algo_arg && K_can_vary) cmf_track += metroK(sc);
 			assert(st.get_K() >=  GLOBAL_constraint_min_K);
