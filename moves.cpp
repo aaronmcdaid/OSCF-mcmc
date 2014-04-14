@@ -1049,15 +1049,15 @@ void expand_seed(const int comm_source, const int comm_new, const int seed_edge,
 	};
 
 	const network:: EdgeSet:: Edge & seed_Edge = net->edge_set->edges.at(seed_edge);
-	cout << "seed.left" << endl;
+	//cout << "seed.left" << endl;
 	how_many_frontier_edges_I_have[seed_Edge.left] = 0;
 	move_node_into_growing_comm(seed_Edge.left);
 
-	cout << "seed.right" << endl;
+	//cout << "seed.right" << endl;
 	how_many_frontier_edges_I_have[seed_Edge.right] = 1;
 	move_node_into_growing_comm(seed_Edge.right);
 
-	PP2(nodes_in_growing_comm.size(), edges_in_growing_comm.size());
+	//PP2(nodes_in_growing_comm.size(), edges_in_growing_comm.size());
 
 	auto identify_next_node_to_add = [&]() -> int {
 		//PP(noisy_queue.size());
