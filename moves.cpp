@@ -993,6 +993,8 @@ vector<int> my_edges_in_a_random_order(State &st, const int k) {
 	return edges_in_a_random_order;
 }
 void expand_seed(const int comm_source, const int comm_new, const int seed_edge, const vector<int> &E, Net net, long double &delta_score, Score &sc) {
+	assert(sc.state.get_one_community_summary(comm_new).num_edges == 0);
+	assert(sc.state.get_one_community_summary(comm_source).num_edges == (int64_t)E.size());
 	// For the purposes of this, we *only* consider the edges in E. Only
 	// those edges contribute towards the 'score' associated with a given frontier node
 	//
@@ -1083,20 +1085,19 @@ void expand_seed(const int comm_source, const int comm_new, const int seed_edge,
 
 		if(delta_score_before_this_node > 0 && delta_score < delta_score_before_this_node) {
 			// should undo this addition and get out
-			// BROKEN - not undone
 			for(auto const edge_to_undo : edges_I_moved_into_the_comm) {
 				delta_score += sc.add_edge(edge_to_undo, comm_source);
 				delta_score += sc.remove_edge(edge_to_undo, comm_new);
 			}
 			PP(delta_score_before_this_node, delta_score);
 			assertVERYCLOSE(delta_score_before_this_node, delta_score);
-			assertEQ(delta_score_before_this_node, delta_score); // BROKEN - too strict?
 			break;
 		}
 		if(delta_score < 0 && delta_score < delta_score_before_this_node && nodes_in_growing_comm.size() > 5)
 			break;
 
 	}
+	assert(sc.state.get_one_community_summary(comm_new).num_edges + sc.state.get_one_community_summary(comm_source).num_edges == (int64_t)E.size());
 }
 pair<int, long double> select_cluster_at_random_weighted_by_edge(State &st) {
 	int total_y_kij = 0;
@@ -1129,6 +1130,59 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 	const long double p_attempt_split = 1.0L / sc.state.get_K(); // if K=1, then it will not attempt a merge, of course
 	cout << endl;
 	PP(sc.state.get_K());
+	auto calculate_prop_prob_from_seed = [&sc](
+				const vector<int64_t> & launch_k
+				, const int k
+				, const vector<int64_t> & launch_l
+				, const int l
+				, const double (&alpha)[3]
+				) -> long double {
+			size_t count_asis = 0;
+			size_t count_other= 0;
+			size_t count_both = 0;
+			auto do_one_edge_here = [&](int64_t const e, const int comm_asis, const int comm_other) {
+				bool const still_in_asis = sc.state.test_edge(e, comm_asis);
+				bool const also_in_other = sc.state.test_edge(e, comm_other);
+				assert(still_in_asis || also_in_other); // must now be in one or the other, or both.
+				if(still_in_asis && also_in_other)
+					++ count_both;
+				else
+				if(still_in_asis)
+					++ count_asis;
+				else
+				if(also_in_other)
+					++ count_other;
+				else
+					assert(1==2); // shouldn't get here
+			};
+			assert(k < sc.state.get_K());
+			assert(l < sc.state.get_K());
+			for(auto const e : launch_k) {
+				do_one_edge_here(e, k, l);
+			}
+			for(auto const e : launch_l) {
+				do_one_edge_here(e, l, k);
+			}
+			PP(count_asis, count_other, count_both);
+			//assert(verify_asis == count_asis);
+			//assert(verify_other== count_other);
+			//assert(verify_both == count_both);
+			// Now everything is in one of three 'clusters', and we can use the collapsed formula
+			//
+			const long double l2_pp =
+				LOG2GAMMA( alpha[0]+alpha[1]+alpha[2] )
+				-LOG2GAMMA( alpha[0]+alpha[1]+alpha[2]
+						+count_asis+count_other+count_both )
+				+LOG2GAMMA( count_asis  + alpha[0] )
+				+LOG2GAMMA( count_other + alpha[1] )
+				+LOG2GAMMA( count_both  + alpha[2] )
+				-LOG2GAMMA( alpha[0] )
+				-LOG2GAMMA( alpha[1] )
+				-LOG2GAMMA( alpha[2] )
+				;
+			PP(l2_pp);
+			return l2_pp;
+	}; // end lambda for the proposal prob, which will be useful in both split and merge
 	if(gsl_ran_bernoulli(r, p_attempt_split)) {
 		// Multiple parts to the proposal probability:
 		// 0. Deciding to split, with probability 1/K
@@ -1196,59 +1250,7 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		//PP(verify_asis, verify_other, verify_both);
 		assert(int(E.size()) <= sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
 
-		auto calculate_prop_prob_from_seed = [&](
-				const vector<int64_t> & launch_k
-				, const int k
-				, const vector<int64_t> & launch_l
-				, const int l
-				) -> long double {
-			size_t count_asis = 0;
-			size_t count_other= 0;
-			size_t count_both = 0;
-			auto do_one_edge_here = [&](int64_t const e, const int comm_asis, const int comm_other) {
-				bool const still_in_asis = sc.state.get_comms().at(comm_asis).get_my_edges().count(e);
-				bool const also_in_other = sc.state.get_comms().at(comm_other).get_my_edges().count(e);
-				assert(still_in_asis || also_in_other); // must now be in one or the other, or both.
-				if(still_in_asis && also_in_other)
-					++ count_both;
-				else
-				if(still_in_asis)
-					++ count_asis;
-				else
-				if(also_in_other)
-					++ count_other;
-				else
-					assert(1==2); // shouldn't get here
-			};
-			assert(k < sc.state.get_K());
-			assert(l < sc.state.get_K());
-			for(auto const e : launch_k) {
-				do_one_edge_here(e, k, l);
-			}
-			for(auto const e : launch_l) {
-				do_one_edge_here(e, l, k);
-			}
-			PP(count_asis, count_other, count_both);
-			assert(verify_asis == count_asis);
-			assert(verify_other== count_other);
-			assert(verify_both == count_both);
-			// Now everything is in one of three 'clusters', and we can use the collapsed formula
-			//
-			const long double l2_pp =
-				LOG2GAMMA( alpha[0]+alpha[1]+alpha[2] )
-				-LOG2GAMMA( alpha[0]+alpha[1]+alpha[2]
-						+count_asis+count_other+count_both )
-				+LOG2GAMMA( count_asis  + alpha[0] )
-				+LOG2GAMMA( count_other + alpha[1] )
-				+LOG2GAMMA( count_both  + alpha[2] )
-				-LOG2GAMMA( alpha[0] )
-				-LOG2GAMMA( alpha[1] )
-				-LOG2GAMMA( alpha[2] )
-				;
-			PP(l2_pp);
-			return l2_pp;
-		};
-		const long double l2_pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
+		const long double l2_pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1, alpha);
 		PP(delta_score);
 		const int new_size = sc.state.get_K();
 		const long double l2_pp_all_forward = log2l(p_attempt_split)+ log2l(k_and_prob.second)+ l2_pp_post_launch+ log2l(1.0/new_size);
@@ -1260,7 +1262,7 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 		const long double l2_acpt_prob = delta_score - l2_pp_all_forward + l2_pp_all_reverse;
 		PP(l2_acpt_prob);
 		if( log2l(gsl_rng_uniform(r)) < l2_acpt_prob) {
-			cout << "  (seed-expand) ACCEPT"
+			cout << "  (seed-expand) SPLIT ACCEPT"
 				<< endl;
 			const int swap_with_me = gsl_rng_uniform_int(r, sc.state.get_K());
 			sc.state.swap_cluster_to_the_end(swap_with_me);
@@ -1284,7 +1286,125 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 			return delta_score;
 		}
 	}  else {
-		return 0.0L; // merge unimplemented // BROKEN
+		assert(sc.state.get_K() > 1); // see 'p_attempt_split'
+
+		// swap a cluster, randomly, to the end
+		// DON'T FORGET TO UNDO THIS IF WE REJECT
+		//
+		// record the current state
+		// empty qplus1, set k instead
+		// set up the launch state
+		// calculate the FORCED proposal probability
+		// ...
+
+		const int swap_with_me = gsl_rng_uniform_int(r, sc.state.get_K());
+		sc.state.swap_cluster_to_the_end(swap_with_me);
+		// how, we have our "expelled" cluster at the end
+		const int k = gsl_rng_uniform_int(r, sc.state.get_K()-1);
+		const int qplus1 = sc.state.get_K()-1;
+		assert(k < qplus1);
+
+		// record the current state
+		const auto &    initial_state_qplus1_ = sc.state.get_comms().at(qplus1).get_my_edges();
+		vector<int64_t> initial_state_qplus1  (initial_state_qplus1_.begin(), initial_state_qplus1_.end() );
+		const auto &    initial_state_k_      = sc.state.get_comms().at(k).get_my_edges();
+		vector<int64_t> initial_state_k       (initial_state_k_.begin(), initial_state_k_.end() );
+
+		set<int> E_set( initial_state_k.begin(), initial_state_k.end() );
+		assert(E_set.size() == initial_state_k.size());
+		for(const auto e : initial_state_qplus1) {
+			E_set.insert(e);
+		}
+		if(E_set.size() < 2) {
+			sc.state.swap_cluster_to_the_end(swap_with_me);
+			assertVERYCLOSE(delta_score, 0.0L);
+			return delta_score; // == 0.0L
+		}
+		PP(E_set.size(), initial_state_qplus1.size(), initial_state_k.size());
+		assert(E_set.size() <= initial_state_qplus1.size() + initial_state_k.size());
+		vector<int> E (E_set.begin(), E_set.end());
+		assert(E.size() == E_set.size());
+		random_shuffle(E.begin(), E.end());
+
+		// empty qplus1, put everything in k instead
+		for(const auto edge_in_q_plus1 : initial_state_qplus1) {
+			delta_score += sc.remove_edge(edge_in_q_plus1, qplus1);
+			if(!sc.state.test_edge(edge_in_q_plus1, k))
+				delta_score += sc.add_edge(edge_in_q_plus1, k);
+		}
+		const size_t seed_edge = E.front();
+		expand_seed(k, qplus1, seed_edge, E, sc.state.net, delta_score, sc);
+
+		// launch state now established
+		// This is the launch state, which we must now record
+		const auto &    launch_state_qplus1_ = sc.state.get_comms().at(qplus1).get_my_edges();
+		vector<int64_t> launch_state_qplus1  (launch_state_qplus1_.begin(), launch_state_qplus1_.end() );
+		const auto &    launch_state_k_      = sc.state.get_comms().at(k).get_my_edges();
+		vector<int64_t> launch_state_k       (launch_state_k_.begin(), launch_state_k_.end() );
+		assert(launch_state_k.size() + launch_state_qplus1.size() == E.size());
+		assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges + sc.state.get_one_community_summary(qplus1).num_edges);
+
+		// OK, go back to the 'initial' state!
+		delta_score += empty_one_cluster(qplus1, sc);
+		delta_score += empty_one_cluster(k, sc);
+		for(const auto e : initial_state_k)      { delta_score += sc.add_edge(e, k); }
+		for(const auto e : initial_state_qplus1) { delta_score += sc.add_edge(e, qplus1); }
+		assertVERYCLOSE(delta_score, 0.0L);
+
+		const double alpha[3] = { staticcast(double,E.size()), 0.9, 0.1}; // as-is, other, both
+		const long double l2_pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1, alpha);
+		PP(l2_pp_post_launch);
+
+		// Must force a merge now, to calculate the delta_score there, and the k_and_prob_second
+		delta_score += empty_one_cluster(qplus1, sc);
+		for(const auto e : E) {
+			if(!sc.state.test_edge(e, k))
+				delta_score += sc.add_edge(e, k);
+		}
+		assert((int64_t)E.size() == sc.state.get_one_community_summary(k).num_edges);
+
+		delta_score += sc.delete_empty_cluster_from_the_end();
+		long double k_and_prob_second;
+		{
+			size_t total_y_kij = 0;
+			for(const auto & comm : sc.state.get_comms()) {
+				total_y_kij += comm.get_num_edges();
+			}
+			k_and_prob_second = (sc.state.get_one_community_summary(k).num_edges+.0L) / total_y_kij;
+		}
+
+		// Now, accept or reject?
+		// (currently, in the merged state)
+		const int orig_larger_k = sc.state.get_K()+1;
+		const int new_small_k = sc.state.get_K();
+		cout << "reverse pp:" << endl;
+		const long double l2_pp_all_reverse = log2l(1.0L/new_small_k)+ log2l(k_and_prob_second)+ l2_pp_post_launch+ log2l(1.0/orig_larger_k);
+		PP(                                   log2l(1.0L/new_small_k), log2l(k_and_prob_second), l2_pp_post_launch, log2l(1.0/orig_larger_k), l2_pp_all_reverse);
+		cout << "forward pp:" << endl;
+		const long double l2_pp_all_forward = log2l( 1.0L - 1.0L/orig_larger_k )+ -log2l(orig_larger_k)-log2l(orig_larger_k-1);
+		PP(                                   log2l( 1.0L - 1.0L/orig_larger_k ), -log2l(orig_larger_k)-log2l(orig_larger_k-1), l2_pp_all_forward );
+
+		const long double l2_acpt_prob = delta_score - l2_pp_all_forward + l2_pp_all_reverse;
+		PP(l2_acpt_prob);
+		if( log2l(gsl_rng_uniform(r)) < l2_acpt_prob) {
+			cout << "  (seed-expand) MERGE ACCEPT"
+				<< endl;
+			return delta_score;
+		} else {
+			// MERGE reject
+			assert(qplus1 == sc.state.get_K());
+			delta_score += sc.append_empty_cluster();
+			// put the initial_state in play
+			delta_score += empty_one_cluster(k, sc);
+			for(const auto e : initial_state_k)
+				delta_score += sc.add_edge(e, k);
+			for(const auto e : initial_state_qplus1)
+				delta_score += sc.add_edge(e, qplus1);
+			// then swap again
+			sc.state.swap_cluster_to_the_end(swap_with_me);
+			assertVERYCLOSE(delta_score, 0.0L);
+			return delta_score; // == 0.0L
+		}
 	}
 }
 long double		split_or_merge_on_a_shared_edge(Score & sc) {
