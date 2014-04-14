@@ -1060,13 +1060,13 @@ void expand_seed(const int comm_source, const int comm_new, const int seed_edge,
 	PP2(nodes_in_growing_comm.size(), edges_in_growing_comm.size());
 
 	auto identify_next_node_to_add = [&]() -> int {
-		PP(noisy_queue.size());
+		//PP(noisy_queue.size());
 		while(!noisy_queue.empty()) {
 			auto const x = noisy_queue.top();
 			noisy_queue.pop();
 			if(how_many_frontier_edges_I_have.count(x.second)) {
 				size_t const how_many = how_many_frontier_edges_I_have[x.second];
-				PP2(how_many, x.first);
+				//PP2(how_many, x.first);
 				assert(how_many == floor(x.first));
 				return x.second;
 			}
@@ -1080,8 +1080,8 @@ void expand_seed(const int comm_source, const int comm_new, const int seed_edge,
 		if(top_candidate == -1)
 			break;
 		auto const edges_I_moved_into_the_comm = move_node_into_growing_comm(top_candidate);
-		const int current_size = nodes_in_growing_comm.size();
-		PP(current_size, edges_in_growing_comm.size(), current_size*(current_size-1)/2, delta_score);
+		//const int current_size = nodes_in_growing_comm.size();
+		//PP(current_size, edges_in_growing_comm.size(), current_size*(current_size-1)/2, delta_score);
 
 		if(delta_score_before_this_node > 0 && delta_score < delta_score_before_this_node) {
 			// should undo this addition and get out
