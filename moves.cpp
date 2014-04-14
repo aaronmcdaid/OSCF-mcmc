@@ -1098,6 +1098,24 @@ void expand_seed(const int comm_source, const int comm_new, const int seed_edge,
 
 	}
 }
+pair<int, long double> select_cluster_at_random_weighted_by_edge(State &st) {
+	int total_y_kij = 0;
+	for (auto const & cluster : st.get_comms()) {
+		total_y_kij += cluster.get_num_edges();
+	}
+	assert( total_y_kij >= st.net->E() );
+	int64_t random_latent_edge_offset = gsl_rng_uniform_int(r, total_y_kij);
+
+	size_t k=0;
+	while(true) {
+		const int edges_in_k = st.get_one_community_summary(k).num_edges;
+		if(edges_in_k > random_latent_edge_offset) {
+			return { k, (edges_in_k+.0L) / total_y_kij };
+		}
+		++k;
+		random_latent_edge_offset -= edges_in_k;
+	}
+}
 long double             split_or_merge_by_seed_expansion(Score &sc) {
 	// Attempt a merge or split
 	// Record current state (very simple if we're just proposing to split)
