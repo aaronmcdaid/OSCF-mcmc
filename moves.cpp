@@ -1124,12 +1124,30 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 	// Either:
 	//    Do proposal randomly (if splitting)
 	//    Calculate reverse proposal probability (if merging)
-	//
-	const long double p_attempt_split = 0.5L;
+
+	long double delta_score = 0.0L;
+	const long double p_attempt_split = 1.0L / sc.state.get_K(); // if K=1, then it will not attempt a merge, of course
+	cout << endl;
+	PP(sc.state.get_K());
 	if(gsl_ran_bernoulli(r, p_attempt_split)) {
-		const int k = gsl_rng_uniform_int(r, sc.state.get_K());
+		// Multiple parts to the proposal probability:
+		// 0. Deciding to split, with probability 1/K
+		// 1. Selecting a cluster at random, ACCORDING TO HOW MANY EDGES IT HAS
+		// -. (append empty cluster, "q+1" )
+		// -. (prepare launch state)
+		// -. (make proposal)
+		// 2. calculate proposal probability of second stage
+		// 3. select a cluster to be swapped with "q+1"
+		// that gives us three numbers for the proposal
+		//
+		// the reverse proposal probability is pretty simple, with *two* componnents:
+		// 0. Deciding to merge, with probability (1- 1/K)
+		// 1. just the probability of selecting two *distinct* clusters to merge
+		auto const k_and_prob = select_cluster_at_random_weighted_by_edge(sc.state);
+		PP(k_and_prob.first, k_and_prob.second);
+
+		const int k = k_and_prob.first;
 		const int qplus1 = sc.state.get_K();
-		long double delta_score = 0.0L;
 		vector<int> E = my_edges_in_a_random_order(sc.state, k); // I don't really need them to be random, but what the hell
 		if(E.size() < 2)
 			return 0.0L;
@@ -1230,27 +1248,41 @@ long double             split_or_merge_by_seed_expansion(Score &sc) {
 			PP(l2_pp);
 			return l2_pp;
 		};
-		const long double pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
-		PP(pp_post_launch, delta_score);
+		const long double l2_pp_post_launch = calculate_prop_prob_from_seed(launch_state_k, k, launch_state_qplus1, qplus1);
+		PP(delta_score);
+		const int new_size = sc.state.get_K();
+		const long double l2_pp_all_forward = log2l(p_attempt_split)+ log2l(k_and_prob.second)+ l2_pp_post_launch+ log2l(1.0/new_size);
+		PP(                                   log2l(p_attempt_split), log2l(k_and_prob.second), l2_pp_post_launch, log2l(1.0/new_size), l2_pp_all_forward);
+		cout << "reverse pp:" << endl;
+		const long double l2_pp_all_reverse = log2l( 1.0L - 1.0L/new_size )+ -log2l(new_size)-log2l(new_size-1);
+		PP(                                   log2l( 1.0L - 1.0L/new_size ), -log2l(new_size)-log2l(new_size-1), l2_pp_all_reverse );
 
-		// BROKEN should reject sometimes
-
-		// OK, but everything back the way it was
-		PP(__LINE__, delta_score);
-		for(const auto e : E) {
-			if(!sc.state.test_edge(e, k))
-				delta_score += sc.add_edge(e, k);
-			if( sc.state.test_edge(e, qplus1))
-				delta_score += sc.remove_edge(e, qplus1);
+		const long double l2_acpt_prob = delta_score - l2_pp_all_forward + l2_pp_all_reverse;
+		PP(l2_acpt_prob);
+		if( log2l(gsl_rng_uniform(r)) < l2_acpt_prob) {
+			cout << "  (seed-expand) ACCEPT"
+				<< endl;
+			const int swap_with_me = gsl_rng_uniform_int(r, sc.state.get_K());
+			sc.state.swap_cluster_to_the_end(swap_with_me);
+			return delta_score;
+		} else {
+			// OK, but everything back the way it was
+			PP(__LINE__, delta_score);
+			for(const auto e : E) {
+				if(!sc.state.test_edge(e, k))
+					delta_score += sc.add_edge(e, k);
+				if( sc.state.test_edge(e, qplus1))
+					delta_score += sc.remove_edge(e, qplus1);
+			}
+			PP(__LINE__, delta_score);
+			assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges);
+			assert(  0           == sc.state.get_one_community_summary(qplus1).num_edges);
+			PP(delta_score);
+			delta_score += sc.delete_empty_cluster_from_the_end();
+			PP(delta_score);
+			assertVERYCLOSE(delta_score, 0);
+			return delta_score;
 		}
-		PP(__LINE__, delta_score);
-		assert(int(E.size()) == sc.state.get_one_community_summary(k).num_edges);
-		assert(  0           == sc.state.get_one_community_summary(qplus1).num_edges);
-		PP(delta_score);
-		delta_score += sc.delete_empty_cluster_from_the_end();
-		PP(delta_score);
-		assertVERYCLOSE(delta_score, 0);
-		return delta_score;
 	}  else {
 		return 0.0L; // merge unimplemented // BROKEN
 	}
