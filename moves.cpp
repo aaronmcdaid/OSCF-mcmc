@@ -53,11 +53,21 @@ static pair< pair<bool,bool>, long double>	bernoullis_not_all_failed_2(
 		//    1 0
 		//    1 1
 
+		assert(p_k_1 > 0);
+		assert(p_k_2 > 0);
 		const long double prob_both_failing = (1.0L-p_k_1) * (1.0L-p_k_2);
-		const long double prob_at_least_one_success = 1.0L - prob_both_failing;
+		long double prob_at_least_one_success = 1.0L - prob_both_failing;
+		if(prob_at_least_one_success < p_k_1) {
+			assertVERYCLOSE(prob_at_least_one_success, p_k_1);
+			prob_at_least_one_success = p_k_1;
+		}
+		assert(prob_at_least_one_success >= p_k_1); // BROKEN?
 
 		// First, calculate the conditional probability of cluster 1 being assigned
 		const long double cond_prob_A = p_k_1 / prob_at_least_one_success;
+		unless(isfinite(cond_prob_A)) {
+			PP(__LINE__, cond_prob_A, p_k_1, prob_at_least_one_success);
+		}
 		assert(isfinite(cond_prob_A));
 
 		long double log2_product_of_accepted_probabilities = 0.0L;
@@ -68,12 +78,15 @@ static pair< pair<bool,bool>, long double>	bernoullis_not_all_failed_2(
 		} else {
 			bA = possibly_force.first;
 		}
+		//PP(bA, cond_prob_A, log2l(cond_prob_A), log2_one_plus_l(-cond_prob_A));
 		log2_product_of_accepted_probabilities += bA ? log2l(cond_prob_A) : log2_one_plus_l(-cond_prob_A);
 		unless(isfinite(log2_product_of_accepted_probabilities)) {
-			if(isinf(log2_product_of_accepted_probabilities) == 1) {
+			if(!isfinite(log2_product_of_accepted_probabilities)) {
 				log2_product_of_accepted_probabilities = most_negative();
-				assert(cond_prob_A == 1);
+				assertVERYCLOSE(cond_prob_A, 1);
+				assert(isfinite(log2_product_of_accepted_probabilities));
 			}
+			assert(isfinite(log2_product_of_accepted_probabilities));
 		}
 		assert(isfinite(log2_product_of_accepted_probabilities));
 
