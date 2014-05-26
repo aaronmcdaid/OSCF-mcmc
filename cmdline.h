@@ -79,6 +79,9 @@ struct gengetopt_args_info
   int M3_algo_arg;	/**< @brief  (default='1').  */
   char * M3_algo_orig;	/**< @brief  original value given at command line.  */
   const char *M3_algo_help; /**< @brief  help description.  */
+  char * save_z_arg;	/**< @brief save (truncated) z to this file (default='').  */
+  char * save_z_orig;	/**< @brief save (truncated) z to this file original value given at command line.  */
+  const char *save_z_help; /**< @brief save (truncated) z to this file help description.  */
   float m_iidBernoulli_arg;	/**< @brief A simpler model for the edges. Default is off (-1) (default='-1').  */
   char * m_iidBernoulli_orig;	/**< @brief A simpler model for the edges. Default is off (-1) original value given at command line.  */
   const char *m_iidBernoulli_help; /**< @brief A simpler model for the edges. Default is off (-1) help description.  */
@@ -103,6 +106,7 @@ struct gengetopt_args_info
   unsigned int AnySM_algo_given ;	/**< @brief Whether AnySM.algo was given.  */
   unsigned int SharedSM_algo_given ;	/**< @brief Whether SharedSM.algo was given.  */
   unsigned int M3_algo_given ;	/**< @brief Whether M3.algo was given.  */
+  unsigned int save_z_given ;	/**< @brief Whether save.z was given.  */
   unsigned int m_iidBernoulli_given ;	/**< @brief Whether m.iidBernoulli was given.  */
   unsigned int algo_seedSplit_given ;	/**< @brief Whether algo.seedSplit was given.  */
   unsigned int init_seedExpand_given ;	/**< @brief Whether init.seedExpand was given.  */

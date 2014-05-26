@@ -145,19 +145,21 @@ void dump_all(const State & st, const int64_t rep, in< std::vector< std::vector<
 	cout << " ==" << endl << endl;
 }
 void dump_truncated_node_cover(const State & st) {
-	cout << "=Current Cover=" << endl;
+	if(! args_info.save_z_arg || ! args_info.save_z_arg[0])
+		return;
+	ofstream z_file(args_info.save_z_arg);
+	assert(args_info.save_z_arg && args_info.save_z_arg[0]);
 	for(int k=0; k<st.get_K(); ++k) {
 		vector<int64_t> nodes_in_this_comm = st.get_comms().at(k).get_my_nodes_NO_COUNT();
 		sort(nodes_in_this_comm.begin(), nodes_in_this_comm.end());
 		For(n, nodes_in_this_comm) {
 			if(n!=nodes_in_this_comm.begin())
-				cout << ' ';
+				z_file << ' ';
 			string node_name = st.net->node_set->as_string(*n);
-			cout << node_name;
+			z_file << node_name;
 		}
-		cout << endl;
+		z_file << endl;
 	}
-	cout << "=End Of Current Cover=" << endl;
 }
 
 static vector< vector<int64_t> > load_ground_truth(const NodeSet * const node_set, const char * gt_file_name) {
@@ -341,7 +343,7 @@ void oscf(Net net, const gengetopt_args_info &args_info) {
 		}
 		if(rep>0 && rep % 1 == 0) { // || rep < 100) {
 			dump_all(st, rep, ground_truth);
-			// dump_truncated_node_cover(st);
+			dump_truncated_node_cover(st);
 		}
 	}
 	PP2("fin", ELAPSED());

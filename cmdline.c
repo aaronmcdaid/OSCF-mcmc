@@ -48,6 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "      --AnySM.algo=INT            (default=`1')",
   "      --SharedSM.algo=INT         (default=`1')",
   "      --M3.algo=INT               (default=`1')",
+  "  -z, --save.z=STRING           save (truncated) z to this file  (default=`')",
   "      --m.iidBernoulli=FLOAT    A simpler model for the edges. Default is off \n                                  (-1)  (default=`-1')",
   "      --algo.seedSplit          Algo: split-merge, via seed expansion  \n                                  (default=off)",
   "      --init.seedExpand         Initialize via seed expansion  (default=off)",
@@ -93,6 +94,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->AnySM_algo_given = 0 ;
   args_info->SharedSM_algo_given = 0 ;
   args_info->M3_algo_given = 0 ;
+  args_info->save_z_given = 0 ;
   args_info->m_iidBernoulli_given = 0 ;
   args_info->algo_seedSplit_given = 0 ;
   args_info->init_seedExpand_given = 0 ;
@@ -128,6 +130,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->SharedSM_algo_orig = NULL;
   args_info->M3_algo_arg = 1;
   args_info->M3_algo_orig = NULL;
+  args_info->save_z_arg = gengetopt_strdup ("");
+  args_info->save_z_orig = NULL;
   args_info->m_iidBernoulli_arg = -1;
   args_info->m_iidBernoulli_orig = NULL;
   args_info->algo_seedSplit_flag = 0;
@@ -156,9 +160,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->AnySM_algo_help = gengetopt_args_info_help[13] ;
   args_info->SharedSM_algo_help = gengetopt_args_info_help[14] ;
   args_info->M3_algo_help = gengetopt_args_info_help[15] ;
-  args_info->m_iidBernoulli_help = gengetopt_args_info_help[16] ;
-  args_info->algo_seedSplit_help = gengetopt_args_info_help[17] ;
-  args_info->init_seedExpand_help = gengetopt_args_info_help[18] ;
+  args_info->save_z_help = gengetopt_args_info_help[16] ;
+  args_info->m_iidBernoulli_help = gengetopt_args_info_help[17] ;
+  args_info->algo_seedSplit_help = gengetopt_args_info_help[18] ;
+  args_info->init_seedExpand_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -255,6 +260,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->AnySM_algo_orig));
   free_string_field (&(args_info->SharedSM_algo_orig));
   free_string_field (&(args_info->M3_algo_orig));
+  free_string_field (&(args_info->save_z_arg));
+  free_string_field (&(args_info->save_z_orig));
   free_string_field (&(args_info->m_iidBernoulli_orig));
   
   
@@ -323,6 +330,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "SharedSM.algo", args_info->SharedSM_algo_orig, 0);
   if (args_info->M3_algo_given)
     write_into_file(outfile, "M3.algo", args_info->M3_algo_orig, 0);
+  if (args_info->save_z_given)
+    write_into_file(outfile, "save.z", args_info->save_z_orig, 0);
   if (args_info->m_iidBernoulli_given)
     write_into_file(outfile, "m.iidBernoulli", args_info->m_iidBernoulli_orig, 0);
   if (args_info->algo_seedSplit_given)
@@ -603,13 +612,14 @@ cmdline_parser_internal (
         { "AnySM.algo",	1, NULL, 0 },
         { "SharedSM.algo",	1, NULL, 0 },
         { "M3.algo",	1, NULL, 0 },
+        { "save.z",	1, NULL, 'z' },
         { "m.iidBernoulli",	1, NULL, 0 },
         { "algo.seedSplit",	0, NULL, 0 },
         { "init.seedExpand",	0, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVK:i:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVK:i:z:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -645,6 +655,18 @@ cmdline_parser_internal (
               &(local_args_info.iterations_given), optarg, 0, "10000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "iterations", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* save (truncated) z to this file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->save_z_arg), 
+               &(args_info->save_z_orig), &(args_info->save_z_given),
+              &(local_args_info.save_z_given), optarg, 0, "", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "save.z", 'z',
               additional_error))
             goto failure;
         
