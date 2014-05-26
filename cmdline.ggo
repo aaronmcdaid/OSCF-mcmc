@@ -47,3 +47,4 @@ option  "M3.algo"    - ""                                               int     
 option   "m.iidBernoulli"     - "A simpler model for the edges. Default is off (-1)" float        default="-1" no
 option  "algo.seedSplit"      - "Algo: split-merge, via seed expansion"            flag       off
 option  "init.seedExpand"     - "Initialize via seed expansion"            flag       off
+option  "save.current.z.truncated"      - "save the nodes at the end of the edges "  string        default="" no
